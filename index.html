@@ -2698,7 +2698,10 @@ function pauseForUpgrade(s,count=3,isChest=false){
       card.onclick=()=>{
         u.apply(s.player);
         s.collectedItems.push({...u,_count:(s.collectedItems.filter(c=>c.id===u.id).length+1)});
-        updateHpHUD();showScreen('game-screen');s.paused=false;
+        updateHpHUD();
+        // Clear any stuck keys — keyup events are missed while the levelup screen is active
+        for(const k in keys) keys[k]=false;
+        showScreen('game-screen');s.paused=false;
       };
       container.appendChild(card);
     });
@@ -2731,7 +2734,8 @@ function doReroll(){
   if(s.player.gold<cost){addFloat(s.player.x,s.player.y,'NOT ENOUGH GOLD!','#ff4400');return;}
   s.player.gold-=cost;
   updateKillsHUD();
-  s._rerollCost=(s._rerollCost||15)*2; // double cost each reroll
+  s._rerollCost=(s._rerollCost||15)*2;
+  for(const k in keys) keys[k]=false;
   pauseForUpgrade(s,window._pendingCount||3,window._pendingIsChest||false);
 }
 
