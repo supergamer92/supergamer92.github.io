@@ -180,13 +180,24 @@ body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monosp
 .stat-line .sl-val{color:var(--accent2);}
 .stat-line .sl-next{font-size:10px;color:var(--border2);}
 #items-grid{display:flex;flex-wrap:wrap;gap:5px;}
-.item-badge{background:var(--panel2);border:1px solid var(--border2);padding:4px 8px;font-size:11px;display:flex;align-items:center;gap:5px;transition:border-color .15s;}
+.item-badge{background:var(--panel2);border:1px solid var(--border2);padding:4px 8px;font-size:11px;display:flex;align-items:center;gap:5px;transition:border-color .15s;position:relative;cursor:default;}
 .item-badge:hover{border-color:var(--accent2);}
 .item-badge .ib-icon{font-size:15px;}
 .item-badge .ib-name{font-family:'Press Start 2P',monospace;font-size:5px;color:var(--accent2);line-height:1.6;}
 .item-badge .ib-count{font-size:9px;color:var(--accent3);}
 .item-badge.rare{border-color:#2a6080;}
 .item-badge.epic{border-color:#5b3fa0;}
+.item-badge .ib-tooltip{
+  display:none;position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);
+  background:#0d0d1a;border:1px solid var(--border2);padding:7px 10px;
+  font-size:11px;color:var(--text);white-space:nowrap;z-index:999;pointer-events:none;
+  box-shadow:0 4px 18px rgba(0,0,0,0.7);min-width:140px;max-width:220px;white-space:normal;line-height:1.5;text-align:center;
+}
+.item-badge .ib-tooltip::after{
+  content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);
+  border:5px solid transparent;border-top-color:#252540;
+}
+.item-badge:hover .ib-tooltip{display:block;}
 .char-info-box{background:var(--panel2);border:1px solid var(--border2);padding:10px;display:flex;gap:10px;align-items:center;}
 .cib-icon{font-size:32px;}
 .cib-text{display:flex;flex-direction:column;gap:3px;}
@@ -935,7 +946,7 @@ const CHARACTERS=[
   {
     id:'druid', name:'DRUID', icon:'🌿', tag:'SUPPORT · NATURE',
     weaponType:'ranged',
-    desc:'Shoots thorns at enemies. Places a Leech Plant that drains nearby enemies — consuming them extends the plant\'s life.',
+    desc:'Shoots thorns at enemies. Places a Leech Plant that latches up to 3 enemies at once — kills heal you for 2% max HP.',
     abilityName:'LEECH PLANT', abilityIcon:'🪴', abilityCooldown:7,
     statMods:{speed:0,damage:6,fireRate:120,maxHp:20},
     ability(s){
@@ -949,7 +960,7 @@ const CHARACTERS=[
         life:12, maxLife:12,
         dmgPs:p.damage*0.9,  // drain damage per second while latched
         leechRange:52,   // how close enemy must be to get grabbed
-        latchedEnemy:null,
+        latchedEnemies:[],   // up to 3 simultaneous targets
         pulse:0,         // animation pulse counter
         feedCount:0,     // how many enemies consumed
       };
@@ -1606,49 +1617,52 @@ function update(dt){
       pl.life-=dt;
       pl.pulse=(pl.pulse||0)+dt*3;
       if(pl.life<=0){
-        // Plant dies — burst of spores
         spawnParticles(s,pl.x,pl.y,'#336622',14);
         s.leechPlants.splice(i,1);continue;
       }
-      // If currently latched onto an enemy, drain it
-      if(pl.latchedEnemy){
-        const le=pl.latchedEnemy;
-        // Check enemy still alive and in range
+      if(!pl.latchedEnemies)pl.latchedEnemies=[];
+
+      // ── Drain each latched enemy ─────────────────────────────────
+      for(let li=pl.latchedEnemies.length-1;li>=0;li--){
+        const le=pl.latchedEnemies[li];
+        // Drop if dead or wandered too far
         if(!s.enemies.includes(le)||Math.hypot(le.x-pl.x,le.y-pl.y)>pl.leechRange*1.8){
-          pl.latchedEnemy=null;
-        } else {
-          // Drain damage
-          const drain=pl.dmgPs*dt;
-          le.hp-=drain;le.hitFlash=Math.min(1,le.hitFlash+.08);
-          s.totalDamageDealt+=drain;
-          // Heal player a fraction of drain
-          p.hp=Math.min(p.maxHp,p.hp+drain*0.18);
-          // Leech particle toward plant
-          if(Math.random()<0.25)spawnParticles(s,le.x+(pl.x-le.x)*.3,le.y+(pl.y-le.y)*.3,'#44ff66',2);
-          // If enemy consumed (dead)
-          if(le.hp<=0){
-            // Gain life extension per consumed enemy
-            pl.life=Math.min(pl.maxLife*2, pl.life+6);
-            pl.feedCount++;
-            pl.maxLife=Math.max(pl.maxLife, pl.life);
-            spawnParticles(s,pl.x,pl.y,'#00ff88',20);spawnParticles(s,pl.x,pl.y,'#44ff66',12);
-            abilityRing(s,pl.x,pl.y,'#00ff88',45,.4);
-            addFloat(pl.x,pl.y-20,'CONSUMED! +6s','#00ff88');
-            updateHpHUD();
-            pl.latchedEnemy=null;
-          }
+          pl.latchedEnemies.splice(li,1);continue;
         }
-      } else {
-        // Hunt for nearest non-boss enemy in range
-        let near=null,nd=Infinity;
-        for(const e of s.enemies){
-          if(e.isBoss)continue;
-          const d=Math.hypot(e.x-pl.x,e.y-pl.y);
-          if(d<pl.leechRange+e.r&&d<nd){near=e;nd=d;}
+        const drain=pl.dmgPs*dt;
+        le.hp-=drain;le.hitFlash=Math.min(1,le.hitFlash+.08);
+        s.totalDamageDealt+=drain;
+        // Passive drain trickle heal
+        p.hp=Math.min(p.maxHp,p.hp+drain*0.10);
+        if(Math.random()<0.25)spawnParticles(s,le.x+(pl.x-le.x)*.3,le.y+(pl.y-le.y)*.3,'#44ff66',2);
+        // Kill — heal 2% max HP and extend plant life
+        if(le.hp<=0){
+          pl.life=Math.min(pl.maxLife*2,pl.life+6);
+          pl.feedCount++;
+          pl.maxLife=Math.max(pl.maxLife,pl.life);
+          const killHeal=Math.floor(p.maxHp*0.02);
+          p.hp=Math.min(p.maxHp,p.hp+killHeal);
+          spawnParticles(s,pl.x,pl.y,'#00ff88',20);spawnParticles(s,pl.x,pl.y,'#44ff66',12);
+          abilityRing(s,pl.x,pl.y,'#00ff88',45,.4);
+          addFloat(pl.x,pl.y-20,`CONSUMED! +${killHeal}HP`,'#00ff88');
+          updateHpHUD();
+          pl.latchedEnemies.splice(li,1);
         }
-        if(near){
-          pl.latchedEnemy=near;
-          // Latch effect — slow the target and flash it
+      }
+
+      // ── Grab new targets up to 3 ────────────────────────────────
+      if(pl.latchedEnemies.length<3){
+        // Collect all in-range non-boss enemies not already latched
+        const candidates=s.enemies.filter(e=>
+          !e.isBoss&&
+          !pl.latchedEnemies.includes(e)&&
+          Math.hypot(e.x-pl.x,e.y-pl.y)<pl.leechRange+e.r
+        );
+        // Sort by closest and grab until full
+        candidates.sort((a,b)=>Math.hypot(a.x-pl.x,a.y-pl.y)-Math.hypot(b.x-pl.x,b.y-pl.y));
+        for(const near of candidates){
+          if(pl.latchedEnemies.length>=3)break;
+          pl.latchedEnemies.push(near);
           if(!near._frozenSpeed)near._frozenSpeed=near.speed;
           near.speed=Math.min(near.speed,near._frozenSpeed*0.35);
           near._leeched=true;
@@ -2210,7 +2224,7 @@ function killEnemy(s,e,idx){
     addFloat(p.x,p.y,'🔥 RAMPAGE! 🔥','#ff4500');triggerShake(5);
   }
   // Release from any leech plant
-  if(s.leechPlants){for(const pl of s.leechPlants){if(pl.latchedEnemy===e){pl.latchedEnemy=null;}}}
+  if(s.leechPlants){for(const pl of s.leechPlants){if(pl.latchedEnemies)pl.latchedEnemies=pl.latchedEnemies.filter(le=>le!==e);}}
   // BERSERKER BLOODLUST: kills during rage cut next CD
   if(p._charId==='berserker'&&p._berserkerRage){
     p._abilityCooldown=Math.max(0,p._abilityCooldown-1.5);
@@ -2390,7 +2404,8 @@ function draw(){
     ctx.save();
     const lifeRatio=pl.life/pl.maxLife;
     const pulse=Math.sin(pl.pulse)*0.18+0.82;
-    const isFeeding=!!pl.latchedEnemy;
+    const latched=pl.latchedEnemies||[];
+    const isFeeding=latched.length>0;
     const glow=isFeeding?'#00ff88':'#44ff66';
     ctx.translate(pl.x,pl.y);
     ctx.globalAlpha=0.25+lifeRatio*0.25;
@@ -2434,16 +2449,22 @@ function draw(){
       ctx.font='bold 9px monospace';ctx.fillStyle='#00ff88';ctx.textAlign='center';
       ctx.fillText(`×${pl.feedCount}`,0,-28);
     }
-    // Leech line to latched enemy
-    if(pl.latchedEnemy){
-      const le=pl.latchedEnemy;
-      ctx.restore();ctx.save();
+    // Latch count badge (e.g. "2/3")
+    if(latched.length>0){
+      ctx.font='bold 8px monospace';ctx.fillStyle='#aaffcc';ctx.textAlign='center';
+      ctx.fillText(`${latched.length}/3`,0,26);
+    }
+    ctx.restore();
+    // Leech lines to all latched enemies (drawn in world space)
+    for(const le of latched){
+      ctx.save();
       ctx.strokeStyle='#00ff88';ctx.lineWidth=1.5;ctx.globalAlpha=0.55+Math.sin(pl.pulse*4)*0.2;
       ctx.shadowColor='#00ff88';ctx.shadowBlur=8;ctx.setLineDash([3,4]);
       ctx.beginPath();ctx.moveTo(pl.x,pl.y);ctx.lineTo(le.x,le.y);ctx.stroke();
       ctx.setLineDash([]);ctx.shadowBlur=0;
+      ctx.restore();
     }
-    ctx.restore();ctx.shadowBlur=0;ctx.globalAlpha=1;
+    ctx.shadowBlur=0;ctx.globalAlpha=1;
   }}
 
   for(const e of s.enemies){
@@ -2787,7 +2808,7 @@ function openStats(){
   for(const it of items){if(!grouped[it.id])grouped[it.id]={...it,count:0};grouped[it.id].count++;}
   const grid=document.getElementById('items-grid');
   grid.innerHTML=Object.values(grouped).length===0?'<div style="color:var(--muted);font-size:12px;padding:4px">No items yet...</div>'
-    :Object.values(grouped).map(it=>`<div class="item-badge ${it.rarity}" title="${it.desc}"><div class="ib-icon">${it.icon}</div><div class="ib-name">${it.name}</div>${it.count>1?`<div class="ib-count">×${it.count}</div>`:''}</div>`).join('');
+    :Object.values(grouped).map(it=>`<div class="item-badge ${it.rarity}"><div class="ib-icon">${it.icon}</div><div class="ib-name">${it.name}</div>${it.count>1?`<div class="ib-count">×${it.count}</div>`:''}<div class="ib-tooltip">${it.icon} <strong>${it.name}</strong><br>${it.desc}</div></div>`).join('');
   showScreen('stats-screen');
 }
 
