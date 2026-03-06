@@ -239,6 +239,8 @@ body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monosp
 #hammer-flash.active{animation:abilityFlashAnim .25s ease-out forwards;}
 #earthbind-flash{position:absolute;inset:0;background:rgba(0,200,80,0.15);pointer-events:none;opacity:0;z-index:53;}
 #earthbind-flash.active{animation:abilityFlashAnim .5s ease-out forwards;}
+#ach-toast{position:absolute;bottom:-90px;left:50%;transform:translateX(-50%);background:rgba(10,10,25,0.95);border:1px solid #ffd700;padding:10px 16px;display:flex;align-items:center;gap:12px;z-index:300;pointer-events:none;min-width:260px;box-shadow:0 0 24px rgba(255,215,0,0.4);transition:bottom .4s cubic-bezier(0.34,1.56,0.64,1);}
+#ach-toast.show{bottom:16px;}
 #danger-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,transparent 55%,rgba(255,0,0,0.45) 100%);pointer-events:none;opacity:0;transition:opacity .2s;z-index:51;}
 #danger-vignette.active{opacity:1;animation:dangerPulse 0.7s ease-in-out infinite;}
 @keyframes dangerPulse{0%,100%{opacity:0.5;}50%{opacity:1;}}
@@ -264,8 +266,9 @@ body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monosp
     <div class="title-emoji">🥔</div>
     <h1>SPUDGEON</h1>
     <div class="title-sub">Roguelike · Survivor · Bullet Hell</div>
-    <div class="title-version">v3.1 — HARDER ENEMIES · MINIMAP · DANGER WARNING</div>
+    <div class="title-version">v3.3 — FINAL RELEASE · ACHIEVEMENTS · HIGHSCORES</div>
   </div>
+  <div id="title-hs" style="font-size:10px;color:var(--muted);letter-spacing:1px;text-align:center;line-height:1.9;min-height:36px;"></div>
   <div class="title-btn-row">
     <button class="pixel-btn green" onclick="showCharSelect()">▶ PLAY</button>
     <button class="pixel-btn cyan" onclick="showHowToPlay()">? HOW TO PLAY</button>
@@ -299,9 +302,7 @@ body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monosp
         • <span style="color:#ff6600">EXPLODER</span> — detonates near you!<br>
         • <span style="color:#00ff88">HEALER</span> — revives nearby enemies<br>
         • <span style="color:#8800aa">NECROMANCER</span> — restores enemy HP<br>
-        • <span style="color:#ffd700">MIMIC</span> — disguised as a chest!<br>
-        • <span style="color:#cc00cc">VAMPIRE</span> — drains your HP on contact<br>
-        • <span style="color:#ff8800">BOMBER</span> — has a visible fuse, erupts on death<br>
+        • <span style="color:#ff8800">BOMBER</span> — visible fuse, erupts on death<br>
         • <span style="color:#00ffcc">TELEPORTER</span> — blinks behind you<br>
         • <span style="color:#8b0000">JUGGERNAUT</span> — charges at full speed
       </div>
@@ -399,6 +400,13 @@ body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monosp
     <div id="combo-display"><span id="combo-text"></span><div id="combo-timer-bar"><div id="combo-timer-fill" style="width:100%"></div></div></div>
     <div id="rampage-display">🔥 RAMPAGE!</div>
     <div id="streak-display" style="position:absolute;top:56px;left:10px;font-family:'Press Start 2P',monospace;font-size:7px;color:#ff8800;z-index:20;pointer-events:none;opacity:0;transition:opacity .3s;text-shadow:0 0 8px #ff4400;"></div>
+    <div id="minigun-ramp" style="position:absolute;top:75px;left:10px;width:80px;pointer-events:none;opacity:0;transition:opacity .3s;z-index:20;">
+      <div style="font-family:'Press Start 2P',monospace;font-size:6px;color:#ff8800;margin-bottom:2px;">🔩 RAMP UP</div>
+      <div style="height:4px;background:rgba(0,0,0,0.5);border:1px solid #ff8800;width:80px;">
+        <div id="minigun-ramp-fill" style="height:100%;background:#ff8800;width:0%;transition:width .1s;"></div>
+      </div>
+    </div>
+    <div id="ach-toast"></div>
     <div class="hud-buttons">
       <button class="pixel-btn tiny purple" onclick="togglePause()">⏸ PAUSE [P]</button>
       <button class="pixel-btn tiny cyan" onclick="openStats()">📋 STATS [TAB]</button>
@@ -447,6 +455,7 @@ body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monosp
 <div id="gameover-screen" class="screen">
   <div style="font-size:52px;filter:drop-shadow(0 0 20px rgba(255,45,85,0.5))">💀</div>
   <h2>YOU DIED</h2>
+  <div id="gameover-ach" style="font-size:9px;color:var(--accent3);letter-spacing:1px;font-family:'Press Start 2P',monospace;"></div>
   <div class="end-stat-table" id="gameover-stats"></div>
   <div style="display:flex;gap:10px;margin-top:4px;">
     <button class="pixel-btn green" onclick="showCharSelect()">↺ RETRY</button>
@@ -469,6 +478,54 @@ body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monosp
 </div><!-- end game-wrapper -->
 
 <script>
+
+// ═══════════════════════════════════════════════════════════════════
+//  ACHIEVEMENTS
+// ═══════════════════════════════════════════════════════════════════
+const ACHIEVEMENTS=[
+  {id:'first_blood',  icon:'🩸', name:'FIRST BLOOD',    desc:'Kill your first enemy',         check:(s)=>s.player.kills>=1},
+  {id:'wave5',        icon:'⚔️', name:'VETERAN',         desc:'Survive to wave 5',              check:(s)=>s.wave>=5},
+  {id:'wave10',       icon:'🔥', name:'WARLORD',         desc:'Survive to wave 10',             check:(s)=>s.wave>=10},
+  {id:'wave15',       icon:'👑', name:'LEGEND',          desc:'Survive to wave 15',             check:(s)=>s.wave>=15},
+  {id:'kills100',     icon:'💀', name:'CENTURION',       desc:'Kill 100 enemies in one run',    check:(s)=>s.player.kills>=100},
+  {id:'kills250',     icon:'☠️', name:'REAPER',          desc:'Kill 250 enemies in one run',    check:(s)=>s.player.kills>=250},
+  {id:'combo10',      icon:'🌀', name:'COMBO KING',      desc:'Hit a ×10 combo',                check:(s)=>s.combo>=10},
+  {id:'rampage',      icon:'🔥', name:'RAMPAGE',         desc:'Trigger Rampage mode',           check:(s)=>s.player._rampageEver},
+  {id:'level10',      icon:'⚡', name:'POWER SURGE',     desc:'Reach level 10',                 check:(s)=>s.player.level>=10},
+  {id:'level20',      icon:'💎', name:'TRANSCENDENT',    desc:'Reach level 20',                 check:(s)=>s.player.level>=20},
+  {id:'phoenix',      icon:'🪶', name:'RISEN',           desc:'Survive a killing blow',         check:(s)=>s.player._phoenixEver},
+  {id:'boss1',        icon:'👹', name:'BOSS SLAYER',     desc:'Kill your first boss',           check:(s)=>s._bossKills>=1},
+  {id:'boss3',        icon:'🗡️', name:'BOSS HUNTER',     desc:'Kill 3 bosses',                  check:(s)=>s._bossKills>=3},
+  {id:'pacifist_wave',icon:'🕊️', name:'UNTOUCHABLE',     desc:'Clear a wave without being hit', check:(s)=>s._untouchedWave},
+  {id:'godmode',      icon:'🌟', name:'GODMODE',         desc:'Complete wave 20',               check:(s)=>s.wave>=20},
+];
+function getUnlockedAchievements(){try{return JSON.parse(localStorage.getItem('spudgeon_ach')||'[]');}catch(e){return[];}}
+function unlockAchievement(id){
+  const unlocked=getUnlockedAchievements();
+  if(unlocked.includes(id))return false;
+  unlocked.push(id);
+  try{localStorage.setItem('spudgeon_ach',JSON.stringify(unlocked));}catch(e){}
+  return true;
+}
+function checkAchievements(s){
+  const unlocked=getUnlockedAchievements();
+  for(const ach of ACHIEVEMENTS){
+    if(unlocked.includes(ach.id))continue;
+    if(ach.check(s)){
+      if(unlockAchievement(ach.id)){
+        showAchievementToast(ach);
+      }
+    }
+  }
+}
+function showAchievementToast(ach){
+  const toast=document.getElementById('ach-toast');
+  if(!toast)return;
+  toast.innerHTML=`<span style="font-size:18px">${ach.icon}</span> <div><div style="font-family:'Press Start 2P',monospace;font-size:6px;color:#ffd700">ACHIEVEMENT UNLOCKED</div><div style="font-size:11px;color:#fff">${ach.name}</div><div style="font-size:10px;color:#aaa">${ach.desc}</div></div>`;
+  toast.classList.remove('show');void toast.offsetWidth;toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'),3500);
+}
+
 // ═══════════════════════════════════════════════════════════════════
 //  CHARACTERS
 // ═══════════════════════════════════════════════════════════════════
@@ -478,7 +535,7 @@ const CHARACTERS=[
     weaponType:'ranged',
     desc:'Trusty all-rounder. Fires a steady stream of bullets.',
     abilityName:'DASH BURST', abilityIcon:'💨', abilityCooldown:3,
-    statMods:{speed:0,damage:0,fireRate:0,maxHp:0},
+    statMods:{speed:0,damage:8,fireRate:0,maxHp:0},
     ability(s){
       const p=s.player;let dx=0,dy=0;
       if(keys['ArrowLeft']||keys['a']||keys['A'])dx=-1;
@@ -520,7 +577,12 @@ const CHARACTERS=[
       const isHeadshot=(p._shotCount%5===0);
       const finalDmg=isHeadshot?dmg*3:dmg;
       const ang=Math.atan2(near.y-p.y,near.x-p.x);
-      s.bullets.push({x:p.x,y:p.y,vx:Math.cos(ang)*12,vy:Math.sin(ang)*12,r:isHeadshot?p.bulletSize+5:p.bulletSize+2,dmg:finalDmg,pierce:p.piercing+2,life:2.2,isSniper:true,isHeadshot});
+      const mSpread=(p.multishot-1)*.12;
+      for(let mi=0;mi<p.multishot;mi++){
+        const ma=ang+(mi-(p.multishot-1)/2)*mSpread;
+        const mDmg=(mi===0)?finalDmg:finalDmg*(1-MULTISHOT_DMG_PENALTY);
+        s.bullets.push({x:p.x,y:p.y,vx:Math.cos(ma)*12,vy:Math.sin(ma)*12,r:isHeadshot?p.bulletSize+5:p.bulletSize+2,dmg:mDmg,pierce:p.piercing+2,life:2.2,isSniper:true,isHeadshot});
+      }
       if(isHeadshot){spawnParticles(s,p.x,p.y,'#ffee00',12);addFloat(p.x,p.y,'HEADSHOT!','#ffee00');}
       // Laser line flash
       if(!s.laserBeams)s.laserBeams=[];
@@ -531,14 +593,14 @@ const CHARACTERS=[
   {
     id:'engineer', name:'ENGINEER', icon:'🔧', tag:'SUMMONER · TURRETS',
     weaponType:'ranged',
-    desc:'Deploys up to 4 auto-turrets. Turrets shoot fast and last longer. Buffed personal damage.',
+    desc:'Deploys up to 2 turrets. Turrets inherit your upgrades — damage, fire rate, and pierce.',
     abilityName:'DEPLOY TURRET', abilityIcon:'🔫', abilityCooldown:7,
     statMods:{speed:-0.2,damage:8,fireRate:80,maxHp:25},
     ability(s){
       const p=s.player;
       if(!s.turrets)s.turrets=[];
-      if(s.turrets.length>=4)s.turrets.shift();
-      s.turrets.push({x:p.x,y:p.y,r:10,shootTimer:0,shootCooldown:0.6,life:22,maxLife:22,color:'#4af'});
+      if(s.turrets.length>=2)s.turrets.shift();
+      s.turrets.push({x:p.x,y:p.y,r:10,shootTimer:0,shootCooldown:Math.max(0.25,p.fireRate/1000*0.7),life:25,maxLife:25,color:'#4af',_ownerDmg:p.damage,_ownerPierce:p.piercing,_ownerBulletSize:p.bulletSize});
       // Deploy ring burst + sparks
       abilityRing(s,p.x,p.y,'#4af',50,.4);abilityRing(s,p.x,p.y,'#4af',80,.55);
       spawnParticles(s,p.x,p.y,'#4af',22);spawnParticles(s,p.x,p.y,'#ffffff',10);
@@ -567,11 +629,11 @@ const CHARACTERS=[
     color:'#5599ff',pip:[3,3,3,3],
   },
   {
-    id:'pyro', name:'PYROMANCER', icon:'🔥', tag:'AOE BURN · GUN',
+    id:'pyro', name:'PYROMANCER', icon:'🔥', tag:'AOE BURN · FLAMETHROWER',
     weaponType:'ranged',
-    desc:'Fireballs ignite targets. Napalm Rain blankets an area in fire.',
-    abilityName:'NAPALM RAIN', abilityIcon:'☄️', abilityCooldown:7,
-    statMods:{speed:0,damage:12,fireRate:80,maxHp:-10},
+    desc:'Continuous flamethrower — sprays fire patches in front. Napalm Rain for a massive burst.',
+    abilityName:'NAPALM RAIN', abilityIcon:'☄️', abilityCooldown:9,
+    statMods:{speed:0,damage:8,fireRate:60,maxHp:-10},
     ability(s){
       const p=s.player;
       if(!s.firePatches)s.firePatches=[];
@@ -581,6 +643,27 @@ const CHARACTERS=[
       abilityRing(s,p.x,p.y,'#ff6600',100,.5);abilityRing(s,p.x,p.y,'#ffaa00',160,.7);
       flashEl('ability-flash');document.getElementById('ability-flash').style.background='rgba(255,80,0,0.2)';
       triggerShake(5);addFloat(p.x,p.y,'NAPALM!','#ff6600');
+    },
+    customShoot(s,dmg){
+      const p=s.player;if(!s.enemies.length)return;
+      // Find nearest enemy to aim cone
+      let near=null,nd=Infinity;
+      for(const e of s.enemies){const d=Math.hypot(e.x-p.x,e.y-p.y);if(d<nd){near=e;nd=d;}}
+      if(!near)return;
+      const ang=Math.atan2(near.y-p.y,near.x-p.x);
+      if(!s.firePatches)s.firePatches=[];
+      // Spray 2 fire patches in a cone in front of player
+      for(let i=0;i<2;i++){
+        const spread=(Math.random()-.5)*0.6;
+        const dist=30+Math.random()*55;
+        s.firePatches.push({
+          x:p.x+Math.cos(ang+spread)*dist,
+          y:p.y+Math.sin(ang+spread)*dist,
+          r:16+(p.bulletSize*1.5),life:0.9,maxLife:0.9,
+          dmgPs:dmg*1.8,
+        });
+      }
+      spawnParticles(s,p.x+Math.cos(ang)*20,p.y+Math.sin(ang)*20,'#ff6600',3);
     },
     color:'#ff5500',pip:[3,3,5,2],
   },
@@ -609,6 +692,7 @@ const CHARACTERS=[
           spawnParticles(s,e.x,e.y,'#ffaa00',5);addFloat(e.x,e.y,`-${Math.floor(dmg)}`,'#ffd700');
         }
       }
+      for(const he of s.enemies){const hd=Math.hypot(he.x-p.x,he.y-p.y);if(hd<swingR+he.r){const hea=Math.atan2(he.y-p.y,he.x-p.x);let df=hea-ang;while(df>Math.PI)df-=Math.PI*2;while(df<-Math.PI)df+=Math.PI*2;if(Math.abs(df)<=arcHalf)applyMeleeEffects(s,p,he,dmg);}}
       if(!s.meleeSwings)s.meleeSwings=[];
       s.meleeSwings.push({x:p.x,y:p.y,ang,arcHalf,r:swingR,life:.18,maxLife:.18,color:'#ffcc44'});
     },
@@ -645,6 +729,7 @@ const CHARACTERS=[
       if(!near||nd>reach+near.r)return;
       const hit=dmg*(p._berserkerRage?p._berserkerDmgBoost:1);
       near.hp-=hit;near.hitFlash=1;s.totalDamageDealt+=hit;
+      applyMeleeEffects(s,p,near,hit);
       spawnParticles(s,near.x,near.y,'#ff3355',8);addFloat(near.x,near.y,`-${Math.floor(hit)}`,'#ff4444');
       if(!s.meleeSwings)s.meleeSwings=[];
       const ang=Math.atan2(near.y-p.y,near.x-p.x);
@@ -665,9 +750,9 @@ const CHARACTERS=[
   {
     id:'ninja', name:'NINJA', icon:'🥷', tag:'MELEE · DAGGERS',
     weaponType:'melee',
-    desc:'Blindingly fast dual daggers. Hits 3 enemies at once but short range.',
+    desc:'Blindingly fast dual daggers. Hits 3 enemies at once. Smoke Bomb dashes away leaving damaging clones.',
     passive:'🗡 BACKSTAB — First hit on an enemy deals 2.5× damage.',
-    abilityName:'SHADOW STEP', abilityIcon:'🌑', abilityCooldown:4,
+    abilityName:'SMOKE BOMB', abilityIcon:'💨', abilityCooldown:5,
     statMods:{speed:0.9,damage:15,fireRate:-200,maxHp:-20},
     customShoot(s,dmg){
       const p=s.player;if(!s.enemies.length)return;
@@ -682,7 +767,7 @@ const CHARACTERS=[
         const isBackstab=!e._ninjaHit;
         const hitDmg=isBackstab?dmg*2.5:dmg;
         e._ninjaHit=true;
-        e.hp-=hitDmg;e.hitFlash=1;s.totalDamageDealt+=hitDmg;
+        e.hp-=hitDmg;e.hitFlash=1;s.totalDamageDealt+=hitDmg;applyMeleeEffects(s,p,e,hitDmg);
         if(isBackstab){spawnParticles(s,e.x,e.y,'#ff44ff',8);addFloat(e.x,e.y,'BACKSTAB!','#ff44ff');}
         else{spawnParticles(s,e.x,e.y,'#aa44ff',4);addFloat(e.x,e.y,`-${Math.floor(hitDmg)}`,'#cc88ff');}
         const ang=Math.atan2(e.y-p.y,e.x-p.x);
@@ -690,27 +775,28 @@ const CHARACTERS=[
       }
     },
     ability(s){
-      const p=s.player;if(!s.enemies.length)return;
-      let near=null,nd=Infinity;
-      for(const e of s.enemies){const d=Math.hypot(e.x-p.x,e.y-p.y);if(d<nd){near=e;nd=d;}}
-      if(!near)return;
-      // Leave shadow afterimage at old position
+      const p=s.player;
+      // Smoke Bomb: dash in movement direction, leave 3 shadow clones that damage nearby enemies
+      let dx=0,dy=0;
+      if(keys['a']||keys['A']||keys['ArrowLeft'])dx=-1;if(keys['d']||keys['D']||keys['ArrowRight'])dx+=1;
+      if(keys['w']||keys['W']||keys['ArrowUp'])dy=-1;if(keys['s']||keys['S']||keys['ArrowDown'])dy+=1;
+      if(!dx&&!dy){dx=0;dy=-1;}
+      const ml=Math.sqrt(dx*dx+dy*dy)||1;
       if(!s.afterimages)s.afterimages=[];
-      for(let i=0;i<4;i++){s.afterimages.push({x:p.x+(Math.random()-.5)*10,y:p.y+(Math.random()-.5)*10,r:p.r,color:'#aa44ff',life:.55+i*.08,maxLife:.55+i*.08});}
-      spawnParticles(s,p.x,p.y,'#330044',20);
-      const ang=Math.atan2(near.y-p.y,near.x-p.x);
-      p.x=near.x-Math.cos(ang)*(near.r+p.r+5);
-      p.y=near.y-Math.sin(ang)*(near.r+p.r+5);
-      p.x=Math.max(p.r,Math.min(W-p.r,p.x));p.y=Math.max(p.r,Math.min(H-p.r,p.y));
-      for(let i=0;i<5;i++){
-        const e2=s.enemies.find(e=>Math.hypot(e.x-p.x,e.y-p.y)<55+e.r);
-        if(e2){e2.hp-=p.damage*1.1;e2.hitFlash=1;s.totalDamageDealt+=p.damage*1.1;}
+      // Leave 3 clones behind that burst with damage
+      for(let i=0;i<3;i++){
+        const cx=p.x-dx/ml*i*30,cy=p.y-dy/ml*i*30;
+        s.afterimages.push({x:cx,y:cy,r:p.r*1.2,color:'#aa44ff',life:.7,maxLife:.7});
+        if(!s.firePatches)s.firePatches=[];
+        s.firePatches.push({x:cx,y:cy,r:28,life:1.0,maxLife:1.0,dmgPs:p.damage*3.5,isGhost:true});
       }
-      p.immune=0.5;
-      // Arrival burst at new position
+      spawnParticles(s,p.x,p.y,'#330044',20);
+      p.x+=dx/ml*130;p.y+=dy/ml*130;
+      p.x=Math.max(p.r,Math.min(W-p.r,p.x));p.y=Math.max(p.r,Math.min(H-p.r,p.y));
+      p.immune=1.0;
       spawnParticles(s,p.x,p.y,'#aa44ff',30);spawnParticles(s,p.x,p.y,'#ffffff',12);
       abilityRing(s,p.x,p.y,'#aa44ff',55,.35);
-      addFloat(p.x,p.y,'SHADOW STEP!','#aa44ff');
+      addFloat(p.x,p.y,'SMOKE BOMB!','#aa44ff');
     },
     color:'#8833cc',pip:[4,5,5,2],
   },
@@ -727,9 +813,9 @@ const CHARACTERS=[
       let hit=false;
       for(const e of s.enemies){
         if(Math.hypot(e.x-p.x,e.y-p.y)<reach+e.r){
-          e.hp-=dmg;e.hitFlash=1;s.totalDamageDealt+=dmg;
+          e.hp-=dmg;e.hitFlash=1;s.totalDamageDealt+=dmg;applyMeleeEffects(s,p,e,dmg);
           const ang=Math.atan2(e.y-p.y,e.x-p.x);
-          e.x+=Math.cos(ang)*18;e.y+=Math.sin(ang)*18;
+          e.x+=Math.cos(ang)*8;e.y+=Math.sin(ang)*8;
           spawnParticles(s,e.x,e.y,'#ffaa00',5);addFloat(e.x,e.y,`-${Math.floor(dmg)}`,'#ffcc00');
           hit=true;
         }
@@ -748,10 +834,10 @@ const CHARACTERS=[
     color:'#cc8800',pip:[2,1,3,5],
   },
   {
-    id:'warlock', name:'WARLOCK', icon:'🔮', tag:'ARCANE · HYBRID',
+    id:'warlock', name:'WARLOCK', icon:'🔮', tag:'ARCANE · CURSE',
     weaponType:'ranged',
-    desc:'Fires slow magic orbs that deal AoE damage on impact. Void Nova erupts.',
-    abilityName:'VOID NOVA', abilityIcon:'💜', abilityCooldown:6,
+    desc:'Fires magic orbs that explode on impact. Soul Rend curses all visible enemies — draining their HP and healing you.',
+    abilityName:'SOUL REND', abilityIcon:'💀', abilityCooldown:7,
     statMods:{speed:-0.2,damage:28,fireRate:350,maxHp:10},
     customShoot(s,dmg){
       const p=s.player;if(!s.enemies.length)return;
@@ -763,21 +849,30 @@ const CHARACTERS=[
     },
     ability(s){
       const p=s.player;
-      explodeAt(s,p.x,p.y,145,p.damage*1.5);
-      spawnParticles(s,p.x,p.y,'#cc44ff',60);spawnParticles(s,p.x,p.y,'#8800cc',30);spawnParticles(s,p.x,p.y,'#ffffff',15);
-      for(let i=0;i<14;i++){const a=i/14*Math.PI*2;s.bullets.push({x:p.x,y:p.y,vx:Math.cos(a)*6,vy:Math.sin(a)*6,r:p.bulletSize+3,dmg:p.damage*1.3,pierce:2,life:1.8,isAoEOrb:true,aoeR:30});}
-      abilityRing(s,p.x,p.y,'#cc44ff',80,.4);abilityRing(s,p.x,p.y,'#9900ff',145,.55);abilityRing(s,p.x,p.y,'#ff88ff',200,.7);
-      flashEl('void-flash');triggerShake(7);addFloat(p.x,p.y,'VOID NOVA!','#cc44ff');
+      let totalDrain=0;
+      for(const e of s.enemies){
+        const drain=Math.min(e.hp*0.35, e.maxHp*0.35);
+        e.hp-=drain;e.hitFlash=1;s.totalDamageDealt+=drain;totalDrain+=drain;
+        spawnParticles(s,e.x,e.y,'#cc44ff',8);
+        if(!s.laserBeams)s.laserBeams=[];
+        s.laserBeams.push({x1:e.x,y1:e.y,x2:p.x,y2:p.y,color:'#cc44ff',w:2,life:.5,maxLife:.5});
+      }
+      const healAmt=Math.floor(Math.min(p.maxHp*0.4, totalDrain*0.3));
+      p.hp=Math.min(p.maxHp,p.hp+healAmt);
+      updateHpHUD();
+      abilityRing(s,p.x,p.y,'#cc44ff',80,.4);abilityRing(s,p.x,p.y,'#9900ff',145,.55);
+      spawnParticles(s,p.x,p.y,'#cc44ff',60);spawnParticles(s,p.x,p.y,'#ffffff',15);
+      flashEl('void-flash');triggerShake(5);
+      addFloat(p.x,p.y,`SOUL REND! +${healAmt}HP`,'#cc44ff');
     },
     color:'#9933cc',pip:[3,2,5,2],
   },
   {
     id:'phantom', name:'PHANTOM', icon:'👻', tag:'HYBRID · SPECTRAL',
     weaponType:'ranged',
-    // BUFFED: more damage, faster fire, cloak now fires ghost burst when it ends
-    desc:'Fast spectral shots pierce 1 enemy by default. Cloak fires a ghost burst on exit.',
+    desc:'Fast spectral shots pierce 1 enemy. Cloak fires a ghost burst on exit.',
     passive:'👁 GHOSTWALK — Moving while cloaked leaves spectral trails that damage enemies.',
-    abilityName:'PHASE CLOAK', abilityIcon:'🌫️', abilityCooldown:5,
+    abilityName:'PHASE CLOAK', abilityIcon:'🌫️', abilityCooldown:8,
     statMods:{speed:0.7,damage:4,fireRate:-120,maxHp:-20},
     ability(s){
       const p=s.player;
@@ -807,32 +902,21 @@ const CHARACTERS=[
   {
     id:'alchemist', name:'ALCHEMIST', icon:'⚗️', tag:'RANGED · POISON',
     weaponType:'ranged',
-    desc:'Lobs poison flasks that leave acid pools. Transmute converts gold into temp power.',
-    abilityName:'TRANSMUTE', abilityIcon:'🧪', abilityCooldown:8,
+    desc:'Lobs acid flasks that leave poison pools. Acid Nova erupts 8 large acid pools around you.',
+    abilityName:'ACID NOVA', abilityIcon:'🧪', abilityCooldown:7,
     statMods:{speed:-0.1,damage:10,fireRate:200,maxHp:5},
     ability(s){
       const p=s.player;
-      const goldCost=Math.min(10,p.gold);p.gold-=goldCost;
-      const boost=1.0+(goldCost*0.12);
-      p._alchemyBoost=boost;p._alchemyTimer=5.0;
-      // Massive visual explosion
-      spawnParticles(s,p.x,p.y,'#aaff44',80);spawnParticles(s,p.x,p.y,'#ffd700',60);
-      spawnParticles(s,p.x,p.y,'#ffffff',30);spawnParticles(s,p.x,p.y,'#00ff88',40);
-      // Big expanding rings
-      abilityRing(s,p.x,p.y,'#aaff44',80,.4);
-      abilityRing(s,p.x,p.y,'#ffd700',140,.55);
-      abilityRing(s,p.x,p.y,'#ffffff',200,.65);
-      abilityRing(s,p.x,p.y,'#aaff44',260,.8);
-      // Radial gold burst lines
-      if(!s.laserBeams)s.laserBeams=[];
-      for(let i=0;i<12;i++){
-        const a=i/12*Math.PI*2;
-        s.laserBeams.push({x1:p.x,y1:p.y,x2:p.x+Math.cos(a)*200,y2:p.y+Math.sin(a)*200,color:i%2===0?'#aaff44':'#ffd700',w:3,life:.35,maxLife:.35});
+      if(!s.firePatches)s.firePatches=[];
+      for(let i=0;i<8;i++){
+        const a=i/8*Math.PI*2;const d=60+Math.random()*40;
+        s.firePatches.push({x:p.x+Math.cos(a)*d,y:p.y+Math.sin(a)*d,r:30+(p.bulletSize*1.5),life:5.0,maxLife:5.0,dmgPs:p.damage*1.5,isAcid:true});
       }
+      spawnParticles(s,p.x,p.y,'#aaff44',60);spawnParticles(s,p.x,p.y,'#88ff00',30);
+      abilityRing(s,p.x,p.y,'#aaff44',80,.4);abilityRing(s,p.x,p.y,'#00ff88',140,.55);
       document.getElementById('ability-flash').style.background='rgba(100,255,50,0.35)';
-      flashEl('ability-flash');
-      triggerShake(8);
-      addFloat(p.x,p.y,`TRANSMUTE! ×${boost.toFixed(1)}`,'#aaff44');
+      flashEl('ability-flash');triggerShake(6);
+      addFloat(p.x,p.y,'ACID NOVA!','#aaff44');
     },
     color:'#88cc22',pip:[3,3,3,3],
     // Shoots acid flasks that leave poison patches
@@ -871,7 +955,7 @@ const CHARACTERS=[
         const ea=Math.atan2(e.y-p.y,e.x-p.x);
         let diff=ea-ang;while(diff>Math.PI)diff-=Math.PI*2;while(diff<-Math.PI)diff+=Math.PI*2;
         if(Math.abs(diff)<=arcHalf){
-          e.hp-=dmg;e.hitFlash=1;s.totalDamageDealt+=dmg;
+          e.hp-=dmg;e.hitFlash=1;s.totalDamageDealt+=dmg;applyMeleeEffects(s,p,e,dmg);
           if(p._reaperHarvest){p.hp=Math.min(p.maxHp,p.hp+3);} // mini-lifesteal on swing
           spawnParticles(s,e.x,e.y,'#aa00ff',5);addFloat(e.x,e.y,`-${Math.floor(dmg)}`,'#cc44ff');
         }
@@ -905,7 +989,7 @@ const CHARACTERS=[
     weaponType:'ranged',
     desc:'Dual pistols — fires left AND right simultaneously. Fan the Hammer: rapid burst.',
     abilityName:'FAN THE HAMMER', abilityIcon:'🔫', abilityCooldown:5,
-    statMods:{speed:0.3,damage:-2,fireRate:-80,maxHp:-10},
+    statMods:{speed:0.3,damage:5,fireRate:-80,maxHp:-10},
     ability(s){
       const p=s.player;
       if(!s.enemies.length)return;
@@ -958,8 +1042,8 @@ const CHARACTERS=[
         x:p.x, y:p.y,
         r:18,           // detection radius for enemies
         life:12, maxLife:12,
-        dmgPs:p.damage*0.9,  // drain damage per second while latched
-        leechRange:52,   // how close enemy must be to get grabbed
+        dmgPs:Math.max(p.damage*1.2, p.maxHp*0.08),  // 8% max HP per second drain
+        leechRange:70,   // how close enemy must be to get grabbed
         latchedEnemies:[],   // up to 3 simultaneous targets
         pulse:0,         // animation pulse counter
         feedCount:0,     // how many enemies consumed
@@ -984,6 +1068,75 @@ const CHARACTERS=[
         // Normal shots — no rooting
         s.bullets.push({x:p.x,y:p.y,vx:Math.cos(a)*p.bulletSpeed,vy:Math.sin(a)*p.bulletSpeed,r:p.bulletSize+1,dmg:bDmg,pierce:p.piercing,life:2.1});
       }
+    },
+  },
+  {
+    id:'minigunner', name:'MINIGUNNER', icon:'💥', tag:'HIGH FIRE RATE · GUN',
+    weaponType:'ranged',
+    desc:'Massive fire rate but bullets spread randomly. Ramp Up: holding fire increases accuracy.',
+    passive:'🔩 RAMP UP — After 8 continuous shots, accuracy improves by 60%.',
+    abilityName:'OVERDRIVE', abilityIcon:'⚡', abilityCooldown:8,
+    statMods:{speed:-0.3,damage:-4,fireRate:-220,maxHp:15},
+    ability(s){
+      const p=s.player;
+      p._overdriveActive=true;p._overdriveTimer=4.0;
+      spawnParticles(s,p.x,p.y,'#ff8800',60);spawnParticles(s,p.x,p.y,'#ffffff',20);
+      abilityRing(s,p.x,p.y,'#ff8800',80,.4);
+      flashEl('hammer-flash');triggerShake(5);
+      addFloat(p.x,p.y,'OVERDRIVE!','#ff8800');
+    },
+    color:'#cc4400',pip:[5,2,5,3],
+    customShoot(s,dmg){
+      const p=s.player;if(!s.enemies.length)return;
+      let near=null,nd=Infinity;
+      for(const e of s.enemies){const d=Math.hypot(e.x-p.x,e.y-p.y);if(d<nd){near=e;nd=d;}}
+      if(!near)return;
+      // Ramp up accuracy after 8 shots
+      p._minigunShots=(p._minigunShots||0)+1;p._minigunIdleTimer=0;
+      const ramped=p._minigunShots>=8||p._overdriveActive;
+      const baseSpread=ramped?0.08:0.45;
+      const ang=Math.atan2(near.y-p.y,near.x-p.x);
+      const spread=(p.multishot-1)*.15;
+      for(let i=0;i<Math.max(1,p.multishot);i++){
+        const a=ang+(Math.random()-.5)*baseSpread+(i-(p.multishot-1)/2)*spread;
+        const bDmg=(i===0)?dmg:dmg*(1-MULTISHOT_DMG_PENALTY);
+        s.bullets.push({x:p.x,y:p.y,vx:Math.cos(a)*p.bulletSpeed*1.1,vy:Math.sin(a)*p.bulletSpeed*1.1,r:p.bulletSize-1,dmg:bDmg,pierce:p.piercing,life:1.7});
+      }
+    },
+  },
+  {
+    id:'vampire_hero', name:'VAMPIRE', icon:'🧛', tag:'MELEE · LIFESTEAL',
+    weaponType:'melee',
+    desc:'Melee attacker with 30% lifesteal on every hit. Blood Surge heals you for all damage dealt.',
+    passive:'🩸 LIFESTEAL — Every melee hit heals 30% of damage dealt.',
+    abilityName:'BLOOD SURGE', abilityIcon:'❤️‍🔥', abilityCooldown:8,
+    statMods:{speed:0.4,damage:20,fireRate:100,maxHp:-15},
+    ability(s){
+      const p=s.player;
+      p._bloodSurgeActive=true;p._bloodSurgeTimer=5.0;
+      const bsv=document.getElementById('rage-vignette');if(bsv)bsv.classList.add('active');
+      spawnParticles(s,p.x,p.y,'#cc0033',60);spawnParticles(s,p.x,p.y,'#ff88aa',20);
+      abilityRing(s,p.x,p.y,'#cc0033',80,.4);abilityRing(s,p.x,p.y,'#ff0044',140,.55);
+      flashEl('rage-vignette');triggerShake(4);
+      addFloat(p.x,p.y,'BLOOD SURGE!','#cc0033');
+    },
+    color:'#880022',pip:[4,4,5,2],
+    customShoot(s,dmg){
+      const p=s.player;if(!s.enemies.length)return;
+      const reach=p.bulletSize*5+32;
+      let near=null,nd=Infinity;
+      for(const e of s.enemies){const d=Math.hypot(e.x-p.x,e.y-p.y);if(d<nd){near=e;nd=d;}}
+      if(!near||Math.hypot(near.x-p.x,near.y-p.y)>reach+near.r)return;
+      const finalDmg=p._bloodSurgeActive?dmg*2.0:dmg;
+      near.hp-=finalDmg;near.hitFlash=1;s.totalDamageDealt+=finalDmg;
+      // 30% lifesteal passive
+      const healAmt=finalDmg*0.30;
+      p.hp=Math.min(p.maxHp,p.hp+healAmt);updateHpHUD();
+      spawnParticles(s,near.x,near.y,'#cc0033',6);addFloat(near.x,near.y,`-${Math.floor(finalDmg)}`,'#ff4466');
+      if(!s.meleeSwings)s.meleeSwings=[];
+      const ang=Math.atan2(near.y-p.y,near.x-p.x);
+      s.meleeSwings.push({x:p.x,y:p.y,ang,arcHalf:.45,r:reach,life:.15,maxLife:.15,color:'#cc0033'});
+      applyMeleeEffects(s,p,near,finalDmg);
     },
   },
 ];
@@ -1048,8 +1201,8 @@ function initState(){
   const ch=selectedChar,sm=ch.statMods;
   // ── NERFED BASE STATS ──────────────────────────────────────────
   // Base damage: 14 (was 18)
-  // Base speed: 1.85 (was 2.2)
-  const baseFireRate=ch.weaponType==='melee'?300:620;
+  // Base speed: 2.2 (was 2.2)
+  const baseFireRate=ch.weaponType==='melee'?300:480;
   return {
     player:{
       x:0,y:0,
@@ -1113,7 +1266,7 @@ const ALL_UPGRADES=[
   {wtype:'any',id:'reg1',name:'POTATO STARCH',icon:'🥔',rarity:'rare',desc:'+HP Regen',apply:p=>{p._regStacks=(p._regStacks||0)+1;p._regen+=Math.max(.4,parseFloat((1.6*Math.pow(DR_REG,p._regStacks-1)).toFixed(1)));}},
   {wtype:'any',id:'reg2',name:'BLOOD RITUAL',icon:'🫀',rarity:'epic',desc:'+Big HP Regen',apply:p=>{p._regStacks=(p._regStacks||0)+1;p._regen+=Math.max(.8,parseFloat((3.0*Math.pow(DR_REG,p._regStacks-1)).toFixed(1)));}},
   // On-kill/defense
-  {wtype:'any',id:'vamp',name:'VAMPIRIC',icon:'🩸',rarity:'rare',desc:'+2 HP per kill',apply:p=>p._vampiric=true},
+  {wtype:'any',id:'vamp',name:'VAMPIRIC',icon:'🩸',rarity:'rare',desc:'Gain +2 HP on every kill.',apply:p=>p._vampiric=true},
   {wtype:'any',id:'thorn',name:'THORNMAIL',icon:'🌵',rarity:'rare',desc:'Reflect 25% dmg taken',apply:p=>p._thorns=true},
   {wtype:'any',id:'cd1',name:'ABILITY SHARD',icon:'💎',rarity:'rare',desc:'-15% Ability CD',apply:p=>p._abilityMaxCd*=.85},
   {wtype:'any',id:'cd2',name:'ETERNAL CORE',icon:'♾️',rarity:'epic',desc:'-25% Ability CD',apply:p=>p._abilityMaxCd*=.75},
@@ -1152,40 +1305,41 @@ const ALL_UPGRADES=[
   {wtype:'melee',id:'m_rch3',name:'TITAN ARMS',icon:'💪',rarity:'epic',desc:'+Reach +DMG',apply:p=>{p._bszStacks=(p._bszStacks||0)+1;p._dmgStacks=(p._dmgStacks||0)+1;p.bulletSize+=Math.max(1,parseFloat((6.5*Math.pow(DR_BSZ,p._bszStacks-1)).toFixed(1)));p.damage+=Math.max(6,Math.round(30*Math.pow(DR_DMG,p._dmgStacks-1)));}},
   {wtype:'melee',id:'m_mh1',name:'CLEAVE',icon:'⚔️',rarity:'rare',desc:'+1 extra target per swing',apply:p=>p.multishot+=1},
   {wtype:'melee',id:'m_mh2',name:'WHIRLWIND STRIKE',icon:'🌪️',rarity:'epic',desc:'+2 extra targets per swing',apply:p=>p.multishot+=2},
-  {wtype:'melee',id:'m_ls1',name:'LIFESTEAL',icon:'❤️‍🔥',rarity:'rare',desc:'+4 HP per kill',apply:p=>{p._vampiric=true;p._meleeLifesteal=true;}},
+  {wtype:'melee',id:'m_ls1',name:'LIFESTEAL',icon:'❤️‍🔥',rarity:'rare',desc:'Gain HP on every kill.',apply:p=>{p._vampiric=true;p._meleeLifesteal=true;}},
   {wtype:'melee',id:'m_ls2',name:'SOUL DRAIN',icon:'💀',rarity:'epic',desc:'+6 HP per kill + regen',apply:p=>{p._vampiric=true;p._meleeLifesteal=true;p._regen+=1.5;}},
-  {wtype:'melee',id:'m_bleed',name:'BLEED',icon:'🩸',rarity:'rare',desc:'Hits cause bleeding (DoT)',apply:p=>p._meleeBleed=true},
-  {wtype:'melee',id:'m_stun',name:'STAGGERING BLOW',icon:'⭐',rarity:'rare',desc:'Hits briefly stun enemies',apply:p=>p._meleeStun=true},
-  {wtype:'melee',id:'m_fire',name:'FLAME EDGE',icon:'🔥',rarity:'epic',desc:'Swings ignite enemies',apply:p=>p._meleeIgnite=true},
-  {wtype:'melee',id:'m_shock',name:'THUNDER BLADE',icon:'⚡',rarity:'epic',desc:'Hits chain to nearby enemies',apply:p=>p._meleeChain=true},
+  {wtype:'melee',id:'m_bleed',name:'BLEED',icon:'🩸',rarity:'rare',desc:'Hits apply bleeding — enemies take damage over 4 seconds.',apply:p=>p._meleeBleed=true},
+  {wtype:'melee',id:'m_stun',name:'STAGGERING BLOW',icon:'⭐',rarity:'rare',desc:'Hits stun enemies for 0.6s, stopping them cold.',apply:p=>p._meleeStun=true},
+  {wtype:'melee',id:'m_fire',name:'FLAME EDGE',icon:'🔥',rarity:'epic',desc:'Hits ignite enemies — burning DoT for 3.5 seconds.',apply:p=>p._meleeIgnite=true},
+  {wtype:'melee',id:'m_shock',name:'THUNDER BLADE',icon:'⚡',rarity:'epic',desc:'40% chance hits chain lightning to a nearby enemy for 50% damage.',apply:p=>p._meleeChain=true},
   // ── NEW ITEMS — SHARED ──────────────────────────────────────────
-  {wtype:'any',id:'new_adrenaline',name:'ADRENALINE',icon:'💉',rarity:'rare',desc:'Kill enemies faster — +5% dmg per wave',apply:p=>p._adrenaline=true},
-  {wtype:'any',id:'new_goldmagnet',name:'GOLD MAGNET',icon:'💰',rarity:'common',desc:'+3 Gold per kill',apply:p=>p._goldBonus=(p._goldBonus||0)+3},
-  {wtype:'any',id:'new_phoenix',name:'PHOENIX FEATHER',icon:'🪶',rarity:'epic',desc:'Revive once with 40% HP',apply:p=>{if(!p._phoenixUsed)p._phoenix=true;}},
-  {wtype:'any',id:'new_berserker_charm',name:'BERSERKER CHARM',icon:'😤',rarity:'rare',desc:'+15% DMG when below 40% HP',apply:p=>p._berserkerCharm=true},
+  {wtype:'any',id:'new_adrenaline',name:'ADRENALINE',icon:'💉',rarity:'rare',desc:'+5% more damage per wave you have survived.',apply:p=>p._adrenaline=true},
+  {wtype:'any',id:'new_goldmagnet',name:'GOLD MAGNET',icon:'💰',rarity:'common',desc:'+3 Gold per kill. Stacks with multiple pickups.',apply:p=>p._goldBonus=(p._goldBonus||0)+3},
+  {wtype:'any',id:'new_phoenix',name:'PHOENIX FEATHER',icon:'🪶',rarity:'epic',desc:'Revive once with 40% HP.',apply:p=>{p._phoenix=true;}},
+  {wtype:'any',id:'new_berserker_charm',name:'BERSERKER CHARM',icon:'😤',rarity:'rare',desc:'+15% damage when below 40% HP. Dangerous lifestyle.',apply:p=>p._berserkerCharm=true},
   {wtype:'any',id:'new_mirror',name:'MIRROR SHIELD',icon:'🪞',rarity:'epic',desc:'Reflect 15% of all dmg taken as bullets',apply:p=>p._mirrorShield=true},
-  {wtype:'any',id:'new_haste',name:'WAR DRUMS',icon:'🥁',rarity:'rare',desc:'+10% ATK speed & +10% move speed permanently',apply:p=>{p.speed*=1.10;p.fireRate=Math.max(100,p.fireRate*.90);}},
+  {wtype:'any',id:'new_haste',name:'WAR DRUMS',icon:'🥁',rarity:'rare',desc:'+10% attack speed and +10% move speed — permanently.',apply:p=>{p.speed*=1.10;p.fireRate=Math.max(100,p.fireRate*.90);}},
   {wtype:'any',id:'new_regen2',name:'MEDKIT',icon:'🩺',rarity:'common',desc:'Restore 30 HP immediately',apply:p=>p.hp=Math.min(p.maxHp,p.hp+30)},
-  {wtype:'any',id:'new_glass',name:'GLASS CANNON',icon:'💎',rarity:'epic',desc:'+40% DMG but -25 Max HP',apply:p=>{p.damage*=1.4;p.maxHp=Math.max(20,p.maxHp-25);p.hp=Math.min(p.hp,p.maxHp);}},
+  {wtype:'any',id:'new_glass',name:'GLASS CANNON',icon:'💎',rarity:'epic',desc:'+40% Damage but -25 Max HP. High risk, high reward.',apply:p=>{p.damage*=1.4;p.maxHp=Math.max(20,p.maxHp-25);p.hp=Math.min(p.hp,p.maxHp);}},
   // ── NEW ITEMS — RANGED ONLY ──────────────────────────────────────
-  {wtype:'ranged',id:'new_ricochet',name:'RICOCHET',icon:'↩️',rarity:'epic',desc:'Bullets bounce to 1 extra enemy on miss',apply:p=>p._ricochet=true},
-  {wtype:'ranged',id:'new_incendiary',name:'INCENDIARY',icon:'🔥',rarity:'rare',desc:'25% chance bullets ignite enemies (DoT)',apply:p=>p._incendiaryBullets=true},
-  {wtype:'ranged',id:'new_icebullet',name:'CRYO ROUNDS',icon:'❄️',rarity:'rare',desc:'Bullets slow enemies on hit',apply:p=>p._cryoRounds=true},
-  {wtype:'ranged',id:'new_seekers',name:'SEEKER ROUNDS',icon:'🎯',rarity:'epic',desc:'Bullets curve toward nearest enemy',apply:p=>p._seekerBullets=true},
+  // new_ricochet merged into main ricochet item
+  {wtype:'ranged',id:'new_incendiary',name:'INCENDIARY',icon:'🔥',rarity:'rare',desc:'25% chance bullets ignite enemies — burning DoT for 3 seconds.',apply:p=>p._incendiaryBullets=true},
+  {wtype:'ranged',id:'new_icebullet',name:'CRYO ROUNDS',icon:'❄️',rarity:'rare',desc:'40% chance bullets slow enemies to 40% speed for 1 second.',apply:p=>p._cryoRounds=true},
+  {wtype:'ranged',id:'new_seekers',name:'SEEKER ROUNDS',icon:'🎯',rarity:'epic',desc:'Bullets home toward the nearest enemy.',apply:p=>p._seekerBullets=true},
   // ── NEW ITEMS — MELEE ONLY ───────────────────────────────────────
-  {wtype:'melee',id:'new_executioner',name:'EXECUTIONER',icon:'🪓',rarity:'epic',desc:'+50% DMG vs enemies below 25% HP',apply:p=>p._executioner=true},
-  {wtype:'melee',id:'new_counter',name:'COUNTER STRIKE',icon:'🛡️',rarity:'rare',desc:'Taking damage grants +20% DMG for 2s',apply:p=>p._counterStrike=true},
+  {wtype:'melee',id:'new_executioner',name:'EXECUTIONER',icon:'🪓',rarity:'epic',desc:'+50% damage to enemies below 25% HP — finish them!',apply:p=>p._executioner=true},
+  {wtype:'melee',id:'new_counter',name:'COUNTER STRIKE',icon:'🛡️',rarity:'rare',desc:'Taking damage grants +20% damage for 2 seconds.',apply:p=>p._counterStrike=true},
   // ── NEW ITEMS — ANY ─────────────────────────────────────────────
-  {wtype:'any',id:'glass_cannon',name:'GLASS CANNON',icon:'💎',rarity:'epic',desc:'-30% Max HP, +60% Damage',apply:p=>{p.maxHp=Math.max(20,Math.floor(p.maxHp*0.7));p.hp=Math.min(p.hp,p.maxHp);p.damage=Math.floor(p.damage*1.6);}},
-  {wtype:'any',id:'soul_link',name:'SOUL LINK',icon:'👻',rarity:'rare',desc:'Kills heal 3 HP. Stacks with Vampiric.',apply:p=>p._soulLink=true},
-  {wtype:'any',id:'overclock',name:'OVERCLOCK',icon:'⚙️',rarity:'epic',desc:'+25% Attack Speed, +25% Move Speed, -15% Max HP',apply:p=>{p._firStacks=(p._firStacks||0)+1;p.fireRate=Math.max(100,p.fireRate*0.75);p.speed*=1.25;p.maxHp=Math.max(20,Math.floor(p.maxHp*0.85));p.hp=Math.min(p.hp,p.maxHp);}},
-  {wtype:'any',id:'undying_will',name:'UNDYING WILL',icon:'🔥',rarity:'epic',desc:'Once per run: survive a killing blow at 40% HP',apply:p=>p._phoenix=true},
-  {wtype:'any',id:'life_leech',name:'LIFE LEECH',icon:'🩸',rarity:'rare',desc:'Heal 2% of damage dealt as HP',apply:p=>p._lifeLeech=true},
-  {wtype:'any',id:'berserker_charm',name:'BERSERK CHARM',icon:'😡',rarity:'rare',desc:'+15% DMG when below 40% HP',apply:p=>p._berserkerCharm=true},
-  {wtype:'any',id:'lucky_clover',name:'LUCKY CLOVER',icon:'🍀',rarity:'epic',desc:'Next level-up shows 5 choices instead of 3',apply:p=>p._luckyClover=(p._luckyClover||0)+1},
-  {wtype:'any',id:'momentum',name:'MOMENTUM',icon:'💨',rarity:'rare',desc:'Your speed also boosts damage (+5 DMG per 1 SPD above 2)',apply:p=>p._momentum=true},
-  {wtype:'any',id:'mirror_shield',name:'MIRROR SHIELD',icon:'🪞',rarity:'rare',desc:'40% chance to reflect contact damage back as bullets',apply:p=>p._mirrorShield=true},
-  {wtype:'ranged',id:'ricochet',name:'RICOCHET',icon:'🎱',rarity:'epic',desc:'Bullets bounce once off arena walls',apply:p=>p._ricochet=true},
+  // glass_cannon deduped (see new_glass)
+  {wtype:'any',id:'soul_link',name:'SOUL LINK',icon:'👻',rarity:'rare',desc:'Gain +3 HP on every kill. Stacks with Vampiric.',apply:p=>p._soulLink=true},
+  {wtype:'any',id:'overclock',name:'OVERCLOCK',icon:'⚙️',rarity:'epic',desc:'+25% Attack Speed, +25% Move Speed — costs 15% Max HP.',apply:p=>{p._firStacks=(p._firStacks||0)+1;p.fireRate=Math.max(100,p.fireRate*0.75);p.speed*=1.25;p.maxHp=Math.max(20,Math.floor(p.maxHp*0.85));p.hp=Math.min(p.hp,p.maxHp);}},
+  {wtype:'any',id:'undying_will',name:'UNDYING WILL',icon:'🔥',rarity:'epic',desc:'Survive a killing blow at 40% HP. Activates once.',apply:p=>p._phoenix=true},
+  {wtype:'any',id:'life_leech',name:'LIFE LEECH',icon:'🩸',rarity:'rare',desc:'Heal 3% of max HP on every kill.',apply:p=>p._lifeLeech=true},
+  // berserker_charm deduped (see new_berserker_charm)
+  {wtype:'any',id:'lucky_clover',name:'LUCKY CLOVER',icon:'🍀',rarity:'epic',desc:'Next level-up shows 5 upgrade choices instead of 3.',apply:p=>p._luckyClover=(p._luckyClover||0)+1},
+  {wtype:'any',id:'momentum',name:'MOMENTUM',icon:'💨',rarity:'rare',desc:'+5 damage for every 1 speed above 2.0.',apply:p=>p._momentum=true},
+  {wtype:'any',id:'mirror_shield',name:'MIRROR SHIELD',icon:'🪞',rarity:'rare',desc:'40% chance to reflect contact damage back as a bullet.',apply:p=>p._mirrorShield=true},
+  {wtype:'ranged',id:'ricochet',name:'RICOCHET',icon:'🎱',rarity:'epic',desc:'Bullets bounce to a nearby enemy after hitting.',apply:p=>p._ricochet=true},
+  {wtype:'ranged',id:'gatling',name:'GATLING',icon:'🔩',rarity:'rare',desc:'-20% fire delay. Stacks well.',apply:p=>{p._firStacks=(p._firStacks||0)+1;p.fireRate=Math.max(80,Math.round(p.fireRate*0.80));}},
 ];
 
 function buildUpgradePool(){
@@ -1244,25 +1398,23 @@ function getUpgradeChoices(pool,count=3){
 //  ENEMIES — HARDER SCALING
 // ═══════════════════════════════════════════════════════════════════
 const ENEMY_TYPES=[
-  {name:'GRUNT',   color:'#ff4455',r:10,speed:1.5, hp:44, dmgPs:20,xp:3, gold:1,shape:'circle'},
-  {name:'RUNNER',  color:'#ff9900',r:8, speed:2.5, hp:38, dmgPs:17,xp:2, gold:1,shape:'circle'},
-  {name:'TANK',    color:'#cc2200',r:19,speed:0.95,hp:200,dmgPs:28,xp:8, gold:3,shape:'circle'},
-  {name:'SPEEDER', color:'#ffdd00',r:8, speed:3.1, hp:48, dmgPs:21,xp:4, gold:2,shape:'diamond'},
-  {name:'BRUTE',   color:'#cc00ff',r:22,speed:0.95,hp:320,dmgPs:33,xp:12,gold:5,shape:'circle'},
-  {name:'GHOST',   color:'#88aaff',r:11,speed:2.5, hp:55, dmgPs:21,xp:5, gold:2,shape:'circle',alpha:.6},
-  {name:'EXPLODER',color:'#ff6600',r:12,speed:2.2, hp:65, dmgPs:0, xp:6, gold:2,shape:'circle',explodes:true},
-  {name:'SHIELDER',color:'#00ccff',r:13,speed:1.5, hp:100,dmgPs:23,xp:7, gold:3,shape:'circle',shielded:true},
-  {name:'SPLITTER',color:'#aa44ff',r:14,speed:1.7, hp:115,dmgPs:18,xp:8, gold:3,shape:'circle',splits:true},
-  {name:'SNIPER',  color:'#ff4488',r:9, speed:0.6, hp:45, dmgPs:0, xp:6, gold:2,shape:'circle',shoots:true,shootCooldown:1.6},
-  {name:'HEALER',  color:'#00ff88',r:11,speed:1.4, hp:80, dmgPs:16,xp:7, gold:3,shape:'circle',healer:true,healTimer:2.5,healCooldown:2.5,healRange:90},
-  {name:'BERSERKER',color:'#ff2200',r:16,speed:1.2,hp:160,dmgPs:38,xp:10,gold:4,shape:'circle',enrages:true},
-  {name:'NECROMANCER',color:'#8800aa',r:12,speed:1.0,hp:95,dmgPs:13,xp:11,gold:5,shape:'circle',necro:true,necroTimer:5,necroCooldown:5},
-  {name:'MIMIC',    color:'#ffd700',r:16,speed:1.8, hp:130,dmgPs:31,xp:14,gold:8,shape:'circle',isMimic:true},
-  // NEW ENEMIES (indices 14-17)
-  {name:'VAMPIRE',  color:'#cc00cc',r:11,speed:2.0,hp:90, dmgPs:25,xp:10,gold:4,shape:'circle',isVampire:true},
-  {name:'BOMBER',   color:'#ff8800',r:13,speed:1.6,hp:75, dmgPs:0, xp:8, gold:3,shape:'circle',isBomber:true},
-  {name:'TELEPORTER',color:'#00ffcc',r:10,speed:1.8,hp:70,dmgPs:23,xp:9,gold:4,shape:'diamond',isTeleporter:true},
-  {name:'JUGGERNAUT',color:'#8b0000',r:26,speed:0.7,hp:450,dmgPs:44,xp:18,gold:8,shape:'circle',isJuggernaut:true},
+  {name:'GRUNT',   color:'#ff4455',r:10,speed:1.3, hp:55, dmgPs:20,xp:3, gold:1,shape:'circle'},
+  {name:'RUNNER',  color:'#ff9900',r:8, speed:1.85, hp:48, dmgPs:17,xp:2, gold:1,shape:'circle'},
+  {name:'TANK',    color:'#cc2200',r:19,speed:0.8, hp:260,dmgPs:28,xp:8, gold:3,shape:'circle'},
+  {name:'SPEEDER', color:'#ffdd00',r:8, speed:2.6, hp:58, dmgPs:21,xp:4, gold:2,shape:'diamond'},
+  {name:'BRUTE',   color:'#cc00ff',r:22,speed:0.8, hp:400,dmgPs:33,xp:12,gold:5,shape:'circle'},
+  {name:'GHOST',   color:'#88aaff',r:11,speed:1.9, hp:70, dmgPs:21,xp:5, gold:2,shape:'circle',alpha:.6},
+  {name:'EXPLODER',color:'#ff6600',r:12,speed:1.5, hp:80, dmgPs:0, xp:6, gold:2,shape:'circle',explodes:true},
+  {name:'SHIELDER',color:'#00ccff',r:13,speed:1.3, hp:130,dmgPs:23,xp:7, gold:3,shape:'circle',shielded:true},
+  {name:'SPLITTER',color:'#aa44ff',r:14,speed:1.4, hp:145,dmgPs:18,xp:8, gold:3,shape:'circle',splits:true},
+  {name:'SNIPER',  color:'#ff4488',r:9, speed:0.5, hp:58, dmgPs:0, xp:6, gold:2,shape:'circle',shoots:true,shootCooldown:1.6},
+  {name:'HEALER',  color:'#00ff88',r:11,speed:1.2, hp:100,dmgPs:16,xp:7, gold:3,shape:'circle',healer:true,healTimer:2.5,healCooldown:2.5,healRange:90},
+  {name:'BERSERKER',color:'#ff2200',r:16,speed:1.0,hp:200,dmgPs:38,xp:10,gold:4,shape:'circle',enrages:true},
+  {name:'NECROMANCER',color:'#8800aa',r:12,speed:0.85,hp:120,dmgPs:13,xp:11,gold:5,shape:'circle',necro:true,necroTimer:5,necroCooldown:5},
+  // NEW ENEMIES (indices 13-15) — Mimic & Vampire removed
+  {name:'BOMBER',   color:'#ff8800',r:13,speed:1.3,hp:95, dmgPs:0, xp:8, gold:3,shape:'circle',isBomber:true},
+  {name:'TELEPORTER',color:'#00ffcc',r:10,speed:1.5,hp:88,dmgPs:23,xp:9,gold:4,shape:'diamond',isTeleporter:true},
+  {name:'JUGGERNAUT',color:'#8b0000',r:26,speed:0.6,hp:560,dmgPs:44,xp:18,gold:8,shape:'circle',isJuggernaut:true},
 ];
 
 // BOSSES — much more HP, faster projectiles, more aggressive
@@ -1304,17 +1456,16 @@ function spawnEnemy(s){
   if(w>=5)pool.push(4,5);if(w>=6)pool.push(10);if(w>=7)pool.push(8,9);
   if(w>=8)pool.push(11);  // Berserker
   if(w>=9)pool.push(4,4,5);if(w>=10)pool.push(12); // Necromancer
-  if(w>=11)pool.push(10,10);if(w>=12)pool.push(6,8,9,13); // Mimic
-  if(w>=6)pool.push(14);  // Vampire — wave 6+
-  if(w>=7)pool.push(15);  // Bomber — wave 7+
-  if(w>=9)pool.push(16);  // Teleporter — wave 9+
-  if(w>=11)pool.push(17,14,15); // Juggernaut — wave 11+
+  if(w>=11)pool.push(10,10);if(w>=12)pool.push(6,8,9);
+  if(w>=7)pool.push(13);  // Bomber — wave 7+
+  if(w>=9)pool.push(14);  // Teleporter — wave 9+
+  if(w>=11)pool.push(15,13,14); // Juggernaut — wave 11+
   const t=ENEMY_TYPES[pool[Math.floor(Math.random()*pool.length)]];
   const pos=getEdgePos();
-  const hpScale=1+(w-1)*.45;
-  const spdScale=1+(w-1)*.14;
+  const hpScale=1+(w-1)*.35;
+  const spdScale=1+(w-1)*.015;
   const e={x:pos.x,y:pos.y,r:t.r,hp:t.hp*hpScale,maxHp:t.hp*hpScale,speed:t.speed*spdScale,
-    dmgPs:t.dmgPs*(1+(w-1)*.10),
+    dmgPs:t.dmgPs*(1+(w-1)*.06),
     xp:t.xp,gold:t.gold,color:t.color,name:t.name,shape:t.shape||'circle',
     alpha:t.alpha||1,hitFlash:0,isBoss:false};
   if(t.explodes)e.explodes=true;if(t.splits)e.splits=true;
@@ -1323,8 +1474,6 @@ function spawnEnemy(s){
   if(t.healer){e.healer=true;e.healTimer=t.healTimer;e.healCooldown=t.healCooldown;e.healRange=t.healRange;}
   if(t.enrages){e.enrages=true;e._enraged=false;}
   if(t.necro){e.necro=true;e.necroTimer=t.necroTimer;e.necroCooldown=t.necroCooldown;}
-  if(t.isMimic){e.isMimic=true;e._mimicRevealed=false;}
-  if(t.isVampire){e.isVampire=true;e._healTimer=0;}
   if(t.isBomber){e.isBomber=true;e._fuseTimer=2.5+Math.random()*2;}
   if(t.isTeleporter){e.isTeleporter=true;e._teleportTimer=2.5+Math.random()*2;}
   if(t.isJuggernaut){e.isJuggernaut=true;e._chargeTimer=3.5;e._charging=false;}
@@ -1366,6 +1515,7 @@ function gameLoop(ts){
 function update(dt){
   const s=state,p=s.player;
   s.totalTime+=dt;
+  s._achTimer=(s._achTimer||0)+dt;if(s._achTimer>1.0){s._achTimer=0;checkAchievements(s);}
 
   // Wave timer
   s.waveTimer-=dt;updateTimerHUD();
@@ -1373,12 +1523,15 @@ function update(dt){
   if(s.waveTimer<=0){
     s.wave++;
     s.waveTimer=Math.min(55, 18+s.wave*1.8);
-    s.spawnRate=Math.max(.10,1.4-(s.wave-1)*.10);
+    s.spawnRate=Math.max(.30,1.4-(s.wave-1)*.06);
     s.bossSpawned=false;
-    if(s.wave%15===0)triggerWin(); // milestone banner every 15 waves
+    s._waveStartDamageTaken=s.totalDamageTaken; // track for untouched achievement
+    if(s.wave%15===0)triggerWin();
     if(s.wave%5!==0)announceWave(`WAVE ${s.wave}`);
     updateWaveHUD();
   }
+  // Check untouched wave
+  if(s._waveStartDamageTaken!==undefined&&s.totalDamageTaken===s._waveStartDamageTaken&&s.enemies.length===0&&s.wave>1){s._untouchedWave=true;}
 
   // Spawn enemies
   if(!(s.wave%5===0&&s.bossAlive)){
@@ -1450,6 +1603,33 @@ function update(dt){
   if(p._alchemyBoost){p._alchemyTimer-=dt;if(p._alchemyTimer<=0){p._alchemyBoost=1;delete p._alchemyTimer;}}
   if(p._reaperHarvest){p._reaperTimer-=dt;if(p._reaperTimer<=0){p._reaperHarvest=false;}}
   if(p._counterActive){p._counterTimer-=dt;if(p._counterTimer<=0){p._counterActive=false;}}
+  if(p._overdriveActive){
+    p._overdriveTimer-=dt;
+    if(p._overdriveTimer<=0){p._overdriveActive=false;p._minigunShots=0;} // reset ramp on expiry
+  }
+  // Minigunner: decay ramp-up when not shooting for 0.4s
+  if(p._charId==='minigunner'&&!p._overdriveActive){
+    p._minigunIdleTimer=(p._minigunIdleTimer||0)+dt;
+    if(p._minigunIdleTimer>0.4){p._minigunShots=0;}
+  }
+  if(p._bloodSurgeActive){
+    p._bloodSurgeTimer-=dt;
+    if(p._bloodSurgeTimer<=0){
+      p._bloodSurgeActive=false;
+      const rv=document.getElementById('rage-vignette');if(rv)rv.classList.remove('active');
+    }
+  }
+  // Minigunner ramp HUD
+  if(p._charId==='minigunner'){
+    const rd=document.getElementById('minigun-ramp');
+    const rf=document.getElementById('minigun-ramp-fill');
+    if(rd){rd.style.opacity=p._overdriveActive?'1':(p._minigunShots>0?'1':'0');}
+    if(rf){
+      const pct=p._overdriveActive?100:Math.min(100,((p._minigunShots||0)/8)*100);
+      rf.style.width=pct+'%';
+      rf.style.background=p._overdriveActive?'#ffee00':'#ff8800';
+    }
+  }
   // Adrenaline: scale dmg with wave
   if(p._adrenaline){p._adrenalineBonus=1+(s.wave-1)*0.05;}
 
@@ -1475,7 +1655,7 @@ function update(dt){
   if(p._charId==='reaper'){
     const soulKills=p.kills;
     const prevMeter=p._soulMeterPrev||0;
-    if(Math.floor(soulKills/5)>Math.floor(prevMeter/5)){
+    if(Math.floor(soulKills/8)>Math.floor(prevMeter/8)){
       // Mini harvest
       const r=90;let hits=0;
       for(const e of s.enemies){
@@ -1524,7 +1704,8 @@ function update(dt){
   }
 
   // Regen
-  if(p._regen>0){p._regenAcc+=dt;if(p._regenAcc>=1){p.hp=Math.min(p.maxHp,p.hp+p._regen);p._regenAcc=0;updateHpHUD();}}
+  if(p._regen>0){p._regenAcc+=dt;if(p._regenAcc>=1){p.hp=Math.min(p.maxHp,p.hp+p._regen);p._regenAcc=0;updateHpHUD();
+    state.floatTexts.push({x:p.x+(Math.random()-.5)*18,y:p.y-22,text:`+${Math.ceil(p._regen)}`,color:'#00ff88',life:0.65,scale:0.8});}}
 
   // ── DANGER VIGNETTE — flashes red border when HP < 25% ─────────
   const dangerEl=document.getElementById('danger-vignette');
@@ -1535,6 +1716,9 @@ function update(dt){
     s._waveClearedShown=true;
     const wcel=document.getElementById('wave-cleared');
     if(wcel){wcel.textContent=`✓ WAVE ${s.wave} CLEARED!`;wcel.classList.remove('show');void wcel.offsetWidth;wcel.classList.add('show');}
+    // Early clear bonus: +gold proportional to time remaining
+    const earlyBonus=Math.floor(s.waveTimer*0.4);
+    if(earlyBonus>0){s.player.gold+=earlyBonus;addFloat(s.player.x,s.player.y-30,`+${earlyBonus}💰 EARLY CLEAR!`,'#ffd700');updateKillsHUD();}
     setTimeout(()=>{if(wcel)wcel.classList.remove('show');},2400);
   }
   if(s.enemies.length>0)s._waveClearedShown=false;
@@ -1560,11 +1744,8 @@ function update(dt){
   // Bullets move
   for(let i=s.bullets.length-1;i>=0;i--){
     const b=s.bullets[i];b.x+=b.vx*60*dt;b.y+=b.vy*60*dt;b.life-=dt;
-    // Ricochet: bounce once off walls
-    if(p._ricochet&&!b.isTurret&&!b._bounced){
-      if(b.x<0||b.x>W){b.vx*=-1;b.x=Math.max(0,Math.min(W,b.x));b._bounced=true;}
-      if(b.y<0||b.y>H){b.vy*=-1;b.y=Math.max(0,Math.min(H,b.y));b._bounced=true;}
-    }
+    // Ricochet: after hitting an enemy, seek nearest other enemy
+    // (handled in bullet-hit section via b._ricochetDone flag)
     if(b.life<=0||b.x<-40||b.x>W+40||b.y<-40||b.y>H+40)s.bullets.splice(i,1);
   }
 
@@ -1578,7 +1759,7 @@ function update(dt){
       if(s.combo>1){s.combo=1;s.comboTimer=0;updateComboHUD();addFloat(p.x,p.y-20,'COMBO LOST!','#ff2d55');}
       updateHpHUD();spawnParticles(s,p.x,p.y,'#ff2d55',5);
       triggerDamageFlash();triggerShake(3);
-      if(p.hp<=0){triggerGameOver();return;}
+      if(p.hp<=0){triggerGameOver('BOSS PROJECTILE');return;}
     }
   }
 
@@ -1605,7 +1786,7 @@ function update(dt){
         t.shootTimer=t.shootCooldown;
         let near=null,nd=Infinity;
         for(const e of s.enemies){const d=Math.hypot(e.x-t.x,e.y-t.y);if(d<nd){near=e;nd=d;}}
-        if(near){const ang=Math.atan2(near.y-t.y,near.x-t.x);s.bullets.push({x:t.x,y:t.y,vx:Math.cos(ang)*6.5,vy:Math.sin(ang)*6.5,r:5,dmg:p.damage*.55,pierce:0,life:1.5,isTurret:true});}
+        if(near){const ang=Math.atan2(near.y-t.y,near.x-t.x);const td=t._ownerDmg||p.damage;const tp=t._ownerPierce||0;const ts=t._ownerBulletSize||5;s.bullets.push({x:t.x,y:t.y,vx:Math.cos(ang)*6.5,vy:Math.sin(ang)*6.5,r:ts,dmg:td*0.65,pierce:tp,life:1.5,isTurret:true});}
       }
     }
   }
@@ -1664,7 +1845,7 @@ function update(dt){
           if(pl.latchedEnemies.length>=3)break;
           pl.latchedEnemies.push(near);
           if(!near._frozenSpeed)near._frozenSpeed=near.speed;
-          near.speed=Math.min(near.speed,near._frozenSpeed*0.35);
+          near.speed=Math.min(near.speed,near._frozenSpeed*0.20);
           near._leeched=true;
           spawnParticles(s,near.x,near.y,'#44ff66',8);
           addFloat(near.x,near.y,'LEECHED!','#44ff66');
@@ -1696,6 +1877,7 @@ function update(dt){
     const e=s.enemies[i];
     e.hitFlash=Math.max(0,e.hitFlash-dt*8);
     if(e._frozen){e._frozenTimer-=dt;if(e._frozenTimer<=0){e._frozen=false;if(e._frozenSpeed){e.speed=e._frozenSpeed;delete e._frozenSpeed;}}}
+    if(e._stunned){e._stunTimer-=dt;if(e._stunTimer<=0){e._stunned=false;if(e._frozenSpeed){e.speed=e._frozenSpeed;delete e._frozenSpeed;}}}
     // Bleed DoT
     if(e._bleeding){e._bleedTimer-=dt;e.hp-=e._bleedDmg*dt;s.totalDamageDealt+=e._bleedDmg*dt;if(e._bleedTimer<=0)e._bleeding=false;}
     // Fire DoT
@@ -1740,36 +1922,12 @@ function update(dt){
         }
       }
     }
-    // MIMIC: disguised as a chest, reveals when player gets close
-    if(e.isMimic&&!e._mimicRevealed){
-      if(Math.hypot(p.x-e.x,p.y-e.y)<120){
-        e._mimicRevealed=true;
-        spawnParticles(s,e.x,e.y,'#ffd700',20);addFloat(e.x,e.y,'IT\'S A MIMIC!','#ff4400');
-        triggerShake(4);
-      }else{
-        // Stay still while disguised - just bob
-        e._mimicBob=(e._mimicBob||0)+dt*3;
-        continue; // don't move toward player
-      }
-    }
-    // VAMPIRE: heals from hitting the player and steals HP
-    if(e.isVampire){
-      e._healTimer-=dt;
-      if(e._healTimer<=0){
-        e._healTimer=4.0;
-        // Self-heal if near player
-        if(Math.hypot(p.x-e.x,p.y-e.y)<60){
-          const steal=e.maxHp*0.06;e.hp=Math.min(e.maxHp,e.hp+steal);
-          spawnParticles(s,e.x,e.y,'#cc00cc',8);addFloat(e.x,e.y,'DRAIN!','#cc00cc');
-        }
-      }
-    }
     // BOMBER: counts down a fuse then detonates in a large explosion
     if(e.isBomber){
       e._fuseTimer-=dt;
       if(e._fuseTimer<=0){
         // Detonate
-        explodeAt(s,e.x,e.y,70,e.dmgPs*2.5);
+        explodeAt(s,e.x,e.y,70,e.dmgPs*1.5);
         spawnParticles(s,e.x,e.y,'#ff8800',30);spawnParticles(s,e.x,e.y,'#ffff00',20);
         abilityRing(s,e.x,e.y,'#ff6600',70,.35);
         addFloat(e.x,e.y,'BOOM!','#ff8800');triggerShake(5);
@@ -1838,7 +1996,7 @@ function update(dt){
     for(let j=s.bullets.length-1;j>=0;j--){
       const b=s.bullets[j];
       if(Math.hypot(e.x-b.x,e.y-b.y)<e.r+b.r){
-        if(e.shielded&&e.shieldHp>0){e.shieldHp-=b.dmg;e.hitFlash=.5;if(e.shieldHp<=0){e.shielded=false;addFloat(e.x,e.y,'SHIELD BROKEN','#00ccff');}if(b.pierce<=0)s.bullets.splice(j,1);else b.pierce--;continue;}
+        if(e.shielded&&e.shieldHp>0){e.shieldHp-=b.dmg;e.hitFlash=.5;if(e.shieldHp<=0){e.shielded=false;addFloat(e.x,e.y,'SHIELD BROKEN','#00ccff');}b.pierce--;if(b.pierce<0)s.bullets.splice(j,1);continue;}
         if(b.isAoEOrb){
           explodeAt(s,b.x,b.y,b.aoeR||40,b.dmg*1.1);
           spawnParticles(s,b.x,b.y,'#cc44ff',12);
@@ -1859,12 +2017,31 @@ function update(dt){
           spawnParticles(s,e.x,e.y,'#88ff00',8);
         }
         // (vine rooting removed)
-        spawnParticles(s,e.x,e.y,e.color,3);addFloat(e.x,e.y,`-${Math.floor(b.dmg)}`,'#ffd700');
+        spawnParticles(s,e.x,e.y,e.color,3);
+        const fdmg=Math.floor(b.dmg);
+        const fcol=fdmg>=80?'#ff4444':fdmg>=40?'#ff8800':'#ffd700';
+        const fsize=fdmg>=80?1.4:fdmg>=40?1.15:1.0;
+        state.floatTexts.push({x:e.x,y:e.y-10,text:`-${fdmg}`,color:fcol,life:1.0,scale:fsize});
         if(p._explosiveBullets)explodeAt(s,e.x,e.y,40,p.damage*.6);
         if(p._chainLightning&&!b.isTurret&&Math.random()<.25){
           for(const ce of s.enemies){if(ce!==e&&Math.hypot(ce.x-e.x,ce.y-e.y)<80){ce.hp-=b.dmg*.4;ce.hitFlash=.7;spawnParticles(s,ce.x,ce.y,'#00d4ff',4);break;}}
         }
-        if(b.pierce<=0)s.bullets.splice(j,1);else b.pierce--;
+        if(p._ricochet&&!b.isTurret&&!b._ricochetDone){
+          // Find nearest enemy that isn't this one
+          let rb=null,rd=Infinity;
+          for(const re of s.enemies){if(re!==e&&!re.isBoss){const rdd=Math.hypot(re.x-b.x,re.y-b.y);if(rdd<rd&&rdd<200){rb=re;rd=rdd;}}}
+          if(rb&&b.pierce<0){// bullet just died, resurrect it as ricochet
+            b.life=1.0;b._ricochetDone=true;b.pierce=0;
+            const ra=Math.atan2(rb.y-b.y,rb.x-b.x);
+            const sp=Math.hypot(b.vx,b.vy)||5;
+            b.vx=Math.cos(ra)*sp;b.vy=Math.sin(ra)*sp;
+            spawnParticles(s,b.x,b.y,'#ffd700',4);
+            // remove from splice list (undo the pierce-killed splice)
+            // Re-insert bullet if it was just removed
+            if(s.bullets.indexOf(b)<0){s.bullets.push(b);}
+          }
+        }
+        b.pierce--;if(b.pierce<0)s.bullets.splice(j,1);
         if(e.hp<=0){dead=true;break;}
       }
     }
@@ -1904,18 +2081,18 @@ function update(dt){
       if(s.combo>1){s.combo=1;s.comboTimer=0;updateComboHUD();addFloat(p.x,p.y-20,'COMBO LOST!','#ff2d55');}
       // Phoenix check
       if(p.hp<=0&&p._phoenix&&!p._phoenixUsed){
-        p._phoenixUsed=true;p._phoenix=false;p.hp=Math.floor(p.maxHp*0.4);
+        p._phoenixUsed=true;p._phoenix=false;p._phoenixCharges=(p._phoenixCharges||1)-1;p.hp=Math.floor(p.maxHp*0.4);p._phoenixEver=true;
         addFloat(p.x,p.y,'PHOENIX REVIVE!','#ff8800');spawnParticles(s,p.x,p.y,'#ff8800',50);
         p.immune=2.0;updateHpHUD();continue;
       }
       updateHpHUD();spawnParticles(s,p.x,p.y,'#ff2d55',5);
       triggerDamageFlash();
-      if(p.hp<=0){triggerGameOver();return;}
+      if(p.hp<=0){triggerGameOver("BOSS PROJECTILE");return;}
     }
     if(e.explodes&&Math.hypot(p.x-e.x,p.y-e.y)<e.r+p.r+22){
-      if(!p._cloaked&&!p._barrier){explodeAt(s,e.x,e.y,85,55);p.hp-=55;updateHpHUD();triggerShake(6);}
+      if(!p._cloaked&&!p._barrier){explodeAt(s,e.x,e.y,85,35);p.hp-=35;updateHpHUD();triggerShake(6);}
       spawnParticles(s,e.x,e.y,'#ff6600',24);s.enemies.splice(i,1);
-      if(p.hp<=0){triggerGameOver();return;}continue;
+      if(p.hp<=0){triggerGameOver(e.name);return;}continue;
     }
   }
   if(p.immune>0)p.immune-=dt;
@@ -2147,7 +2324,7 @@ function updateBossAI(s,e,dt){
         const ang=i/3*Math.PI*2;const dist=60;
         const t=ENEMY_TYPES[14]; // Vampire
         const hpScale=1+(s.wave-1)*.35;
-        const minion={x:e.x+Math.cos(ang)*dist,y:e.y+Math.sin(ang)*dist,r:t.r,hp:t.hp*hpScale,maxHp:t.hp*hpScale,speed:t.speed*(1+(s.wave-1)*.1),dmgPs:t.dmgPs,xp:2,gold:1,color:t.color,name:'PLAGUE SPAWN',shape:'circle',alpha:1,hitFlash:0,isBoss:false,isVampire:true,_healTimer:2};
+        const minion={x:e.x+Math.cos(ang)*dist,y:e.y+Math.sin(ang)*dist,r:t.r,hp:t.hp*hpScale,maxHp:t.hp*hpScale,speed:t.speed*(1+(s.wave-1)*.1),dmgPs:t.dmgPs,xp:2,gold:1,color:'#aa44ff',name:'PLAGUE SPAWN',shape:'circle',alpha:1,hitFlash:0,isBoss:false};
         s.enemies.push(minion);
       }
       spawnParticles(s,e.x,e.y,'#44ff44',25);addFloat(e.x,e.y,'SUMMONING PLAGUE!','#44ff44');
@@ -2194,6 +2371,45 @@ function updateBossAI(s,e,dt){
     }
   } // end titanworm
   e.x=Math.max(e.r,Math.min(W-e.r,e.x));e.y=Math.max(e.r,Math.min(H-e.r,e.y));
+  // Boss enrage flash at 30% HP
+  if(e.isBoss&&!e._enrageShown&&e.hp/e.maxHp<0.3){
+    e._enrageShown=true;
+    addFloat(e.x,e.y,'⚠ ENRAGED! ⚠',e.color);
+    spawnParticles(state,e.x,e.y,e.color,40);triggerShake(8);
+    const af=document.getElementById('ability-flash');
+    if(af){af.style.background=`${e.color}33`;af.classList.remove('active');void af.offsetWidth;af.classList.add('active');}
+  }
+}
+
+
+function applyMeleeEffects(s,p,e,dmg){
+  if(!e||e.isBoss)return;
+  if(p._meleeBleed&&!e._bleeding){e._bleeding=true;e._bleedTimer=4.0;e._bleedDmg=dmg*0.12;}
+  if(p._meleeStun&&!e._stunned){e._stunned=true;e._stunTimer=0.6;if(!e._frozenSpeed)e._frozenSpeed=e.speed;e.speed=0;spawnParticles(s,e.x,e.y,'#ffff00',6);addFloat(e.x,e.y,'STUNNED!','#ffff00');}
+  if(p._meleeIgnite&&!e._onFire){e._onFire=true;e._fireTimer=3.5;e._fireDmg=dmg*0.14;spawnParticles(s,e.x,e.y,'#ff6600',6);}
+  if(p._meleeChain&&Math.random()<0.4){for(const ce of s.enemies){if(ce!==e&&Math.hypot(ce.x-e.x,ce.y-e.y)<90){const cd=dmg*0.5;ce.hp-=cd;ce.hitFlash=0.7;s.totalDamageDealt+=cd;spawnParticles(s,ce.x,ce.y,'#ffff00',5);if(!s.laserBeams)s.laserBeams=[];s.laserBeams.push({x1:e.x,y1:e.y,x2:ce.x,y2:ce.y,color:'#ffff00',w:2,life:.2,maxLife:.2});break;}}}
+  if(p._executioner&&e.hp/e.maxHp<0.25){const xd=dmg*0.5;e.hp-=xd;s.totalDamageDealt+=xd;}
+}
+
+
+function drawEdgeArrows(s){
+  const p=s.player;
+  const margin=28;
+  const arrowsDrawn=new Set();
+  for(const e of s.enemies){
+    const offX=e.x<0||e.x>W;const offY=e.y<0||e.y>H;
+    if(!offX&&!offY)continue;
+    const ang=Math.atan2(e.y-p.y,e.x-p.x);
+    const ex=Math.max(margin,Math.min(W-margin,p.x+Math.cos(ang)*180));
+    const ey=Math.max(margin,Math.min(H-margin,p.y+Math.sin(ang)*180));
+    const key=`${Math.round(ex/20)}_${Math.round(ey/20)}`;
+    if(arrowsDrawn.has(key))continue;arrowsDrawn.add(key);
+    ctx.save();ctx.translate(ex,ey);ctx.rotate(ang);
+    ctx.globalAlpha=0.7;ctx.fillStyle=e.isBoss?'#ff1493':'#ff6600';
+    ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=8;
+    ctx.beginPath();ctx.moveTo(10,0);ctx.lineTo(-6,-5);ctx.lineTo(-6,5);ctx.closePath();ctx.fill();
+    ctx.restore();ctx.shadowBlur=0;ctx.globalAlpha=1;
+  }
 }
 
 function fireBoss(s,e,p,speed,dmg){
@@ -2209,6 +2425,8 @@ function explodeAt(s,x,y,radius,dmg){
 
 function killEnemy(s,e,idx){
   const p=s.player;p.kills++;
+  // Life leech: 3% max HP on kill (applies to all weapon types)
+  if(p._lifeLeech){const ll=Math.ceil(p.maxHp*0.03);p.hp=Math.min(p.maxHp,p.hp+ll);updateHpHUD();}
   p.gold+=e.gold+(p._goldBonus||0);
   s.combo=Math.min(s.combo+1,10);
   s.comboTimer=s.comboMaxTime;
@@ -2221,7 +2439,7 @@ function killEnemy(s,e,idx){
     p._rampageActive=true;p._rampageTimer=8.0;s.killStreak=0;
     spawnParticles(s,p.x,p.y,'#ff4500',60);spawnParticles(s,p.x,p.y,'#ffd700',30);
     abilityRing(s,p.x,p.y,'#ff4500',100,.5);abilityRing(s,p.x,p.y,'#ffd700',160,.65);
-    addFloat(p.x,p.y,'🔥 RAMPAGE! 🔥','#ff4500');triggerShake(5);
+    addFloat(p.x,p.y,'🔥 RAMPAGE! 🔥','#ff4500');triggerShake(5);p._rampageEver=true;
   }
   // Release from any leech plant
   if(s.leechPlants){for(const pl of s.leechPlants){if(pl.latchedEnemies)pl.latchedEnemies=pl.latchedEnemies.filter(le=>le!==e);}}
@@ -2239,8 +2457,9 @@ function killEnemy(s,e,idx){
   if(s.combo>=3)addFloat(e.x,e.y-20,`x${s.combo} COMBO!`,'#00ffa3');
   if(e.isBoss){
     s.bossAlive=false;
+    s._bossKills=(s._bossKills||0)+1;
     document.getElementById('boss-bar-wrap').classList.remove('active');
-    s.chests.push({x:e.x,y:e.y,r:16,bob:0});
+    s.chests.push({x:e.x,y:e.y,r:16,bob:0,isMilestone:true});
     spawnParticles(s,e.x,e.y,'#ffd700',60);addFloat(e.x,e.y,'BOSS DOWN! 🎁','#ffd700');
     triggerShake(10);
   }
@@ -2280,7 +2499,7 @@ function addFloat(x,y,text,color){if(state)state.floatTexts.push({x,y:y-10,text,
 function checkLevelUp(s){
   const p=s.player;
   if(p.xp>=p.xpNext){
-    p.xp-=p.xpNext;p.level++;p.xpNext=Math.floor(p.xpNext*1.65);updateLevelHUD();
+    p.xp-=p.xpNext;p.level++;p.xpNext=Math.floor(p.xpNext*1.65);p.maxHp+=3;p.hp=Math.min(p.hp+3,p.maxHp);updateLevelHUD();updateHpHUD();
     const bonus=p._luckyClover>0?2:0;
     if(bonus>0)p._luckyClover--;
     pauseForUpgrade(s,3+bonus,false);
@@ -2496,8 +2715,6 @@ function draw(){
     if(e._enraged){ctx.beginPath();ctx.arc(0,0,e.r+5+Math.sin(state.totalTime*12)*2,0,Math.PI*2);ctx.strokeStyle='#ff0000';ctx.lineWidth=2;ctx.shadowColor='#ff4400';ctx.shadowBlur=16;ctx.stroke();}
     // Necromancer purple aura
     if(e.necro){ctx.beginPath();ctx.arc(0,0,e.r+4,0,Math.PI*2);ctx.strokeStyle='#8800aa';ctx.lineWidth=1.5;ctx.setLineDash([3,5]);ctx.stroke();ctx.setLineDash([]);}
-    // Vampire drain aura
-    if(e.isVampire){ctx.beginPath();ctx.arc(0,0,e.r+3+Math.sin(state.totalTime*4)*2,0,Math.PI*2);ctx.strokeStyle='#cc00cc';ctx.lineWidth=1.5;ctx.shadowColor='#cc00cc';ctx.shadowBlur=8;ctx.stroke();}
     // Bomber fuse indicator (flashing circle)
     if(e.isBomber&&e._fuseTimer!==undefined){
       const fuseRatio=e._fuseTimer/3.5;
@@ -2509,14 +2726,6 @@ function draw(){
     if(e.isTeleporter){ctx.beginPath();ctx.arc(0,0,e.r+2,0,Math.PI*2);ctx.strokeStyle='#00ffcc';ctx.lineWidth=1.5;ctx.setLineDash([2,3]);ctx.stroke();ctx.setLineDash([]);}
     // Juggernaut charge indicator
     if(e.isJuggernaut&&e._charging){ctx.beginPath();ctx.arc(0,0,e.r+8+Math.sin(state.totalTime*20)*4,0,Math.PI*2);ctx.strokeStyle='#ff2200';ctx.lineWidth=3;ctx.shadowColor='#ff2200';ctx.shadowBlur=18;ctx.stroke();}
-    // Mimic disguise: render as chest if not revealed
-    if(e.isMimic&&!e._mimicRevealed){
-      ctx.globalAlpha=1;ctx.shadowBlur=0;
-      ctx.fillStyle='#8b4513';ctx.fillRect(-14,-10,28,20);
-      ctx.fillStyle='#ffd700';ctx.fillRect(-14,-12,28,6);
-      ctx.font='16px serif';ctx.textAlign='center';ctx.fillText('🎁',0,6);
-      ctx.restore();ctx.shadowBlur=0;ctx.globalAlpha=1;continue;
-    }
     if(!e.isBoss&&e.hp<e.maxHp){const bw=e.r*2.4;ctx.fillStyle='#300';ctx.fillRect(-bw/2,-e.r-7,bw,4);ctx.fillStyle='#f33';ctx.fillRect(-bw/2,-e.r-7,bw*(e.hp/e.maxHp),4);}
     if(e.isBoss){ctx.shadowBlur=0;ctx.font='8px "Press Start 2P",monospace';ctx.fillStyle='#fff';ctx.textAlign='center';ctx.fillText(e.name,0,-e.r-26);}
     ctx.shadowBlur=0;
@@ -2615,8 +2824,9 @@ function draw(){
   }
 
   ctx.textAlign='center';
-  for(const f of s.floatTexts){ctx.globalAlpha=Math.max(0,f.life);ctx.font='bold 10px "Press Start 2P",monospace';ctx.fillStyle=f.color;ctx.shadowColor=f.color;ctx.shadowBlur=6;ctx.fillText(f.text,f.x,f.y);}
+  for(const f of s.floatTexts){const fsc=f.scale||1;ctx.globalAlpha=Math.max(0,f.life);ctx.font=`bold ${Math.floor(10*fsc)}px "Press Start 2P",monospace`;ctx.fillStyle=f.color;ctx.shadowColor=f.color;ctx.shadowBlur=6;ctx.fillText(f.text,f.x,f.y);}
   ctx.globalAlpha=1;ctx.shadowBlur=0;ctx.textAlign='left';
+  drawEdgeArrows(s);
   ctx.restore();
 
   // ── MINIMAP ──────────────────────────────────────────────────────
@@ -2660,7 +2870,7 @@ function updateHpHUD(){
 function updateXpHUD(){
   const p=state.player;
   document.getElementById('xp-bar').style.width=(p.xp/p.xpNext*100)+'%';
-  document.getElementById('xp-val').textContent=`${p.xp}/${p.xpNext}`;
+  document.getElementById('xp-val').textContent=`${p.xp}/${p.xpNext} (Lv${p.level})`;
 }
 function updateKillsHUD(){
   document.getElementById('kills-display').textContent=state.player.kills;
@@ -2834,13 +3044,28 @@ function announceWave(msg){
 
 function fmtTime(t){const s=Math.floor(t);return`${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;}
 
-function triggerGameOver(){
+function getHighScore(){try{return JSON.parse(localStorage.getItem('spudgeon_hs')||'{}');}catch(e){return{};}}
+function saveHighScore(wave,kills,level,charName){
+  const hs=getHighScore();
+  let changed=false;
+  if(!hs.wave||wave>hs.wave){hs.wave=wave;hs.waveChar=charName;changed=true;}
+  if(!hs.kills||kills>hs.kills){hs.kills=kills;hs.killsChar=charName;changed=true;}
+  if(!hs.level||level>hs.level){hs.level=level;hs.levelChar=charName;changed=true;}
+  try{localStorage.setItem('spudgeon_hs',JSON.stringify(hs));}catch(e){}
+  return changed;
+}
+function triggerGameOver(killerName){
   state.gameOver=true;
   const p=state.player,t=state.totalTime;
+  const killerRow=killerName?`<div class="stat-row" style="color:#ff4455"><span>💀 KILLED BY</span><span>${killerName}</span></div>`:'';
+  const newBest=saveHighScore(state.wave,p.kills,p.level,state.char.name);
+  const hs=getHighScore();
+  const bRow=newBest?`<div class="stat-row" style="color:#ffd700"><span>🏆 NEW RECORD!</span><span>✨</span></div>`:'';
   document.getElementById('gameover-stats').innerHTML=`
+    ${killerRow}${bRow}
     <div class="stat-row"><span>CHARACTER</span><span>${state.char.icon} ${state.char.name}</span></div>
-    <div class="stat-row"><span>WAVE REACHED</span><span>${state.wave}</span></div>
-    <div class="stat-row"><span>KILLS</span><span>${p.kills}</span></div>
+    <div class="stat-row"><span>WAVE REACHED</span><span>${state.wave}${hs.wave&&state.wave>=hs.wave?' 🏆':''}</span></div>
+    <div class="stat-row"><span>KILLS</span><span>${p.kills}${hs.kills&&p.kills>=hs.kills?' 🏆':''}</span></div>
     <div class="stat-row"><span>LEVEL</span><span>${p.level}</span></div>
     <div class="stat-row"><span>ITEMS</span><span>${state.collectedItems.length}</span></div>
     <div class="stat-row"><span>GOLD</span><span>${p.gold} 💰</span></div>
@@ -2848,6 +3073,11 @@ function triggerGameOver(){
     <div class="stat-row"><span>DAMAGE DEALT</span><span>${Math.floor(state.totalDamageDealt).toLocaleString()}</span></div>
     <div class="stat-row"><span>TIME</span><span>${fmtTime(t)}</span></div>`;
   document.getElementById('boss-bar-wrap').classList.remove('active');
+  // Show unlocked achievements count
+  const unlockedAch=getUnlockedAchievements();
+  const allAch=ACHIEVEMENTS.length;
+  const achEl=document.getElementById('gameover-ach');
+  if(achEl)achEl.textContent=`🏆 ACHIEVEMENTS: ${unlockedAch.length}/${allAch} UNLOCKED`;
   setTimeout(()=>showScreen('gameover-screen'),700);
 }
 
@@ -2868,6 +3098,16 @@ function showScreen(id){
 function showTitle(){
   if(raf){cancelAnimationFrame(raf);raf=null;}
   state=null;
+  // Display highscores on title
+  const hs=getHighScore();
+  const hsel=document.getElementById('title-hs');
+  if(hsel){
+    if(hs.wave){hsel.innerHTML=`🏆 BEST: WAVE ${hs.wave} (${hs.waveChar||'?'}) &nbsp;|&nbsp; ☠ ${hs.kills||0} KILLS &nbsp;|&nbsp; ⚡ LVL ${hs.level||1}`;}
+    else{hsel.innerHTML='— NO HIGH SCORE YET — PLAY TO SET ONE —';}
+  // Show achievement count
+  const achCount=getUnlockedAchievements().length;
+  if(achCount>0&&hsel){hsel.innerHTML+=`<br><span style="color:#ffd700;font-size:9px">🏆 ${achCount}/${ACHIEVEMENTS.length} ACHIEVEMENTS UNLOCKED</span>`;}
+  }
   document.getElementById('boss-bar-wrap').classList.remove('active');
   document.getElementById('pause-overlay').classList.remove('active');
   showScreen('title-screen');
