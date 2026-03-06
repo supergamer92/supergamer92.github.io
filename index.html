@@ -1041,8 +1041,8 @@ const CHARACTERS=[
         x:p.x, y:p.y,
         r:18,           // detection radius for enemies
         life:12, maxLife:12,
-        dmgPs:Math.max(p.damage*1.2, p.maxHp*0.08),  // 8% max HP per second drain
-        leechRange:70,   // how close enemy must be to get grabbed
+        dmgPs:Math.max(p.damage*1.2, p.maxHp*0.12),  // 8% max HP per second drain
+        leechRange:80,   // how close enemy must be to get grabbed
         latchedEnemies:[],   // up to 3 simultaneous targets
         pulse:0,         // animation pulse counter
         feedCount:0,     // how many enemies consumed
@@ -1120,10 +1120,10 @@ const CHARACTERS=[
   {
     id:'vampire_hero', name:'VAMPIRE', icon:'🧛', tag:'MELEE · LIFESTEAL',
     weaponType:'melee',
-    desc:'Melee attacker with 30% lifesteal on every hit. Blood Surge heals you for all damage dealt.',
-    passive:'🩸 LIFESTEAL — Every melee hit heals 30% of damage dealt.',
+    desc:'Melee attacker with 10% lifesteal on every hit. Blood Surge heals you for all damage dealt.',
+    passive:'🩸 LIFESTEAL — Every melee hit heals 10% of damage dealt.',
     abilityName:'BLOOD SURGE', abilityIcon:'❤️‍🔥', abilityCooldown:8,
-    statMods:{speed:0.4,damage:20,fireRate:100,maxHp:-15},
+    statMods:{speed:0.6,damage:30,fireRate:100,maxHp:-15},
     ability(s){
       const p=s.player;
       p._bloodSurgeActive=true;p._bloodSurgeTimer=5.0;
