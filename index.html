@@ -300,7 +300,6 @@ body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monosp
       <div style="font-size:11px;color:var(--text);line-height:1.75;">
         • <span style="color:#ff4455">GRUNT/RUNNER/TANK</span> — standard foes<br>
         • <span style="color:#ff6600">EXPLODER</span> — detonates near you!<br>
-        • <span style="color:#00ff88">HEALER</span> — revives nearby enemies<br>
         • <span style="color:#8800aa">NECROMANCER</span> — restores enemy HP<br>
         • <span style="color:#ff8800">BOMBER</span> — visible fuse, erupts on death<br>
         • <span style="color:#00ffcc">TELEPORTER</span> — blinks behind you<br>
@@ -401,7 +400,7 @@ body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monosp
     <div id="rampage-display">🔥 RAMPAGE!</div>
     <div id="streak-display" style="position:absolute;top:56px;left:10px;font-family:'Press Start 2P',monospace;font-size:7px;color:#ff8800;z-index:20;pointer-events:none;opacity:0;transition:opacity .3s;text-shadow:0 0 8px #ff4400;"></div>
     <div id="minigun-ramp" style="position:absolute;top:75px;left:10px;width:80px;pointer-events:none;opacity:0;transition:opacity .3s;z-index:20;">
-      <div style="font-family:'Press Start 2P',monospace;font-size:6px;color:#ff8800;margin-bottom:2px;">🔩 RAMP UP</div>
+      <div style="font-family:'Press Start 2P',monospace;font-size:6px;color:#ff8800;margin-bottom:2px;">🎯 SUPPRESS</div>
       <div style="height:4px;background:rgba(0,0,0,0.5);border:1px solid #ff8800;width:80px;">
         <div id="minigun-ramp-fill" style="height:100%;background:#ff8800;width:0%;transition:width .1s;"></div>
       </div>
@@ -1071,36 +1070,50 @@ const CHARACTERS=[
     },
   },
   {
-    id:'minigunner', name:'MINIGUNNER', icon:'💥', tag:'HIGH FIRE RATE · GUN',
+    id:'minigunner', name:'MINIGUNNER', icon:'💥', tag:'SUPPRESSION · GUN',
     weaponType:'ranged',
-    desc:'Massive fire rate but bullets spread randomly. Ramp Up: holding fire increases accuracy.',
-    passive:'🔩 RAMP UP — After 8 continuous shots, accuracy improves by 60%.',
-    abilityName:'OVERDRIVE', abilityIcon:'⚡', abilityCooldown:8,
-    statMods:{speed:-0.3,damage:-4,fireRate:-220,maxHp:15},
+    desc:'Fires precise 3-round bursts. Each consecutive hit on the same enemy slows them further. Bullet Storm unleashes a piercing hailstorm.',
+    passive:'🎯 SUPPRESSION — Consecutive hits on the same enemy stack a slow up to 70%. 5 stacks = fully suppressed.',
+    abilityName:'HAILSTORM', abilityIcon:'🌪️', abilityCooldown:6,
+    statMods:{speed:-0.2,damage:2,fireRate:-80,maxHp:20},
     ability(s){
       const p=s.player;
-      p._overdriveActive=true;p._overdriveTimer=4.0;
-      spawnParticles(s,p.x,p.y,'#ff8800',60);spawnParticles(s,p.x,p.y,'#ffffff',20);
-      abilityRing(s,p.x,p.y,'#ff8800',80,.4);
-      flashEl('hammer-flash');triggerShake(5);
-      addFloat(p.x,p.y,'OVERDRIVE!','#ff8800');
+      p._bulletStormActive=true;p._bulletStormTimer=3.0;
+      // Bonus damage from suppression stacks
+      const bonus=1+(p._suppressStacks||0)*0.05;
+      p._bulletStormDmgBonus=bonus;
+      spawnParticles(s,p.x,p.y,'#ff8800',80);spawnParticles(s,p.x,p.y,'#ffff00',30);
+      abilityRing(s,p.x,p.y,'#ff8800',60,.3);abilityRing(s,p.x,p.y,'#ffcc00',110,.45);
+      flashEl('hammer-flash');triggerShake(6);
+      addFloat(p.x,p.y,'HAILSTORM!','#ff8800');
     },
-    color:'#cc4400',pip:[5,2,5,3],
+    color:'#cc4400',pip:[5,3,4,3],
     customShoot(s,dmg){
       const p=s.player;if(!s.enemies.length)return;
       let near=null,nd=Infinity;
       for(const e of s.enemies){const d=Math.hypot(e.x-p.x,e.y-p.y);if(d<nd){near=e;nd=d;}}
       if(!near)return;
-      // Ramp up accuracy after 8 shots
-      p._minigunShots=(p._minigunShots||0)+1;p._minigunIdleTimer=0;
-      const ramped=p._minigunShots>=8||p._overdriveActive;
-      const baseSpread=ramped?0.08:0.45;
       const ang=Math.atan2(near.y-p.y,near.x-p.x);
-      const spread=(p.multishot-1)*.15;
-      for(let i=0;i<Math.max(1,p.multishot);i++){
-        const a=ang+(Math.random()-.5)*baseSpread+(i-(p.multishot-1)/2)*spread;
-        const bDmg=(i===0)?dmg:dmg*(1-MULTISHOT_DMG_PENALTY);
-        s.bullets.push({x:p.x,y:p.y,vx:Math.cos(a)*p.bulletSpeed*1.1,vy:Math.sin(a)*p.bulletSpeed*1.1,r:p.bulletSize-1,dmg:bDmg,pierce:p.piercing,life:1.7});
+
+      // Track suppression target
+      if(p._suppressTarget!==near){p._suppressTarget=near;p._suppressStacks=0;}
+
+      const inStorm=p._bulletStormActive;
+      const stormBonus=inStorm?(p._bulletStormDmgBonus||1.0):1.0;
+      const burstCount=inStorm?5:3;
+      const piercePow=inStorm?2:p.piercing;
+
+      for(let i=0;i<burstCount;i++){
+        const offset=(i-(burstCount-1)/2)*0.04; // tiny fixed spread — tight burst
+        const a=ang+offset;
+        const bDmg=dmg*stormBonus*(inStorm?0.85:1.0);
+        s.bullets.push({
+          x:p.x,y:p.y,
+          vx:Math.cos(a)*p.bulletSpeed*1.15,
+          vy:Math.sin(a)*p.bulletSpeed*1.15,
+          r:p.bulletSize-1,dmg:bDmg,pierce:piercePow,life:1.8,
+          _suppressTarget:near,_isMinigunBullet:true
+        });
       }
     },
   },
@@ -1201,7 +1214,7 @@ function initState(){
   const ch=selectedChar,sm=ch.statMods;
   // ── NERFED BASE STATS ──────────────────────────────────────────
   // Base damage: 14 (was 18)
-  // Base speed: 2.2 (was 2.2)
+  // Base speed: 1.85 (was 2.2)
   const baseFireRate=ch.weaponType==='melee'?300:480;
   return {
     player:{
@@ -1339,7 +1352,7 @@ const ALL_UPGRADES=[
   {wtype:'any',id:'momentum',name:'MOMENTUM',icon:'💨',rarity:'rare',desc:'+5 damage for every 1 speed above 2.0.',apply:p=>p._momentum=true},
   {wtype:'any',id:'mirror_shield',name:'MIRROR SHIELD',icon:'🪞',rarity:'rare',desc:'40% chance to reflect contact damage back as a bullet.',apply:p=>p._mirrorShield=true},
   {wtype:'ranged',id:'ricochet',name:'RICOCHET',icon:'🎱',rarity:'epic',desc:'Bullets bounce to a nearby enemy after hitting.',apply:p=>p._ricochet=true},
-  {wtype:'ranged',id:'gatling',name:'GATLING',icon:'🔩',rarity:'rare',desc:'-20% fire delay. Stacks well.',apply:p=>{p._firStacks=(p._firStacks||0)+1;p.fireRate=Math.max(80,Math.round(p.fireRate*0.80));}},
+  {wtype:'ranged',id:'gatling',name:'GATLING',icon:'🔩',rarity:'rare',desc:'-55% fire delay. Massively increases fire rate.',apply:p=>{p._firStacks=(p._firStacks||0)+1;p.fireRate=Math.max(60,Math.round(p.fireRate*0.45));}},
 ];
 
 function buildUpgradePool(){
@@ -1399,22 +1412,22 @@ function getUpgradeChoices(pool,count=3){
 // ═══════════════════════════════════════════════════════════════════
 const ENEMY_TYPES=[
   {name:'GRUNT',   color:'#ff4455',r:10,speed:1.3, hp:55, dmgPs:20,xp:3, gold:1,shape:'circle'},
-  {name:'RUNNER',  color:'#ff9900',r:8, speed:1.85, hp:48, dmgPs:17,xp:2, gold:1,shape:'circle'},
-  {name:'TANK',    color:'#cc2200',r:19,speed:0.8, hp:260,dmgPs:28,xp:8, gold:3,shape:'circle'},
+  {name:'RUNNER',  color:'#ff9900',r:8, speed:2.1, hp:48, dmgPs:17,xp:2, gold:1,shape:'circle'},
+  {name:'TANK',    color:'#cc2200',r:19,speed:0.8, hp:500,dmgPs:28,xp:8, gold:3,shape:'circle'},
   {name:'SPEEDER', color:'#ffdd00',r:8, speed:2.6, hp:58, dmgPs:21,xp:4, gold:2,shape:'diamond'},
-  {name:'BRUTE',   color:'#cc00ff',r:22,speed:0.8, hp:400,dmgPs:33,xp:12,gold:5,shape:'circle'},
-  {name:'GHOST',   color:'#88aaff',r:11,speed:1.9, hp:70, dmgPs:21,xp:5, gold:2,shape:'circle',alpha:.6},
-  {name:'EXPLODER',color:'#ff6600',r:12,speed:1.5, hp:80, dmgPs:0, xp:6, gold:2,shape:'circle',explodes:true},
+  {name:'BRUTE',   color:'#cc00ff',r:22,speed:0.8, hp:850,dmgPs:33,xp:15,gold:7,shape:'circle'},
+  {name:'GHOST',   color:'#88aaff',r:11,speed:2.1, hp:70, dmgPs:21,xp:5, gold:2,shape:'circle',alpha:.6},
+  {name:'EXPLODER',color:'#ff6600',r:12,speed:1.9, hp:80, dmgPs:0, xp:6, gold:2,shape:'circle',explodes:true},
   {name:'SHIELDER',color:'#00ccff',r:13,speed:1.3, hp:130,dmgPs:23,xp:7, gold:3,shape:'circle',shielded:true},
-  {name:'SPLITTER',color:'#aa44ff',r:14,speed:1.4, hp:145,dmgPs:18,xp:8, gold:3,shape:'circle',splits:true},
+  {name:'SPLITTER',color:'#aa44ff',r:14,speed:1.4, hp:220,dmgPs:18,xp:10,gold:4,shape:'circle',splits:true},
   {name:'SNIPER',  color:'#ff4488',r:9, speed:0.5, hp:58, dmgPs:0, xp:6, gold:2,shape:'circle',shoots:true,shootCooldown:1.6},
-  //{name:'HEALER',  color:'#00ff88',r:11,speed:1.2, hp:100,dmgPs:16,xp:7, gold:3,shape:'circle',healer:true,healTimer:2.5,healCooldown:2.5,healRange:90},
-  {name:'BERSERKER',color:'#ff2200',r:16,speed:1.0,hp:200,dmgPs:38,xp:10,gold:4,shape:'circle',enrages:true},
-  {name:'NECROMANCER',color:'#8800aa',r:12,speed:0.85,hp:120,dmgPs:13,xp:11,gold:5,shape:'circle',necro:true,necroTimer:5,necroCooldown:5},
-  // NEW ENEMIES (indices 13-15) — Mimic & Vampire removed
+  // index 10
+  {name:'BERSERKER',color:'#ff2200',r:16,speed:1.0,hp:500,dmgPs:38,xp:13,gold:6,shape:'circle',enrages:true},
+  {name:'NECROMANCER',color:'#8800aa',r:12,speed:0.85,hp:300,dmgPs:13,xp:14,gold:6,shape:'circle',necro:true,necroTimer:5,necroCooldown:5},
+  // NEW ENEMIES (indices 12-14) — Mimic & Vampire removed
   {name:'BOMBER',   color:'#ff8800',r:13,speed:1.3,hp:95, dmgPs:0, xp:8, gold:3,shape:'circle',isBomber:true},
   {name:'TELEPORTER',color:'#00ffcc',r:10,speed:1.5,hp:88,dmgPs:23,xp:9,gold:4,shape:'diamond',isTeleporter:true},
-  {name:'JUGGERNAUT',color:'#8b0000',r:26,speed:0.6,hp:560,dmgPs:44,xp:18,gold:8,shape:'circle',isJuggernaut:true},
+  {name:'JUGGERNAUT',color:'#8b0000',r:26,speed:0.6,hp:1400,dmgPs:44,xp:24,gold:12,shape:'circle',isJuggernaut:true},
 ];
 
 // BOSSES — much more HP, faster projectiles, more aggressive
@@ -1422,7 +1435,7 @@ const BOSS_TYPES=[
   // 1 — KING SLIME: charges + shoots
   {name:'KING SLIME',color:'#00ee88',r:38,speed:1.4,hp:6000,dmgPs:35,xp:40,gold:20,pattern:'charge',chargeTimer:2.0,chargeCooldown:2.0,charging:false,chargeVx:0,chargeVy:0,shootCooldown:0.8,shootTimer:0},
   // 2 — DEATH STAR: spinning bullet hell
-  {name:'DEATH STAR',color:'#ff2266',r:34,speed:0.75,hp:9000,dmgPs:38,xp:60,gold:30,pattern:'orbit',orbitAngle:0,shootCooldown:0.40, shootTimer:0,burstCount:10},
+  {name:'DEATH STAR',color:'#ff2266',r:34,speed:0.65,hp:5500,dmgPs:26,xp:60,gold:30,pattern:'orbit',orbitAngle:0,shootCooldown:0.42,shootTimer:0,burstCount:9},
   // 3 — VOID TITAN: summons minions + spread shot
   {name:'VOID TITAN',color:'#7700ff',r:42,speed:0.7,hp:13000,dmgPs:42,xp:80,gold:40,pattern:'summon',summonTimer:2.0,summonCooldown:2.0,shootCooldown:0.45,shootTimer:0},
   // 4 — FROST LICH: freezes floor + spiraling ice shots
@@ -1453,17 +1466,17 @@ function spawnEnemy(s){
   const w=s.wave;
   let pool=[0,0,1];
   if(w>=2)pool.push(1,2);if(w>=3)pool.push(3,6);if(w>=4)pool.push(7);
-  if(w>=5)pool.push(4,5);if(w>=6)pool.push(10);if(w>=7)pool.push(8,9);
-  if(w>=8)pool.push(11);  // Berserker
-  if(w>=9)pool.push(4,4,5);if(w>=10)pool.push(12); // Necromancer
-  if(w>=11)pool.push(10,10);if(w>=12)pool.push(6,8,9);
-  if(w>=7)pool.push(13);  // Bomber — wave 7+
-  if(w>=9)pool.push(14);  // Teleporter — wave 9+
-  if(w>=11)pool.push(15,13,14); // Juggernaut — wave 11+
+  if(w>=5)pool.push(4,5);if(w>=7)pool.push(8,9);
+  if(w>=8)pool.push(10);  // Berserker (single weight)
+  if(w>=9)pool.push(1,2);if(w>=10)pool.push(11); // Necromancer (single weight)
+  if(w>=11)pool.push(6);if(w>=12)pool.push(8,9); // light enemies, no extra heavies
+  if(w>=7)pool.push(12);  // Bomber wave 7+
+  if(w>=9)pool.push(13);  // Teleporter wave 9+
+  if(w>=13)pool.push(14); // Juggernaut wave 13+ (pushed back, single weight)
   const t=ENEMY_TYPES[pool[Math.floor(Math.random()*pool.length)]];
   const pos=getEdgePos();
   const hpScale=1+(w-1)*.35;
-  const spdScale=1+(w-1)*.015;
+  const spdScale=1+(w-1)*.06;
   const e={x:pos.x,y:pos.y,r:t.r,hp:t.hp*hpScale,maxHp:t.hp*hpScale,speed:t.speed*spdScale,
     dmgPs:t.dmgPs*(1+(w-1)*.06),
     xp:t.xp,gold:t.gold,color:t.color,name:t.name,shape:t.shape||'circle',
@@ -1471,7 +1484,7 @@ function spawnEnemy(s){
   if(t.explodes)e.explodes=true;if(t.splits)e.splits=true;
   if(t.shielded){e.shielded=true;e.shieldHp=50+(w*4);}
   if(t.shoots){e.shoots=true;e.shootTimer=Math.random()*2;e.shootCooldown=Math.max(0.8,t.shootCooldown-(w*0.05));}
-  if(t.healer){e.healer=true;e.healTimer=t.healTimer;e.healCooldown=t.healCooldown;e.healRange=t.healRange;}
+  // healer removed
   if(t.enrages){e.enrages=true;e._enraged=false;}
   if(t.necro){e.necro=true;e.necroTimer=t.necroTimer;e.necroCooldown=t.necroCooldown;}
   if(t.isBomber){e.isBomber=true;e._fuseTimer=2.5+Math.random()*2;}
@@ -1523,7 +1536,7 @@ function update(dt){
   if(s.waveTimer<=0){
     s.wave++;
     s.waveTimer=Math.min(55, 18+s.wave*1.8);
-    s.spawnRate=Math.max(.30,1.4-(s.wave-1)*.06);
+    s.spawnRate=Math.max(.55,1.4-(s.wave-1)*.015);
     s.bossSpawned=false;
     s._waveStartDamageTaken=s.totalDamageTaken; // track for untouched achievement
     if(s.wave%15===0)triggerWin();
@@ -1533,13 +1546,13 @@ function update(dt){
   // Check untouched wave
   if(s._waveStartDamageTaken!==undefined&&s.totalDamageTaken===s._waveStartDamageTaken&&s.enemies.length===0&&s.wave>1){s._untouchedWave=true;}
 
-  // Spawn enemies
-  if(!(s.wave%5===0&&s.bossAlive)){
+  // Spawn enemies — cap to prevent performance freeze
+  if(!(s.wave%5===0&&s.bossAlive)&&s.enemies.length<50){
     s.spawnTimer-=dt;
     if(s.spawnTimer<=0){
-      // More enemies per batch at higher waves
-      const c=1+Math.floor(s.wave/1.8);
-      for(let i=0;i<c;i++)spawnEnemy(s);
+      // More enemies per batch at higher waves (gentler scaling)
+      const c=1+Math.floor(s.wave/3);
+      for(let i=0;i<c;i++){if(s.enemies.length<50)spawnEnemy(s);}
       s.spawnTimer=s.spawnRate;
     }
   }
@@ -1603,14 +1616,32 @@ function update(dt){
   if(p._alchemyBoost){p._alchemyTimer-=dt;if(p._alchemyTimer<=0){p._alchemyBoost=1;delete p._alchemyTimer;}}
   if(p._reaperHarvest){p._reaperTimer-=dt;if(p._reaperTimer<=0){p._reaperHarvest=false;}}
   if(p._counterActive){p._counterTimer-=dt;if(p._counterTimer<=0){p._counterActive=false;}}
-  if(p._overdriveActive){
-    p._overdriveTimer-=dt;
-    if(p._overdriveTimer<=0){p._overdriveActive=false;p._minigunShots=0;} // reset ramp on expiry
+  if(p._bulletStormActive){
+    p._bulletStormTimer-=dt;
+    if(p._bulletStormTimer<=0){
+      p._bulletStormActive=false;p._bulletStormDmgBonus=1.0;
+      const hf=document.getElementById('hammer-flash');
+    }
+    // During storm: fire rate tripled
+    p._stormFireMod=p._bulletStormActive?(1/3):1.0;
+  } else {
+    p._stormFireMod=1.0;
   }
-  // Minigunner: decay ramp-up when not shooting for 0.4s
-  if(p._charId==='minigunner'&&!p._overdriveActive){
-    p._minigunIdleTimer=(p._minigunIdleTimer||0)+dt;
-    if(p._minigunIdleTimer>0.4){p._minigunShots=0;}
+  // Minigunner: decay suppression stacks if target dies or changes
+  if(p._charId==='minigunner'){
+    const rd=document.getElementById('minigun-ramp');
+    const rf=document.getElementById('minigun-ramp-fill');
+    const stacks=p._suppressStacks||0;
+    // Target gone? reset stacks
+    if(p._suppressTarget&&p._suppressTarget.hp<=0){p._suppressTarget=null;p._suppressStacks=0;}
+    if(rd){rd.style.opacity=(stacks>0||p._bulletStormActive)?'1':'0';}
+    if(rf){
+      const pct=p._bulletStormActive?100:Math.min(100,(stacks/5)*100);
+      rf.style.width=pct+'%';
+      rf.style.background=p._bulletStormActive?'#ffee00':'#ff8800';
+    }
+    const rampLabel=rd&&rd.querySelector('div');
+    if(rampLabel){rampLabel.textContent=p._bulletStormActive?'⚡ STORM!':(`🎯 SUPPRESS ${stacks}/5`);}
   }
   if(p._bloodSurgeActive){
     p._bloodSurgeTimer-=dt;
@@ -1619,17 +1650,7 @@ function update(dt){
       const rv=document.getElementById('rage-vignette');if(rv)rv.classList.remove('active');
     }
   }
-  // Minigunner ramp HUD
-  if(p._charId==='minigunner'){
-    const rd=document.getElementById('minigun-ramp');
-    const rf=document.getElementById('minigun-ramp-fill');
-    if(rd){rd.style.opacity=p._overdriveActive?'1':(p._minigunShots>0?'1':'0');}
-    if(rf){
-      const pct=p._overdriveActive?100:Math.min(100,((p._minigunShots||0)/8)*100);
-      rf.style.width=pct+'%';
-      rf.style.background=p._overdriveActive?'#ffee00':'#ff8800';
-    }
-  }
+  // (minigun HUD handled in bullet storm block above)
   // Adrenaline: scale dmg with wave
   if(p._adrenaline){p._adrenalineBonus=1+(s.wave-1)*0.05;}
 
@@ -1733,7 +1754,8 @@ function update(dt){
   // Momentum: speed above 2 boosts damage
   if(p._momentum&&p.speed>2)effDmg+=Math.floor((p.speed-2)*5);
   // Glass cannon / berserker charm already applied via multiplier in contact hit
-  if(s.enemies.length>0&&performance.now()-p.lastShot>p.fireRate){autoShoot(s,effDmg);p.lastShot=performance.now();}
+  const _effectiveFireRate=p.fireRate*(p._bulletStormActive?(1/3):1.0);
+  if(s.enemies.length>0&&performance.now()-p.lastShot>_effectiveFireRate){autoShoot(s,effDmg);p.lastShot=performance.now();}
 
   // Orbital bullets
   if(p._orbitalCount>0){
@@ -1882,18 +1904,7 @@ function update(dt){
     if(e._bleeding){e._bleedTimer-=dt;e.hp-=e._bleedDmg*dt;s.totalDamageDealt+=e._bleedDmg*dt;if(e._bleedTimer<=0)e._bleeding=false;}
     // Fire DoT
     if(e._onFire){e._fireTimer-=dt;e.hp-=e._fireDmg*dt;s.totalDamageDealt+=e._fireDmg*dt;if(e._fireTimer<=0)e._onFire=false;}
-    if(e.healer&&!e.isBoss){
-      e.healTimer-=dt;
-      if(e.healTimer<=0){
-        e.healTimer=e.healCooldown;
-        for(const other of s.enemies){
-          if(other!==e&&!other.isBoss&&Math.hypot(other.x-e.x,other.y-e.y)<e.healRange){
-            const heal=other.maxHp*.06;other.hp=Math.min(other.maxHp,other.hp+heal);
-            spawnParticles(s,other.x,other.y,'#00ff88',5);addFloat(other.x,other.y,`+${Math.floor(heal)}`,'#00ff88');
-          }
-        }
-      }
-    }
+    // healer AI removed
     // BERSERKER: enrages at 50% HP - doubles speed and damage
     if(e.enrages&&!e._enraged&&e.hp/e.maxHp<0.5){
       e._enraged=true;e.speed*=2.0;e.dmgPs*=1.8;e.color='#ff0000';
@@ -2003,6 +2014,18 @@ function update(dt){
           s.bullets.splice(j,1);if(e.hp<=0){dead=true;}break;
         }
         e.hp-=b.dmg;e.hitFlash=1;s.totalDamageDealt+=b.dmg;
+        // SUPPRESSION: minigun bullets stack a slow on their target
+        if(b._isMinigunBullet&&b._suppressTarget===e&&!e.isBoss){
+          p._suppressStacks=Math.min(5,(p._suppressStacks||0)+1);
+          const slowPct=p._suppressStacks*0.14; // 14% per stack up to 70%
+          if(!e._suppressBaseSpeed)e._suppressBaseSpeed=e.speed;
+          e.speed=e._suppressBaseSpeed*(1-slowPct);
+          if(p._suppressStacks>=5&&!e._fullySupPressed){
+            e._fullySupPressed=true;
+            addFloat(e.x,e.y,'SUPPRESSED!','#ff8800');
+            spawnParticles(s,e.x,e.y,'#ff8800',8);
+          }
+        }
         if(p._lifeLeech){p.hp=Math.min(p.maxHp,p.hp+b.dmg*0.02);updateHpHUD();}
         // Executioner: +50% vs low-HP enemies
         if(p._executioner&&!b.isTurret&&e.hp/e.maxHp<0.25){const xDmg=b.dmg*0.5;e.hp-=xDmg;s.totalDamageDealt+=xDmg;}
@@ -2322,7 +2345,7 @@ function updateBossAI(s,e,dt){
       e.minionTimer=e.minionCooldown;
       for(let i=0;i<3;i++){
         const ang=i/3*Math.PI*2;const dist=60;
-        const t=ENEMY_TYPES[14]; // Vampire
+        const t=ENEMY_TYPES[0]; // Plague spawn (grunt base)
         const hpScale=1+(s.wave-1)*.35;
         const minion={x:e.x+Math.cos(ang)*dist,y:e.y+Math.sin(ang)*dist,r:t.r,hp:t.hp*hpScale,maxHp:t.hp*hpScale,speed:t.speed*(1+(s.wave-1)*.1),dmgPs:t.dmgPs,xp:2,gold:1,color:'#aa44ff',name:'PLAGUE SPAWN',shape:'circle',alpha:1,hitFlash:0,isBoss:false};
         s.enemies.push(minion);
@@ -2702,7 +2725,7 @@ function draw(){
     ctx.fillStyle=flash?'#fff':e._frozen?'#aaddff':(e._onFire?'#ff8800':e.color);
     ctx.shadowColor=e._frozen?'#88ccff':(e._onFire?'#ff4400':e.color);ctx.shadowBlur=flash?20:(e.isBoss?28:6);ctx.fill();
     if(e.shielded&&e.shieldHp>0){ctx.beginPath();ctx.arc(0,0,e.r+5,0,Math.PI*2);ctx.strokeStyle='#00ccff';ctx.lineWidth=2.5;ctx.shadowColor='#00ccff';ctx.shadowBlur=10;ctx.stroke();}
-    if(e.healer){ctx.beginPath();ctx.arc(0,0,e.r+3,0,Math.PI*2);ctx.strokeStyle='#00ff88';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);}
+    // healer draw removed
     // Elite: bright spinning outer ring
     if(e._elite){
       ctx.beginPath();ctx.arc(0,0,e.r+7,0,Math.PI*2);
