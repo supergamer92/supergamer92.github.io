@@ -70,22 +70,22 @@ body{
 @keyframes titlePulse{0%,100%{filter:brightness(1);}50%{filter:brightness(1.18);}}
 
 /* ── CHAR SELECT ─────────────────────────────────────────── */
-#char-screen{flex-direction:column;align-items:center;justify-content:flex-start;background:var(--bg);gap:12px;padding:14px 8px 10px;overflow:hidden;}
-#char-screen h2{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--accent2);letter-spacing:6px;text-shadow:2px 2px 0 var(--accent);}
-#char-grid{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;width:100%;max-height:490px;overflow-y:auto;}
+#char-screen{flex-direction:column;align-items:center;justify-content:flex-start;background:var(--bg);gap:6px;padding:10px 8px 8px;overflow:visible;}
+#char-screen h2{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--accent2);letter-spacing:6px;text-shadow:2px 2px 0 var(--accent);margin:0;}
+#char-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:7px;width:100%;max-width:900px;max-height:58vh;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#331155 transparent;}
 #char-grid::-webkit-scrollbar{width:4px;}#char-grid::-webkit-scrollbar-thumb{background:var(--border2);}
 .char-card{
-  width:142px;background:var(--panel);border:1px solid var(--border2);
-  padding:11px 8px;cursor:pointer;transition:all .18s cubic-bezier(0.34,1.56,0.64,1);
-  display:flex;flex-direction:column;align-items:center;gap:5px;position:relative;overflow:hidden;
+  background:var(--panel);border:1px solid var(--border2);
+  padding:10px 8px 12px;cursor:pointer;transition:all .18s cubic-bezier(0.34,1.56,0.64,1);
+  display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;
   clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%);
 }
 .char-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.025) 0%,transparent 60%);pointer-events:none;}
 .char-card::after{content:'';position:absolute;top:0;right:0;width:8px;height:8px;background:var(--border2);clip-path:polygon(0 0,100% 100%,100% 0);}
 .char-card:hover{border-color:var(--accent4);transform:translateY(-5px) scale(1.02);box-shadow:0 8px 28px rgba(124,58,237,.3);}
 .char-card.selected{border-color:var(--accent2);transform:translateY(-5px) scale(1.02);box-shadow:0 8px 28px rgba(255,194,0,.3),inset 0 0 20px rgba(255,194,0,.04);}
-.char-icon{font-size:36px;filter:drop-shadow(0 0 8px rgba(255,194,0,.3));}
-.char-name{font-family:'Bebas Neue',sans-serif;font-size:12px;color:var(--accent2);text-align:center;letter-spacing:3px;}
+.char-icon{font-size:52px;line-height:1;filter:drop-shadow(0 0 8px rgba(255,194,0,.3));}
+.char-name{font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--accent2);text-align:center;letter-spacing:2px;margin-top:2px;}
 .char-tag{font-size:9px;padding:2px 8px;border:1px solid var(--accent4);color:var(--accent4);letter-spacing:1px;font-family:'Share Tech Mono',monospace;}
 .char-desc{font-size:10.5px;color:var(--text);text-align:center;line-height:1.4;opacity:.85;}
 .char-ability{font-size:10px;color:var(--accent3);text-align:center;border-top:1px solid var(--border);padding-top:5px;width:100%;line-height:1.4;font-family:'Share Tech Mono',monospace;}
@@ -93,7 +93,7 @@ body{
 .stat-pip{width:8px;height:8px;background:var(--border);border:1px solid #333;clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);}
 .stat-pip.filled{background:var(--accent2);box-shadow:0 0 4px rgba(255,194,0,.5);}
 .stat-row-sm{display:flex;gap:6px;align-items:center;font-size:10px;color:var(--muted);}
-.char-select-footer{display:flex;gap:12px;flex-shrink:0;}
+.char-select-footer{display:flex;flex-direction:column;align-items:center;gap:8px;flex-shrink:0;width:100%;max-width:900px;}
 .locked-overlay{position:absolute;inset:0;background:rgba(4,4,8,.82);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;z-index:5;}
 .locked-overlay .lock-icon{font-size:22px;opacity:.7;}
 .locked-overlay .lock-hint{font-size:8px;color:var(--muted);text-align:center;line-height:1.5;padding:0 4px;font-family:'Share Tech Mono',monospace;}
@@ -393,7 +393,6 @@ body{
 .amod-chip.chaos{border-color:#00ffcc;color:#aaffee;}
 /* ── META / SHARD UNLOCK SCREEN ─────────────────────────── */
 #unlock-screen{background:radial-gradient(ellipse at center,#0d0020 0%,#050008 100%);}
-#unlock-screen h2{color:#cc88ff;}
 .shard-total{font-family:'Bebas Neue',sans-serif;font-size:28px;color:#cc88ff;
   text-align:center;margin-bottom:10px;letter-spacing:3px;}
 .shard-total span{color:#ffd700;font-size:34px;}
@@ -414,6 +413,241 @@ body{
   position:absolute;top:5px;left:50%;transform:translateX(-50%);
   background:rgba(0,0,0,0.6);padding:1px 10px;border:1px solid #443366;
   border-radius:2px;z-index:26;pointer-events:none;letter-spacing:1px;}
+
+/* ═══════════════════════════════════════════════════════════
+   RUN MODIFIER PICKER — shown on char select screen
+═══════════════════════════════════════════════════════════ */
+#run-mod-section{width:100%;max-width:900px;margin-top:4px;}
+.run-mod-section-title{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;color:#666;margin-bottom:8px;text-align:center;}
+#run-mod-grid{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;}
+.run-mod-card{
+  background:rgba(8,4,20,0.85);border:1px solid #333;border-radius:3px;
+  padding:6px 10px;cursor:pointer;transition:all .15s;min-width:110px;max-width:140px;
+  clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%);
+  text-align:center;
+}
+.run-mod-card:hover{border-color:#9933ff;background:rgba(30,5,60,0.9);}
+.run-mod-card.selected{border-color:#ffd700 !important;background:rgba(40,30,0,0.8) !important;box-shadow:0 0 16px rgba(255,210,0,0.3);}
+.run-mod-card.easy{border-color:#446644;}
+.run-mod-card.hard{border-color:#884422;}
+.run-mod-card.chaos{border-color:#224466;}
+.run-mod-card.normal{border-color:#444;}
+.rmc-icon{font-size:16px;margin-bottom:2px;}
+.rmc-name{font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1px;color:#eee;}
+.rmc-desc{font-family:'Share Tech Mono',monospace;font-size:7px;color:#888;margin-top:2px;line-height:1.3;}
+.rmc-mult{font-family:'Bebas Neue',sans-serif;font-size:11px;margin-top:3px;letter-spacing:1px;}
+.rmc-mult.pos{color:#44ff88;}.rmc-mult.neg{color:#ff6644;}
+
+/* ═══════════════════════════════════════════════════════════
+   RUN MOD HUD CHIP — shows active modifier during play
+═══════════════════════════════════════════════════════════ */
+#run-mod-hud{
+  position:absolute;bottom:6px;right:8px;
+  font-family:'Bebas Neue',sans-serif;font-size:11px;
+  background:rgba(0,0,0,0.6);padding:2px 8px;border:1px solid #333;
+  border-radius:2px;z-index:26;pointer-events:none;letter-spacing:1px;
+  color:#888;display:none;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   IMPROVED UI DESIGN OVERHAUL
+═══════════════════════════════════════════════════════════ */
+
+/* --- Title Screen --- */
+#title-screen{
+  background: radial-gradient(ellipse at 50% 30%, #1a0040 0%, #060010 60%, #000005 100%);
+}
+#title-screen::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 40px,rgba(80,0,180,0.03) 40px,rgba(80,0,180,0.03) 41px),
+             repeating-linear-gradient(90deg,transparent,transparent 40px,rgba(80,0,180,0.03) 40px,rgba(80,0,180,0.03) 41px);
+  pointer-events:none;
+}
+.game-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(56px,9vw,100px);
+  letter-spacing:8px;
+  color:#fff;
+  text-shadow:0 0 40px #9933ff, 0 0 80px #6600cc, 0 0 120px #440088;
+  margin-bottom:4px;
+  animation:titlePulse 3s ease-in-out infinite;
+}
+@keyframes titlePulse{
+  0%,100%{text-shadow:0 0 40px #9933ff, 0 0 80px #6600cc;}
+  50%{text-shadow:0 0 60px #cc44ff, 0 0 120px #9933ff, 0 0 180px #6600cc;}
+}
+.title-subtitle{
+  font-family:'Share Tech Mono',monospace;font-size:11px;
+  color:#6644aa;letter-spacing:6px;margin-bottom:28px;
+  text-transform:uppercase;
+}
+.title-buttons{display:flex;flex-direction:column;align-items:center;gap:10px;width:260px;}
+.pixel-btn{
+  font-family:'Bebas Neue',sans-serif;letter-spacing:3px;font-size:15px;
+  border:none;cursor:pointer;padding:8px 22px;
+  clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);
+  transition:all .12s;
+}
+.pixel-btn.red{background:linear-gradient(135deg,#cc1133,#880022);color:#fff;box-shadow:0 0 20px rgba(200,0,50,0.3);}
+.pixel-btn.red:hover{background:linear-gradient(135deg,#ff2244,#cc0033);box-shadow:0 0 30px rgba(255,30,60,0.5);transform:scaleX(1.02);}
+.pixel-btn.green{background:linear-gradient(135deg,#116633,#084422);color:#fff;box-shadow:0 0 20px rgba(0,180,80,0.2);}
+.pixel-btn.green:hover{background:linear-gradient(135deg,#22aa55,#116633);box-shadow:0 0 30px rgba(0,220,100,0.4);transform:scaleX(1.02);}
+.pixel-btn.cyan{background:linear-gradient(135deg,#0d4466,#062233);color:#44ccff;box-shadow:0 0 20px rgba(0,150,220,0.2);}
+.pixel-btn.cyan:hover{background:linear-gradient(135deg,#1166aa,#0d4466);box-shadow:0 0 30px rgba(0,180,255,0.4);transform:scaleX(1.02);}
+.pixel-btn.purple{background:linear-gradient(135deg,#551188,#330055);color:#cc88ff;box-shadow:0 0 20px rgba(150,0,255,0.2);}
+.pixel-btn.purple:hover{background:linear-gradient(135deg,#8822cc,#551188);box-shadow:0 0 30px rgba(180,0,255,0.4);transform:scaleX(1.02);}
+.pixel-btn.orange{background:linear-gradient(135deg,#884400,#553300);color:#ffaa44;box-shadow:0 0 20px rgba(180,100,0,0.2);}
+.pixel-btn.orange:hover{background:linear-gradient(135deg,#cc6600,#884400);transform:scaleX(1.02);}
+
+/* --- Char select --- */
+#char-screen{background:radial-gradient(ellipse at 50% 20%,#0d0025 0%,#050010 100%);}
+.char-select-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:6px;color:#cc88ff;margin-bottom:12px;}
+#char-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+  gap:7px;max-height:58vh;overflow-y:auto;width:100%;max-width:900px;
+  padding:4px 2px;scrollbar-width:thin;scrollbar-color:#331155 transparent;
+}
+.char-card{
+  background:rgba(8,4,20,0.9);border:1px solid #2a1a44;
+  padding:10px 8px 14px;cursor:pointer;transition:all .13s;
+  clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);
+  text-align:center;position:relative;
+}
+.char-card:hover:not(.locked){border-color:#9933ff;background:rgba(30,5,60,0.95);transform:translateY(-2px);}
+.char-card.selected{border-color:#ffd700;background:rgba(40,30,0,0.85);box-shadow:0 0 20px rgba(255,200,0,0.25);}
+.char-card.locked{opacity:0.5;cursor:not-allowed;filter:saturate(0.2);}
+.char-icon{font-size:52px;line-height:1;margin-bottom:4px;display:block;}
+.char-name{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:#eee;}
+.char-tag{font-family:'Share Tech Mono',monospace;font-size:7.5px;color:#7755aa;margin-top:2px;letter-spacing:0.5px;}
+.char-unlock-hint{font-family:'Share Tech Mono',monospace;font-size:7px;color:#ff8866;margin-top:4px;line-height:1.3;}
+.stat-pips{display:flex;justify-content:center;gap:2px;margin-top:4px;}
+.stat-pip{width:8px;height:8px;background:#1a1a2e;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);border:1px solid #333;}
+.stat-pip.filled{background:#cc44ff;border-color:#9933ff;box-shadow:0 0 4px #9933ff;}
+
+/* --- Upgrade / Unlock screen --- */
+#unlock-screen{background:radial-gradient(ellipse at center,#0d0020 0%,#050008 100%);}
+.unlock-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;max-width:860px;max-height:360px;overflow-y:auto;padding:4px;scrollbar-width:thin;scrollbar-color:#331155 transparent;}
+.unlock-node{background:rgba(12,4,28,0.9);border:1px solid #2a1040;border-radius:2px;padding:10px;cursor:pointer;transition:all .13s;clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%);}
+.unlock-node:hover:not(.locked):not(.owned){border-color:#9933ff;background:rgba(40,5,80,0.9);transform:translateY(-1px);}
+.unlock-node.owned{border-color:#ffd700;background:rgba(30,22,0,0.8);cursor:default;}
+.unlock-node.locked{opacity:0.4;cursor:not-allowed;}
+.un-icon{font-size:22px;margin-bottom:3px;}
+.un-name{font-family:'Bebas Neue',sans-serif;font-size:12px;color:#fff;letter-spacing:1px;}
+.un-desc{font-family:'Share Tech Mono',monospace;font-size:8px;color:#999;margin-top:2px;line-height:1.4;}
+.un-cost{font-family:'Bebas Neue',sans-serif;font-size:11px;color:#ffd700;margin-top:4px;}
+.un-cost.owned{color:#44ff88;}
+
+/* --- Game Over screen --- */
+#gameover-screen{background:radial-gradient(ellipse at center,#1a0005 0%,#060002 100%);}
+.gameover-title{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:8px;color:#ff2244;
+  text-shadow:0 0 30px rgba(255,0,50,0.6);animation:glitch .4s steps(2) infinite alternate;}
+@keyframes glitch{0%{clip-path:inset(0 0 95% 0)}50%{clip-path:inset(40% 0 0 0)}100%{clip-path:inset(0)}}
+#gameover-stats .stat-row{display:flex;justify-content:space-between;
+  font-family:'Share Tech Mono',monospace;font-size:12px;color:#ccc;
+  border-bottom:1px solid rgba(255,255,255,0.05);padding:5px 0;}
+#gameover-stats .stat-row span:last-child{color:#fff;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;}
+#run-grade{font-family:'Bebas Neue',sans-serif;font-size:72px;
+  text-shadow:0 0 40px currentColor;letter-spacing:4px;margin:8px 0;}
+#run-grade.S{color:#ffd700;}#run-grade.A{color:#ff8844;}
+#run-grade.B{color:#44aaff;}#run-grade.C{color:#88ff44;}#run-grade.D{color:#888;}
+
+/* --- In-game HUD improvements --- */
+#hud{background:linear-gradient(180deg,rgba(0,0,0,0.85) 0%,rgba(0,0,0,0) 100%);border-bottom:none;padding:6px 10px;}
+#wave-hud{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#cc88ff;text-shadow:0 0 12px rgba(150,50,255,0.5);}
+#kill-hud{font-family:'Share Tech Mono',monospace;font-size:12px;color:#aaa;}
+.hp-bar-wrap,.xp-bar-wrap{height:6px;border-radius:0;border:none;}
+#hp-fill{background:linear-gradient(90deg,#ff2244,#ff6688);box-shadow:0 0 8px rgba(255,30,80,0.5);}
+#xp-fill{background:linear-gradient(90deg,#6622ff,#cc44ff);box-shadow:0 0 8px rgba(150,50,255,0.4);}
+
+/* --- Item card improvements --- */
+.upgrade-card{border-radius:0;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);}
+
+
+/* ── LOCKED CARD UNLOCK BUTTON ─────────────────────────── */
+.char-card.locked { opacity:1 !important; filter:none !important; }
+.char-card.locked .char-icon-locked { font-size:48px; line-height:1; margin-bottom:4px; filter:grayscale(1); opacity:0.45; }
+.char-card.locked .char-name-locked { font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:2px; color:#666; }
+.char-card.locked .lock-cost { font-family:'Bebas Neue',sans-serif; font-size:11px; color:#cc88ff; margin:5px 0 3px; letter-spacing:1px; }
+.char-card.locked .lock-desc { font-family:'Share Tech Mono',monospace; font-size:7px; color:#555; line-height:1.4; margin-bottom:6px; }
+.btn-unlock {
+  font-family:'Bebas Neue',sans-serif; font-size:12px; letter-spacing:2px;
+  background:linear-gradient(135deg,#551188,#330055); color:#cc88ff;
+  border:1px solid #7722bb; padding:4px 10px; cursor:pointer; width:100%;
+  clip-path:polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%);
+  transition:all .12s;
+}
+.btn-unlock:hover { background:linear-gradient(135deg,#8822cc,#551188); color:#fff; border-color:#cc44ff; }
+.btn-unlock:disabled { opacity:0.35; cursor:not-allowed; background:#222; border-color:#333; color:#555; }
+.char-card.locked .cant-afford { font-family:'Share Tech Mono',monospace; font-size:7px; color:#ff4444; margin-top:3px; }
+
+#char-step-2{display:none;flex-direction:row;}
+#char-step-2.visible{display:flex !important;}
+#char-detail-panel .cd-icon{font-size:52px;text-align:center;display:block;margin-bottom:6px;line-height:1;}
+#char-detail-panel .cd-name{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:4px;color:#ffd700;text-align:center;margin-bottom:2px;}
+#char-detail-panel .cd-tag{font-family:'Share Tech Mono',monospace;font-size:9px;color:#9933ff;text-align:center;letter-spacing:2px;margin-bottom:10px;display:block;}
+#char-detail-panel .cd-desc{font-family:'Share Tech Mono',monospace;font-size:10px;color:#ccc;line-height:1.5;margin-bottom:8px;}
+#char-detail-panel .cd-ability{font-family:'Bebas Neue',sans-serif;font-size:13px;color:#00ffcc;letter-spacing:1px;margin-bottom:2px;}
+#char-detail-panel .cd-abil-desc{font-family:'Share Tech Mono',monospace;font-size:9px;color:#888;margin-bottom:8px;line-height:1.4;}
+#char-detail-panel .cd-passive{font-family:'Share Tech Mono',monospace;font-size:9px;color:#ffd700;margin-bottom:8px;line-height:1.4;border-left:2px solid #ffd700;padding-left:6px;}
+#char-detail-panel .cd-stats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+#char-detail-panel .cd-stat{display:flex;flex-direction:column;align-items:center;gap:3px;font-family:'Bebas Neue',sans-serif;font-size:11px;color:#888;letter-spacing:1px;}
+
+/* ── UPGRADE SCREEN TABS ──────────────────────────────────── */
+.upg-tab{
+  font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;
+  background:rgba(20,5,40,0.8);border:1px solid #332255;color:#775599;
+  padding:7px 20px;cursor:pointer;transition:all .12s;flex:1;
+  clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%);
+}
+.upg-tab:hover{border-color:#9933ff;color:#cc88ff;}
+.upg-tab.active{background:rgba(60,0,120,0.9);border-color:#9933ff;color:#fff;
+  box-shadow:0 0 16px rgba(150,50,255,0.3);}
+
+/* ── UPGRADE GRID ─────────────────────────────────────────── */
+.upg-panel{display:flex;flex-wrap:wrap;gap:8px;overflow-y:auto;max-height:420px;
+  padding:4px 2px;scrollbar-width:thin;scrollbar-color:#331155 transparent;}
+
+/* stat boost cards */
+.upg-card{
+  width:150px;flex-shrink:0;
+  background:rgba(10,3,25,0.95);
+  border:1px solid #2a1044;
+  padding:10px 10px 12px;
+  cursor:pointer;transition:all .14s;
+  clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%);
+  display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;
+}
+.upg-card:hover:not(.owned):not(.cant){border-color:#9933ff;background:rgba(35,5,75,0.95);transform:translateY(-2px);box-shadow:0 6px 20px rgba(130,0,255,0.25);}
+.upg-card.owned{border-color:#ffd700;background:rgba(30,22,0,0.85);cursor:default;}
+.upg-card.cant{opacity:0.4;cursor:not-allowed;}
+.upg-card .uc-icon{font-size:26px;line-height:1;margin-bottom:2px;}
+.upg-card .uc-name{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;color:#eee;}
+.upg-card .uc-desc{font-family:'Share Tech Mono',monospace;font-size:8px;color:#999;line-height:1.4;margin-top:2px;}
+.upg-card .uc-cost{font-family:'Bebas Neue',sans-serif;font-size:12px;margin-top:5px;letter-spacing:1px;}
+.upg-card .uc-cost.buy{color:#cc88ff;}.upg-card .uc-cost.owned{color:#ffd700;}.upg-card .uc-cost.cant{color:#554455;}
+
+/* character unlock cards */
+.char-upg-card{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(10,3,25,0.95);border:1px solid #2a1044;
+  padding:10px 14px;cursor:pointer;transition:all .14s;width:100%;
+  clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%);
+}
+.char-upg-card:hover:not(.owned):not(.cant){border-color:#9933ff;background:rgba(35,5,75,0.95);transform:translateX(3px);}
+.char-upg-card.owned{border-color:#ffd700;background:rgba(30,22,0,0.85);cursor:default;}
+.char-upg-card.cant{opacity:0.4;cursor:not-allowed;}
+.char-upg-card.boss-locked{border-color:#ff6622;background:rgba(30,10,0,0.85);cursor:not-allowed;opacity:0.65;}
+.cuc-icon{font-size:32px;line-height:1;flex-shrink:0;}
+.cuc-info{flex:1;}
+.cuc-name{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:3px;color:#eee;}
+.cuc-tag{font-family:'Share Tech Mono',monospace;font-size:8px;color:#9933ff;letter-spacing:1px;margin-top:1px;}
+.cuc-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;}
+.cuc-badge{font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:1px;padding:2px 8px;border:1px solid;clip-path:polygon(4px 0,100% 0,calc(100% - 4px) 100%,0 100%);}
+.cuc-badge.owned{color:#ffd700;border-color:#ffd700;background:rgba(40,30,0,0.5);}
+.cuc-badge.buy{color:#cc88ff;border-color:#9933ff;background:rgba(40,0,80,0.5);cursor:pointer;}
+.cuc-badge.buy:hover{background:rgba(80,0,160,0.8);color:#fff;}
+.cuc-badge.cant{color:#554455;border-color:#332244;}
+.cuc-badge.boss{color:#ff8844;border-color:#ff6622;background:rgba(40,15,0,0.5);}
 </style>
 </head>
 <body>
@@ -434,6 +668,10 @@ body{
     <button class="pixel-btn green" onclick="showCharSelect()">▶ PLAY</button>
     <button class="pixel-btn cyan" onclick="showHowToPlay()">? HOW TO PLAY</button>
     <button class="pixel-btn purple" onclick="openUnlockScreen()">💠 UPGRADES</button>
+      <div style="display:flex;gap:6px;width:100%">
+        <button class="pixel-btn orange" style="font-size:12px;flex:1" onclick="exportSaveData()">📤 EXPORT</button>
+        <button class="pixel-btn cyan" style="font-size:12px;flex:1" onclick="triggerImport()">📥 IMPORT</button>
+      </div>
   </div>
   <div class="controls-row">
     <div class="ctrl-chip"><span>WASD</span> MOVE</div>
@@ -454,7 +692,8 @@ body{
         • Survive endless waves — no finish line!<br>
         • Your character auto-shoots at enemies<br>
         • Collect XP orbs to level up &amp; pick upgrades<br>
-        • A boss appears every 5th wave<br>
+        • A boss appears every 5th wave (fixed order, 10 bosses)<br>
+        • Survive all 100 waves to win!<br>
         • Kill combos boost your XP drops
       </div>
     </div>
@@ -494,14 +733,34 @@ body{
 </div>
 
 <!-- CHAR SELECT -->
-<div id="char-screen" class="screen">
-  <h2>⚔ CHOOSE YOUR FIGHTER ⚔</h2>
-  <div id="char-grid"></div>
-  <div class="char-select-footer">
-    <button class="pixel-btn green" onclick="startGame()">▶ CONFIRM &amp; PLAY</button>
-    <button class="pixel-btn purple" onclick="showTitle()">◀ BACK</button>
+<div id="char-screen" class="screen" style="padding:10px 12px 8px;gap:6px">
+  <!-- Header row -->
+  <div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:920px">
+    <button class="pixel-btn purple" onclick="showTitle()" style="padding:5px 14px;font-size:12px">◀ BACK</button>
+    <h2 style="margin:0;font-size:24px;letter-spacing:5px">⚔ CHOOSE YOUR FIGHTER ⚔</h2>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:#9933ff;letter-spacing:1px">💠 <span id="char-screen-shards">0</span> SHARDS</div>
   </div>
-  <div class="controls-hint">CLICK TO SELECT CHARACTER</div>
+
+  <!-- STEP 1: Character grid (full width) -->
+  <div id="char-step-1" style="width:100%;max-width:920px;display:flex;flex-direction:column;align-items:center;gap:6px">
+    <div id="char-grid" style="width:100%"></div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:#555;letter-spacing:2px">CLICK TO SELECT · DOUBLE-CLICK TO CONFIRM</div>
+  </div>
+
+  <!-- STEP 2: Detail + modifier (hidden until char confirmed) -->
+  <div id="char-step-2" style="display:none;width:100%;max-width:920px;gap:10px;align-items:flex-start">
+    <!-- Left: char detail -->
+    <div id="char-detail-panel" style="flex:1;min-width:220px;background:rgba(8,4,20,0.9);border:1px solid #443366;padding:14px;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)"></div>
+    <!-- Right: modifier picker -->
+    <div style="flex:2">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:#666;letter-spacing:3px;margin-bottom:8px;text-align:center">— SELECT RUN MODIFIER —</div>
+      <div id="run-mod-grid"></div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:10px">
+        <button class="pixel-btn purple" onclick="charScreenBack()" style="padding:6px 18px;font-size:12px">◀ RESELECT</button>
+        <button class="pixel-btn green" onclick="startGame()" style="padding:7px 32px;font-size:15px">▶ START RUN</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- GAME -->
@@ -587,12 +846,9 @@ body{
       </div>
     </div>
     <div id="ach-toast"></div>
-    <div id="wave-modifier-banner">
-      <div class="wmod-title">⚠ WAVE MODIFIER</div>
-      <div class="wmod-list" id="wmod-list"></div>
-    </div>
-    <div id="active-mods"></div>
+
     <div id="shard-hud" style="display:none">💠 <span id="shard-val">0</span> SHARDS</div>
+    <div id="run-mod-hud"></div>
     <div class="hud-buttons">
       <button class="pixel-btn tiny purple" onclick="togglePause()">⏸ PAUSE [P]</button>
       <button class="pixel-btn tiny cyan" onclick="openStats()">📋 STATS [TAB]</button>
@@ -671,13 +927,35 @@ body{
 </div>
 
 <!-- UNLOCK SCREEN -->
-<div id="unlock-screen" class="screen">
-  <div style="display:flex;align-items:center;justify-content:space-between;max-width:740px;width:100%;margin-bottom:8px;">
-    <h2 style="margin:0">💠 SHARD UPGRADES</h2>
-    <button class="pixel-btn green" onclick="closeUnlockScreen()">◀ BACK</button>
+<div id="unlock-screen" class="screen" style="padding:12px 14px 10px;gap:0">
+
+  <!-- Top bar -->
+  <div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:900px;margin-bottom:10px">
+    <button class="pixel-btn purple" onclick="closeUnlockScreen()" style="padding:5px 14px;font-size:12px">◀ BACK</button>
+    <div style="text-align:center">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:5px;color:#cc88ff">💠 SHARD UPGRADES</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#9933ff;letter-spacing:1px">
+        <span id="shard-total-val">0</span> SHARDS AVAILABLE
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <button class="pixel-btn green" style="font-size:10px;padding:4px 10px" onclick="exportSaveData()">📤 EXPORT</button>
+      <button class="pixel-btn cyan" style="font-size:10px;padding:4px 10px" onclick="triggerImport()">📥 IMPORT</button>
+    </div>
   </div>
-  <div class="shard-total">SHARDS: <span id="shard-total-val">0</span></div>
-  <div class="unlock-grid" id="unlock-grid"></div>
+
+  <!-- Tabs -->
+  <div id="upgrade-tabs" style="display:flex;gap:6px;margin-bottom:10px;width:100%;max-width:900px">
+    <button class="upg-tab active" onclick="setUpgradeTab('stats')" id="tab-stats">⚔ STAT BOOSTS</button>
+    <button class="upg-tab" onclick="setUpgradeTab('chars')" id="tab-chars">🔓 CHARACTERS</button>
+  </div>
+
+  <!-- Stat upgrades panel -->
+  <div id="upg-panel-stats" class="upg-panel" style="width:100%;max-width:900px"></div>
+  <!-- Character unlocks panel -->
+  <div id="upg-panel-chars" class="upg-panel" style="display:none;width:100%;max-width:900px"></div>
+
+  <div id="save-preview" style="font-family:'Share Tech Mono',monospace;font-size:8px;color:#444;text-align:center;margin-top:6px;"></div>
 </div>
 
 </div><!-- end game-wrapper -->
@@ -750,9 +1028,11 @@ const ACHIEVEMENTS=[
   {id:'boss1',        icon:'👹', name:'BOSS SLAYER',     desc:'Kill your first boss',           check:(s)=>s._bossKills>=1},
   {id:'boss3',        icon:'🗡️', name:'BOSS HUNTER',     desc:'Kill 3 bosses',                  check:(s)=>s._bossKills>=3},
   {id:'boss5',        icon:'👑', name:'BOSS MASTER',     desc:'Kill 5 bosses',                  check:(s)=>s._bossKills>=5},
+  {id:'boss7',        icon:'💀', name:'BOSS LEGEND',      desc:'Kill 7 bosses',                  check:(s)=>s._bossKills>=7},
   {id:'boss_undmg',   icon:'🌟', name:'UNTOUCHABLE KING',desc:'Kill a boss without being hit',   check:(s)=>s._bossKillNoHit},
   {id:'pacifist_wave',icon:'🕊️', name:'UNTOUCHABLE',     desc:'Clear a wave without being hit', check:(s)=>s._untouchedWave},
   {id:'godmode',      icon:'🌟', name:'GODMODE',         desc:'Complete wave 20',               check:(s)=>s.wave>=20},
+  {id:'century',      icon:'💯', name:'CENTURION WAVE',  desc:'Survive all 100 waves',          check:(s)=>s.wave>100},
 ];
 function getUnlockedAchievements(){try{return JSON.parse(localStorage.getItem('spudgeon_ach')||'[]');}catch(e){return[];}}
 function unlockAchievement(id){
@@ -830,8 +1110,10 @@ function unlockChar(id){
   return true;
 }
 function isCharUnlocked(ch){
-  if(!ch.unlockReq)return true;
-  return getUnlockedChars().includes(ch.id);
+  if(ch.id==='potato') return true;
+  if(!ch.unlockHint && !ch.unlockReq) return true; // free
+  if(ch.unlockReq && getUnlockedAchievements().includes(ch.unlockReq)) return true; // boss achievement
+  return getUnlockedChars().includes(ch.id); // bought with shards or unlocked by boss kill event
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -839,11 +1121,11 @@ function isCharUnlocked(ch){
 // ═══════════════════════════════════════════════════════════════════
 const CHARACTERS=[
   {
-    id:'potato', name:'SPUDGEON', icon:'🥔', tag:'BALANCED · GUN',
+    id:'potato', name:'SPUDGEON', icon:'🥔', tag:'BALANCED · GUN', // TRUE BALANCED STARTER
     weaponType:'ranged',
     desc:'Trusty all-rounder. Fires a steady stream of bullets.',
     abilityName:'DASH BURST', abilityIcon:'💨', abilityCooldown:2,
-    statMods:{speed:0,damage:8,fireRate:0,maxHp:0},
+    statMods:{speed:0,damage:6,fireRate:0,maxHp:10},
     ability(s){
       const p=s.player;let dx=0,dy=0;
       if(keys['ArrowLeft']||keys['a']||keys['A'])dx=-1;
@@ -872,7 +1154,7 @@ const CHARACTERS=[
     desc:'Shoots slow but bullets pierce everything and travel the whole screen.',
     passive:'💥 HEADSHOT — Every 5th shot deals 3× damage.',
     abilityName:'TRIPLE SHOT', abilityIcon:'⚡', abilityCooldown:3,
-    statMods:{speed:-0.2,damage:35,fireRate:600,maxHp:-10},
+    statMods:{speed:-0.3,damage:40,fireRate:500,maxHp:-15},
     ability(s){
       const p=s.player;if(!s.enemies.length)return;
       let near=null,nd=Infinity;
@@ -916,7 +1198,7 @@ const CHARACTERS=[
     weaponType:'ranged',
     desc:'Deploys up to 2 turrets. Turrets inherit your upgrades — damage, fire rate, and pierce.',
     abilityName:'DEPLOY TURRET', abilityIcon:'🔫', abilityCooldown:5,
-    statMods:{speed:-0.2,damage:8,fireRate:80,maxHp:25},
+    statMods:{speed:-0.1,damage:5,fireRate:60,maxHp:30},
     ability(s){
       const p=s.player;
       if(!s.turrets)s.turrets=[];
@@ -937,7 +1219,7 @@ const CHARACTERS=[
     weaponType:'ranged',
     desc:'Bullets slow enemies. Blizzard freezes ALL enemies & deals burst damage (20s cooldown).',
     abilityName:'BLIZZARD', abilityIcon:'🌨️', abilityCooldown:14,
-    statMods:{speed:0,damage:0,fireRate:50,maxHp:10},
+    statMods:{speed:-0.1,damage:8,fireRate:40,maxHp:15},
     ability(s){
       const p=s.player;
       for(const e of s.enemies){
@@ -964,7 +1246,7 @@ const CHARACTERS=[
     desc:'Flamethrower that stacks BURN on enemies. 6 stacks = INFERNO (40% more damage taken). Overheat mechanic: fire in bursts for max efficiency.',
     passive:'🔥 INFERNO — At 6 burn stacks enemies glow and take 40% extra damage from all sources. Stacks decay after 3s without hits.',
     abilityName:'NAPALM RAIN', abilityIcon:'☄️', abilityCooldown:6,
-    statMods:{speed:0.1,damage:12,fireRate:-40,maxHp:-5},
+    statMods:{speed:0.2,damage:10,fireRate:-50,maxHp:-10},
     ability(s){
       const p=s.player;
       if(!s.firePatches)s.firePatches=[];
@@ -1036,7 +1318,7 @@ const CHARACTERS=[
     desc:'Swings a huge sword in an arc. Must get close — but massive damage.',
     passive:'🛡 FORTITUDE — Every 3 hits taken builds a block charge that absorbs the next hit.',
     abilityName:'WHIRLWIND', abilityIcon:'🌀', abilityCooldown:4,
-    statMods:{speed:0.3,damage:48,fireRate:0,maxHp:35},
+    statMods:{speed:0.2,damage:38,fireRate:0,maxHp:40},
     customShoot(s,dmg){
       const p=s.player;if(!s.enemies.length)return;
       const reach=p.bulletSize*8+40;
@@ -1065,15 +1347,15 @@ const CHARACTERS=[
       flashEl('ability-flash');document.getElementById('ability-flash').style.background='rgba(255,215,0,0.2)';
       triggerShake(7);addFloat(p.x,p.y,'⚔ WHIRLWIND!','#ffd700');
     },
-    color:'#e8c040',pip:[5,3,5,3],
+    color:'#e8c040',pip:[4,3,4,4],
   },
   {
-    id:'berserker', name:'BERSERKER', icon:'🪓', tag:'MELEE · AXE',
+    id:'berserker', unlockHint:'UNLOCK: 25 SHARDS', name:'BERSERKER', icon:'🪓', tag:'MELEE · AXE',
     weaponType:'melee',
     desc:'Charges into enemies with a brutal axe. Short range, insane damage.',
     passive:'🩸 BLOODLUST — Kills during Blood Rage reduce the next cooldown by 1.5s each.',
     abilityName:'BLOOD RAGE', abilityIcon:'🩸', abilityCooldown:5,
-    statMods:{speed:0.6,damage:62,fireRate:0,maxHp:-30},
+    statMods:{speed:0.5,damage:44,fireRate:0,maxHp:-35},
     customShoot(s,dmg){
       const p=s.player;if(!s.enemies.length)return;
       const reach=p.bulletSize*6+34;
@@ -1103,12 +1385,12 @@ const CHARACTERS=[
     color:'#cc2233',pip:[5,4,5,1],
   },
   {
-    id:'ninja', name:'NINJA', icon:'🥷', tag:'MELEE · DAGGERS',
+    id:'ninja', unlockHint:'UNLOCK: 25 SHARDS', name:'NINJA', icon:'🥷', tag:'MELEE · DAGGERS',
     weaponType:'melee',
     desc:'Blindingly fast dual daggers. Hits 3 enemies at once. Smoke Bomb dashes away leaving damaging clones.',
     passive:'🗡 BACKSTAB — First hit on an enemy deals 2.5× damage.',
     abilityName:'SMOKE BOMB', abilityIcon:'💨', abilityCooldown:4,
-    statMods:{speed:0.9,damage:15,fireRate:-200,maxHp:-20},
+    statMods:{speed:0.8,damage:22,fireRate:-120,maxHp:-20},
     customShoot(s,dmg){
       const p=s.player;if(!s.enemies.length)return;
       const reach=p.bulletSize*5+30;
@@ -1166,15 +1448,15 @@ const CHARACTERS=[
       flashEl('void-flash');
       addFloat(p.x,p.y,'💨 SMOKE BOMB!','#aa44ff');
     },
-    color:'#8833cc',pip:[4,5,5,2],
+    color:'#8833cc',pip:[3,5,5,2],
   },
   {
-    id:'sentinel', name:'SENTINEL', icon:'🛡️', tag:'TANK · SHIELD BASH',
+    id:'sentinel', unlockHint:'UNLOCK: 30 SHARDS', name:'SENTINEL', icon:'🛡️', tag:'TANK · SHIELD BASH',
     weaponType:'melee',
     desc:'Enormous HP. Bashes nearby enemies with a shield. Barrier absorbs all damage.',
     passive:'⚡ RETALIATION — When Iron Barrier expires, releases a shockwave damaging all nearby enemies.',
     abilityName:'IRON BARRIER', abilityIcon:'🧱', abilityCooldown:7,
-    statMods:{speed:-0.7,damage:26,fireRate:0,maxHp:110},
+    statMods:{speed:-0.4,damage:28,fireRate:0,maxHp:80},
     customShoot(s,dmg){
       const p=s.player;if(!s.enemies.length)return;
       const reach=p.bulletSize*5+38;
@@ -1207,14 +1489,14 @@ const CHARACTERS=[
       spawnParticles(s,p.x,p.y,'#ffffff',12);
       flashEl('barrier-flash');triggerShake(4);addFloat(p.x,p.y,'🛡 IRON BARRIER!','#ffaa00');
     },
-    color:'#cc8800',pip:[2,1,3,5],
+    color:'#cc8800',pip:[2,2,3,5],
   },
   {
-    id:'warlock', name:'WARLOCK', icon:'🔮', tag:'ARCANE · CURSE',
+    id:'warlock', unlockHint:'UNLOCK: 30 SHARDS', name:'WARLOCK', icon:'🔮', tag:'ARCANE · CURSE',
     weaponType:'ranged',
     desc:'Fires magic orbs that explode on impact. Soul Rend curses all visible enemies — draining their HP and healing you.',
     abilityName:'SOUL REND', abilityIcon:'💀', abilityCooldown:5,
-    statMods:{speed:-0.2,damage:28,fireRate:350,maxHp:10},
+    statMods:{speed:-0.1,damage:24,fireRate:180,maxHp:15},
     customShoot(s,dmg){
       const p=s.player;if(!s.enemies.length)return;
       let near=null,nd=Infinity;
@@ -1247,12 +1529,12 @@ const CHARACTERS=[
     color:'#9933cc',pip:[3,2,5,2],
   },
   {
-    id:'phantom', name:'PHANTOM', icon:'👻', tag:'HYBRID · SPECTRAL',
+    id:'phantom', unlockHint:'UNLOCK: 35 SHARDS', name:'PHANTOM', icon:'👻', tag:'HYBRID · SPECTRAL',
     weaponType:'ranged',
     desc:'Fast spectral shots pierce 1 enemy. Cloak fires a ghost burst on exit.',
     passive:'👁 GHOSTWALK — Moving while cloaked leaves spectral trails that damage enemies.',
     abilityName:'PHASE CLOAK', abilityIcon:'🌫️', abilityCooldown:6,
-    statMods:{speed:0.7,damage:4,fireRate:-120,maxHp:-20},
+    statMods:{speed:0.6,damage:18,fireRate:-80,maxHp:-25},
     ability(s){
       const p=s.player;
       p._cloaked=true;p._cloakTimer=2.5;p.immune=2.5;
@@ -1265,7 +1547,7 @@ const CHARACTERS=[
       flashEl('ability-flash');document.getElementById('ability-flash').style.background='rgba(100,100,255,0.2)';
       addFloat(p.x,p.y,'CLOAKED!','#aaaaff');
     },
-    color:'#8888ff',pip:[3,5,4,2],
+    color:'#8888ff',pip:[3,5,3,2],
     // Phantom bullets always pierce 1
     customShoot(s,dmg){
       const p=s.player;if(!s.enemies.length)return;
@@ -1283,11 +1565,11 @@ const CHARACTERS=[
   },
   // ── 4 NEW CHARACTERS ────────────────────────────────────────────
   {
-    id:'alchemist', name:'ALCHEMIST', icon:'⚗️', tag:'RANGED · POISON',
+    id:'alchemist', unlockHint:'UNLOCK: 35 SHARDS', name:'ALCHEMIST', icon:'⚗️', tag:'RANGED · POISON',
     weaponType:'ranged',
     desc:'Lobs acid flasks that leave poison pools. Acid Nova erupts 8 large acid pools around you.',
     abilityName:'ACID NOVA', abilityIcon:'🧪', abilityCooldown:5,
-    statMods:{speed:-0.1,damage:18,fireRate:200,maxHp:5},
+    statMods:{speed:-0.1,damage:16,fireRate:140,maxHp:10},
     ability(s){
       const p=s.player;
       if(!s.firePatches)s.firePatches=[];
@@ -1322,12 +1604,12 @@ const CHARACTERS=[
     },
   },
   {
-    id:'reaper', name:'REAPER', icon:'💀', tag:'MELEE · SCYTHE',
+    id:'reaper', unlockHint:'UNLOCK: 40 SHARDS', name:'REAPER', icon:'💀', tag:'MELEE · SCYTHE',
     weaponType:'melee',
     desc:'Massive scythe cleaves in a full 180° arc. Soul Harvest heals for each kill.',
     passive:'💀 SOUL METER — Every 5 kills auto-triggers a free mini Soul Harvest.',
     abilityName:'SOUL HARVEST', abilityIcon:'☠️', abilityCooldown:4,
-    statMods:{speed:0.2,damage:52,fireRate:0,maxHp:0},
+    statMods:{speed:0.3,damage:42,fireRate:0,maxHp:-10},
     customShoot(s,dmg){
       const p=s.player;if(!s.enemies.length)return;
       const reach=p.bulletSize*7+50;
@@ -1400,11 +1682,11 @@ const CHARACTERS=[
     color:'#7700aa',pip:[5,3,4,2],
   },
   {
-    id:'gunslinger', name:'GUNSLINGER', icon:'🤠', tag:'RANGED · PISTOLS',
+    id:'gunslinger', unlockHint:'UNLOCK: 30 SHARDS', name:'GUNSLINGER', icon:'🤠', tag:'RANGED · PISTOLS',
     weaponType:'ranged',
     desc:'Dual pistols — fires left AND right simultaneously. Fan the Hammer: rapid burst.',
     abilityName:'FAN THE HAMMER', abilityIcon:'🔫', abilityCooldown:3,
-    statMods:{speed:0.3,damage:5,fireRate:-80,maxHp:-10},
+    statMods:{speed:0.4,damage:12,fireRate:-100,maxHp:-5},
     ability(s){
       const p=s.player;
       if(!s.enemies.length)return;
@@ -1448,11 +1730,11 @@ const CHARACTERS=[
     },
   },
   {
-    id:'druid', name:'DRUID', icon:'🌿', tag:'SUPPORT · NATURE',
+    id:'druid', unlockHint:'UNLOCK: 35 SHARDS', name:'DRUID', icon:'🌿', tag:'SUPPORT · NATURE',
     weaponType:'ranged',
     desc:'Shoots thorns at enemies. Places a Leech Plant that latches up to 3 enemies at once — kills heal you for 2% max HP.',
     abilityName:'LEECH PLANT', abilityIcon:'🪴', abilityCooldown:5,
-    statMods:{speed:0,damage:6,fireRate:120,maxHp:20},
+    statMods:{speed:0,damage:8,fireRate:100,maxHp:25},
     ability(s){
       const p=s.player;
       if(!s.leechPlants)s.leechPlants=[];
@@ -1496,12 +1778,12 @@ const CHARACTERS=[
     },
   },
   {
-    id:'minigunner', name:'MINIGUNNER', icon:'💥', tag:'SUPPRESSION · GUN',
+    id:'minigunner', unlockHint:'UNLOCK: 40 SHARDS', name:'MINIGUNNER', icon:'💥', tag:'SUPPRESSION · GUN',
     weaponType:'ranged',
     desc:'Fires precise 3-round bursts. Each consecutive hit on the same enemy slows them further. Bullet Storm unleashes a piercing hailstorm.',
     passive:'🎯 SUPPRESSION — Consecutive hits on the same enemy stack a slow up to 70%. 5 stacks = fully suppressed.',
     abilityName:'HAILSTORM', abilityIcon:'🌪️', abilityCooldown:7,
-    statMods:{speed:-0.2,damage:-4,fireRate:200,maxHp:20},
+    statMods:{speed:-0.3,damage:2,fireRate:-180,maxHp:15},
     ability(s){
       const p=s.player;
       p._bulletStormActive=true;p._bulletStormTimer=2.0;
@@ -1518,7 +1800,7 @@ const CHARACTERS=[
       triggerShake(8);
       addFloat(p.x,p.y,'🌪 HAILSTORM!','#ff8800');
     },
-    color:'#cc4400',pip:[5,3,4,3],
+    color:'#cc4400',pip:[5,2,5,3],
     customShoot(s,dmg){
       const p=s.player;if(!s.enemies.length)return;
       let near=null,nd=Infinity;
@@ -1549,12 +1831,12 @@ const CHARACTERS=[
     },
   },
   {
-    id:'vampire_hero', name:'VAMPIRE', icon:'🧛', tag:'MELEE · LIFESTEAL',
+    id:'vampire_hero', unlockReq:'boss1', unlockHint:'Kill 1 boss to unlock', name:'VAMPIRE', icon:'🧛', tag:'MELEE · LIFESTEAL',
     weaponType:'melee',
     desc:'Melee attacker with 10% lifesteal on every hit. Blood Surge heals you for all damage dealt.',
     passive:'🩸 LIFESTEAL — Every melee hit heals 10% of damage dealt.',
     abilityName:'BLOOD SURGE', abilityIcon:'❤️‍🔥', abilityCooldown:5,
-    statMods:{speed:0.4,damage:20,fireRate:100,maxHp:-15},
+    statMods:{speed:0.4,damage:30,fireRate:60,maxHp:-10},
     ability(s){
       const p=s.player;
       p._bloodSurgeActive=true;p._bloodSurgeTimer=5.0;
@@ -1599,13 +1881,12 @@ const CHARACTERS=[
   },
   // ── UNLOCKABLE BOSS CHARACTERS ──────────────────────────────────
   {
-    id:'ironclad', name:'IRONCLAD', icon:'⚔️', tag:'MELEE · TANK',
-    unlockReq:'boss1', unlockHint:'Beat your first boss',
+    id:'ironclad', unlockReq:'boss1', unlockHint:'Kill 1 boss to unlock', name:'IRONCLAD', icon:'⚔️', tag:'MELEE · TANK',
     weaponType:'melee',
     desc:'A battle-hardened warrior. Massive HP, reflects damage back at attackers. Fortress Stance makes you invulnerable.',
     passive:'🔩 IRON SKIN — Take 25% less damage from all sources. Thorns: 40% damage returned on contact.',
     abilityName:'FORTRESS STANCE', abilityIcon:'🏰', abilityCooldown:7,
-    statMods:{speed:-0.5,damage:30,fireRate:200,maxHp:60},
+    statMods:{speed:-0.4,damage:32,fireRate:100,maxHp:55},
     ability(s){
       const p=s.player;
       p._barrier=true;p._barrierTimer=3.0;p._fortressStance=true;
@@ -1620,7 +1901,7 @@ const CHARACTERS=[
       triggerShake(6);
       addFloat(p.x,p.y,'🏰 FORTRESS STANCE!','#ffd700');
     },
-    color:'#888899',pip:[4,1,3,5],
+    color:'#888899',pip:[4,2,3,5],
     customShoot(s,dmg){
       const p=s.player;if(!s.enemies.length)return;
       const reach=p.bulletSize*5+40;
@@ -1646,13 +1927,12 @@ const CHARACTERS=[
     },
   },
   {
-    id:'spellblade', name:'SPELLBLADE', icon:'🔮', tag:'RANGED · MAGIC',
-    unlockReq:'boss3', unlockHint:'Beat 3 bosses',
+    id:'spellblade', unlockReq:'boss3', unlockHint:'Kill 3 bosses to unlock', name:'SPELLBLADE', icon:'🔮', tag:'RANGED · MAGIC',
     weaponType:'ranged',
     desc:'Fires homing magic orbs that chain between enemies. Arcane Surge fires 8 seeking missiles that each seek independently.',
     passive:'✨ ARCANE ECHO — Every 4th shot fires a free bonus orb at a random enemy.',
     abilityName:'ARCANE SURGE', abilityIcon:'🌟', abilityCooldown:6,
-    statMods:{speed:0.1,damage:14,fireRate:80,maxHp:-5},
+    statMods:{speed:0.1,damage:18,fireRate:60,maxHp:-5},
     ability(s){
       const p=s.player;
       for(let i=0;i<8;i++){
@@ -1696,13 +1976,12 @@ const CHARACTERS=[
     },
   },
   {
-    id:'riftwalker', name:'RIFTWALKER', icon:'🌌', tag:'RANGED · VOID',
-    unlockReq:'boss5', unlockHint:'Beat 5 bosses',
+    id:'riftwalker', unlockReq:'boss5', unlockHint:'Kill 5 bosses to unlock', name:'RIFTWALKER', icon:'🌌', tag:'RANGED · VOID',
     weaponType:'ranged',
     desc:'Tears rifts in space that teleport bullets. Rift Step instantly blinks to a random position and fires a burst in all directions.',
     passive:'🌌 VOID DRIFT — 20% chance every shot to fire an extra rift bullet from a random nearby position.',
     abilityName:'RIFT STEP', abilityIcon:'✨', abilityCooldown:5,
-    statMods:{speed:0.4,damage:8,fireRate:-50,maxHp:-10},
+    statMods:{speed:0.4,damage:12,fireRate:-60,maxHp:-10},
     ability(s){
       const p=s.player;
       spawnParticles(s,p.x,p.y,'#4400ff',30);
@@ -1742,14 +2021,51 @@ const CHARACTERS=[
       }
     },
   },
+  // ── CHRONOMANCER ────────────────────────────────────────────────
+  {
+    id:'chronomancer', unlockReq:'boss7', unlockHint:'Kill 7 bosses to unlock', name:'CHRONOMANCER', icon:'⏳', tag:'RANGED · TIME',
+    weaponType:'ranged',
+    desc:'Manipulates time itself. Bullets slow enemies on hit. Time Stop freezes all enemies for 2.5s.',
+    passive:'⏳ TIME DILATION — Enemies hit by your bullets are slowed 30% for 1.5s.',
+    abilityName:'TIME STOP', abilityIcon:'❄️', abilityCooldown:9,
+    statMods:{speed:0.1,damage:14,fireRate:60,maxHp:-5},
+    pip:[3,3,3,2],
+    color:'#00ccff',
+    ability(s){
+      const p=s.player;
+      // Freeze all enemies for 2.5s
+      for(const e of s.enemies){
+        if(!e.isBoss){e._timeFrozen=2.5;e._origSpeed=e._origSpeed||e.speed;}
+        else{e._timeFrozen=1.0;} // bosses only slowed briefly
+      }
+      spawnParticles(s,p.x,p.y,'#00ccff',60);spawnParticles(s,p.x,p.y,'#ffffff',30);
+      abilityRing(s,p.x,p.y,'#00ccff',120,.5,{glow:40,lw:5});
+      abilityRing(s,p.x,p.y,'#0088ff',200,.7,{glow:24,lw:3});
+      addFloat(p.x,p.y-20,'TIME STOP!','#00ccff');
+    },
+    customShoot(s,dmg){
+      const p=s.player;if(!s.enemies.length)return;
+      let near=null,nd=Infinity;
+      for(const e of s.enemies){const d=Math.hypot(e.x-p.x,e.y-p.y);if(d<nd){near=e;nd=d;}}
+      if(!near)return;
+      const ang=Math.atan2(near.y-p.y,near.x-p.x);
+      const spread=(p.multishot-1)*.18;
+      for(let i=0;i<p.multishot;i++){
+        const a=ang+(i-(p.multishot-1)/2)*spread;
+        const bDmg=(i===0)?dmg:dmg*(1-MULTISHOT_DMG_PENALTY);
+        s.bullets.push({x:p.x,y:p.y,vx:Math.cos(a)*p.bulletSpeed,vy:Math.sin(a)*p.bulletSpeed,
+          r:p.bulletSize+1,dmg:bDmg,pierce:p.piercing,life:2.2,_timeShot:true,color:'#00ccff'});
+      }
+    },
+  },
   // ── NECROMANCER ───────────────────────────────────────────────────
   {
-    id:'necromancer_hero', name:'NECROMANCER', icon:'💀', tag:'RANGED · SUMMON',
+    id:'necromancer_hero', unlockHint:'UNLOCK: 65 SHARDS', name:'NECROMANCER', icon:'💀', tag:'RANGED · SUMMON',
     weaponType:'ranged',
     desc:'Soul bolts raise slain enemies as skeleton allies (max 5). Each skeleton reduces damage taken 4%.',
     passive:'🦴 UNDYING — Each skeleton reduces damage taken by 4%.',
     abilityName:'DEATH NOVA', abilityIcon:'💥', abilityCooldown:5,
-    statMods:{speed:-0.1,damage:20,fireRate:300,maxHp:0},
+    statMods:{speed:-0.1,damage:18,fireRate:200,maxHp:5},
     unlockHint:'UNLOCK VIA SHARD TREE',
     customShoot(s,dmg){
       const p=s.player;if(!s.enemies.length)return;
@@ -1781,12 +2097,12 @@ const CHARACTERS=[
   },
   // ── TEMPLAR ──────────────────────────────────────────────────────
   {
-    id:'templar', name:'TEMPLAR', icon:'✝️', tag:'HYBRID · HOLY',
+    id:'templar', unlockHint:'UNLOCK: 65 SHARDS', name:'TEMPLAR', icon:'✝️', tag:'HYBRID · HOLY',
     weaponType:'ranged',
     desc:'Consecrated bolts bounce once. Aura weakens nearby enemies -20% dmg. Divine Wrath: holy beam.',
     passive:'✨ CONSECRATION — Enemies within 90px deal 20% less damage.',
     abilityName:'DIVINE WRATH', abilityIcon:'✨', abilityCooldown:6,
-    statMods:{speed:-0.3,damage:32,fireRate:450,maxHp:40},
+    statMods:{speed:-0.2,damage:26,fireRate:220,maxHp:45},
     unlockHint:'UNLOCK VIA SHARD TREE',
     customShoot(s,dmg){
       const p=s.player;if(!s.enemies.length)return;
@@ -1822,16 +2138,16 @@ const CHARACTERS=[
       flashEl('ability-flash');document.getElementById('ability-flash').style.background='rgba(255,255,180,0.35)';
       triggerShake(9);addFloat(p.x,p.y,'✨ DIVINE WRATH!','#ffeeaa');
     },
-    color:'#ddcc44',pip:[2,3,3,4],
+    color:'#ddcc44',pip:[3,2,3,4],
   },
   // ── TRICKSTER ─────────────────────────────────────────────────────
   {
-    id:'trickster', name:'TRICKSTER', icon:'🃏', tag:'RANGED · CHAOS',
+    id:'trickster', unlockHint:'UNLOCK: 60 SHARDS', name:'TRICKSTER', icon:'🃏', tag:'RANGED · CHAOS',
     weaponType:'ranged',
     desc:'Each shot fires a random elemental card (fire/ice/void/acid/bolt). Wild Card fires all 5 at once.',
     passive:'🎲 FORTUNE — 15% chance to fire two cards per shot.',
     abilityName:'WILD CARD', abilityIcon:'🃏', abilityCooldown:4,
-    statMods:{speed:0.2,damage:22,fireRate:280,maxHp:-10},
+    statMods:{speed:0.3,damage:18,fireRate:120,maxHp:-10},
     unlockHint:'UNLOCK VIA SHARD TREE',
     customShoot(s,dmg){
       const p=s.player;if(!s.enemies.length)return;
@@ -1883,49 +2199,97 @@ let selectedChar=CHARACTERS[0];
 function buildCharSelect(){
   const grid=document.getElementById('char-grid');
   grid.innerHTML='';
-  CHARACTERS.forEach(ch=>{
+  const shards=getShards();
+  const css=document.getElementById('char-screen-shards');if(css)css.textContent=shards;
+  // Sort: free/unlocked first, then locked by cost
+  const sortedChars=[
+    ...CHARACTERS.filter(ch=>isCharUnlocked(ch)),
+    ...CHARACTERS.filter(ch=>!isCharUnlocked(ch)),
+  ];
+  sortedChars.forEach(ch=>{
     const locked=!isCharUnlocked(ch);
     const card=document.createElement('div');
     card.className='char-card'+(ch===selectedChar&&!locked?' selected':'')+(locked?' locked':'');
     const pips=(n,v)=>[1,2,3,4,5].map(i=>`<div class="stat-pip${i<=v?' filled':''}"></div>`).join('');
     if(locked){
+      const unlockEntry=SHARD_UPGRADES.find(u=>u.id==='sh_unlock_'+ch.id)||
+                        SHARD_UPGRADES.find(u=>u.apply&&String(u.apply).includes("'"+ch.id+"'"));
+      const cost=unlockEntry?unlockEntry.cost:50;
+      const canAfford=shards>=cost;
       card.innerHTML=`
-        <div class="char-icon">🔒</div>
-        <div class="char-name">${ch.name}</div>
-        <div class="char-unlock-hint">🔒 ${ch.unlockHint||'LOCKED'}</div>
-        <div class="char-desc" style="opacity:.5">Defeat bosses to unlock.</div>`;
-      card.onclick=()=>{
-        // Show a toast-style message without needing game state
-        let el=document.getElementById('locked-toast');
-        if(!el){el=document.createElement('div');el.id='locked-toast';el.style.cssText='position:fixed;top:40%;left:50%;transform:translateX(-50%);font-family:\'Press Start 2P\',monospace;font-size:9px;color:#ff8800;background:rgba(0,0,0,0.85);border:1px solid #ff8800;padding:10px 18px;z-index:999;pointer-events:none;border-radius:4px;';document.body.appendChild(el);}
-        el.textContent='🔒 '+ch.unlockHint.toUpperCase();el.style.opacity='1';
-        clearTimeout(el._t);el._t=setTimeout(()=>el.style.opacity='0',2000);
-      };
+        <div class="char-icon-locked">${ch.icon}</div>
+        <div class="char-name-locked">${ch.name}</div>
+        <div class="lock-desc">${ch.tag}</div>
+        <div class="lock-cost">💠 ${cost} SHARDS</div>
+        <button class="btn-unlock" ${canAfford?'':'disabled'}>
+          ${canAfford?'🔓 UNLOCK':'NOT ENOUGH'}
+        </button>
+        ${!canAfford?`<div class="cant-afford">Need ${cost-shards} more</div>`:''}`;
+      const btn=card.querySelector('.btn-unlock');
+      if(btn&&canAfford){
+        btn.addEventListener('click',(ev)=>{
+          ev.stopPropagation();
+          addShards(-cost);
+          unlockChar(ch.id);
+          showAchievementToast('🔓 '+ch.name+' UNLOCKED!');
+          buildCharSelect();
+        });
+      }
     } else {
       card.innerHTML=`
         <div class="char-icon">${ch.icon}</div>
         <div class="char-name">${ch.name}</div>
-        <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center;">
-          <div class="char-tag">${ch.tag.split('·')[1]?.trim()||ch.tag}</div>
-        </div>
-        <div class="char-desc">${ch.desc}</div>
-        <div class="char-ability">${ch.abilityIcon} ${ch.abilityName} (${ch.abilityCooldown}s CD)</div>
-        ${ch.passive?`<div class="char-ability" style="color:#ffd700;border-top:1px solid rgba(255,215,0,0.2);">${ch.passive}</div>`:''}
-        <div class="stat-row-sm">DMG<div class="stat-pips">${pips('dmg',ch.pip[0])}</div></div>
-        <div class="stat-row-sm">SPD<div class="stat-pips">${pips('spd',ch.pip[1])}</div></div>
-        <div class="stat-row-sm">ATK<div class="stat-pips">${pips('atk',ch.pip[2])}</div></div>
-        <div class="stat-row-sm">DEF<div class="stat-pips">${pips('def',ch.pip[3])}</div></div>`;
+        <div class="char-tag">${ch.tag}</div>`;
       card.onclick=()=>{
-        selectedChar=ch;
-        document.querySelectorAll('.char-card').forEach(c=>c.classList.remove('selected'));
-        card.classList.add('selected');
+        if(selectedChar===ch){
+          // Second click on already selected = confirm
+          confirmCharSelect();
+        } else {
+          selectedChar=ch;
+          document.querySelectorAll('.char-card').forEach(c=>c.classList.remove('selected'));
+          card.classList.add('selected');
+        }
       };
-      card.ondblclick=()=>startGame();
+      card.ondblclick=()=>confirmCharSelect();
     }
     grid.appendChild(card);
   });
 }
 
+function confirmCharSelect(){
+  if(!selectedChar||!isCharUnlocked(selectedChar))return;
+  // Populate detail panel
+  const ch=selectedChar;
+  const pips=(n,v)=>[1,2,3,4,5].map(i=>`<div class="stat-pip${i<=v?' filled':''}"></div>`).join('');
+  const panel=document.getElementById('char-detail-panel');
+  if(panel){
+    panel.innerHTML=`
+      <span class="cd-icon">${ch.icon}</span>
+      <div class="cd-name">${ch.name}</div>
+      <span class="cd-tag">${ch.tag}</span>
+      <div class="cd-desc">${ch.desc}</div>
+      <div class="cd-ability">⚡ ${ch.abilityName} <span style="color:#555;font-size:11px">(${ch.abilityCooldown}s cooldown)</span></div>
+      ${ch.passive?`<div class="cd-passive">${ch.passive}</div>`:''}
+      <div class="cd-stats">
+        <div class="cd-stat">DMG<div class="stat-pips">${pips('dmg',ch.pip[0])}</div></div>
+        <div class="cd-stat">SPD<div class="stat-pips">${pips('spd',ch.pip[1])}</div></div>
+        <div class="cd-stat">ATK<div class="stat-pips">${pips('atk',ch.pip[2])}</div></div>
+        <div class="cd-stat">DEF<div class="stat-pips">${pips('def',ch.pip[3])}</div></div>
+      </div>`;
+  }
+  // Switch panels
+  document.getElementById('char-step-1').style.display='none';
+  const step2=document.getElementById('char-step-2');
+  step2.classList.add('visible');
+  buildRunModSelect();
+}
+
+function charScreenBack(){
+  document.getElementById('char-step-1').style.display='flex';
+  document.getElementById('char-step-1').style.flexDirection='column';
+  const step2=document.getElementById('char-step-2');
+  step2.classList.remove('visible');
+}
 // ═══════════════════════════════════════════════════════════════════
 //  ENGINE
 // ═══════════════════════════════════════════════════════════════════
@@ -1938,9 +2302,9 @@ let state={},raf=null,keys={};
 
 // ── BALANCE CONSTANTS ─────────────────────────────────────────────
 // Diminishing return exponents — lower = steeper DR (nerfs stacking)
-const DR_DMG   = 0.62;   // was 0.82 — damage upgrades fall off hard
-const DR_SPD   = 0.58;   // was 0.78 — speed upgrades fall off hard
-const DR_HP    = 0.70;   // was 0.88 — HP upgrades fall off
+const DR_DMG   = 0.68;   // eased from 0.62 — still falls off but less punishing
+const DR_SPD   = 0.64;   // eased from 0.58
+const DR_HP    = 0.72;   // eased slightly
 const DR_MAG   = 0.68;   // was 0.75
 const DR_BSZ   = 0.65;   // was 0.72 — bullet size DR
 const DR_BSP   = 0.72;   // was 0.80 — bullet speed DR
@@ -2027,10 +2391,10 @@ const ALL_UPGRADES=[
   // Max HP
   {wtype:'any',id:'hp1',name:'BANDAGES',icon:'🩹',rarity:'common',
    desc:'+24 Max HP, +12 HP now',
-   apply:p=>{p._hpStacks=(p._hpStacks||0)+1;const g=Math.max(6,Math.round(24*Math.pow(DR_HP,p._hpStacks-1)));p.maxHp+=g;p.hp=Math.min(p.hp+Math.round(g*.5),p.maxHp);}},
+   apply:p=>{p._hpStacks=(p._hpStacks||0)+1;const g=Math.max(8,Math.round(30*Math.pow(DR_HP,p._hpStacks-1)));p.maxHp+=g;p.hp=Math.min(p.hp+Math.round(g*.5),p.maxHp);}},
   {wtype:'any',id:'hp4',name:'IRON HIDE',icon:'🛡️',rarity:'epic',
    desc:'+70 Max HP, +35 HP now, +2.5 HP/sec regen',
-   apply:p=>{p._hpStacks=(p._hpStacks||0)+1;const g=Math.max(14,Math.round(70*Math.pow(DR_HP,p._hpStacks-1)));p.maxHp+=g;p.hp=Math.min(p.hp+35,p.maxHp);p._regen+=Math.max(1,Math.round(2.5*Math.pow(DR_REG,p._hpStacks-1)));}},
+   apply:p=>{p._hpStacks=(p._hpStacks||0)+1;const g=Math.max(10,Math.round(50*Math.pow(DR_HP,p._hpStacks-1)));p.maxHp+=g;p.hp=Math.min(p.hp+25,p.maxHp);p._regen+=Math.max(0.5,parseFloat((1.5*Math.pow(DR_REG,p._hpStacks-1)).toFixed(1)));}},
 
   // Regen
   {wtype:'any',id:'reg1',name:'POTATO STARCH',icon:'🥔',rarity:'rare',
@@ -2051,7 +2415,7 @@ const ALL_UPGRADES=[
   // Ability cooldown
   {wtype:'any',id:'cd1',name:'ABILITY SHARD',icon:'💎',rarity:'rare',
    desc:'-15% ability cooldown permanently',
-   apply:p=>p._abilityMaxCd*=.85},
+   apply:p=>p._abilityMaxCd*=.82},
   {wtype:'any',id:'cd2',name:'ETERNAL CORE',icon:'♾️',rarity:'epic',
    desc:'-25% ability cooldown permanently',
    apply:p=>p._abilityMaxCd*=.75},
@@ -2066,7 +2430,7 @@ const ALL_UPGRADES=[
    desc:'+1 HP on every kill',
    apply:p=>p._vampiric=true},
   {wtype:'any',id:'life_leech',name:'LIFE LEECH',icon:'❤️‍🔥',rarity:'rare',
-   desc:'Heal 1.5% max HP per kill',
+   desc:'On hit: heal 5% of damage dealt',
    apply:p=>p._lifeLeech=true},
 
   // Defense
@@ -2078,7 +2442,7 @@ const ALL_UPGRADES=[
    apply:p=>p._mirrorShield=true},
 
   // Utility
-  {wtype:'any',id:'new_adrenaline',name:'ADRENALINE',icon:'💉',rarity:'rare',
+  {wtype:'any',id:'new_adrenaline',name:'ADRENALINE',icon:'💉',rarity:'rare', // On low HP: +30% speed+dmg
    desc:'+8% damage per wave survived (wave 10 = +80%). Stacks with everything.',
    apply:p=>p._adrenaline=true},
   {wtype:'any',id:'new_goldmagnet',name:'GOLD MAGNET',icon:'💰',rarity:'common',
@@ -2090,7 +2454,7 @@ const ALL_UPGRADES=[
   {wtype:'any',id:'new_berserker_charm',name:'BERSERKER CHARM',icon:'😤',rarity:'rare',
    desc:'+15% damage when below 40% HP',
    apply:p=>p._berserkerCharm=true},
-  {wtype:'any',id:'new_haste',name:'WAR DRUMS',icon:'🥁',rarity:'rare',
+  {wtype:'any',id:'new_haste',name:'WAR DRUMS',icon:'🥁',rarity:'rare', // +10% spd, -10% fireRate
    desc:'+10% move speed and +10% attack speed, permanently',
    apply:p=>{p.speed*=1.10;p.fireRate=Math.max(100,p.fireRate*.90);}},
   {wtype:'any',id:'new_glass',name:'GLASS CANNON',icon:'💎',rarity:'epic',
@@ -2098,7 +2462,7 @@ const ALL_UPGRADES=[
    apply:p=>{p.damage=Math.round(p.damage*1.4);p.maxHp=Math.max(20,p.maxHp-25);p.hp=Math.min(p.hp,p.maxHp);}},
   {wtype:'any',id:'overclock',name:'OVERCLOCK',icon:'⚙️',rarity:'epic',
    desc:'+25% attack speed, +25% move speed. Costs 15% Max HP.',
-   apply:p=>{p._firStacks=(p._firStacks||0)+1;p.fireRate=Math.max(100,p.fireRate*0.75);p.speed*=1.25;p.maxHp=Math.max(20,Math.floor(p.maxHp*0.85));p.hp=Math.min(p.hp,p.maxHp);}},
+   apply:p=>{p._firStacks=(p._firStacks||0)+1;p.fireRate=Math.max(120,p.fireRate*0.82);p.speed*=1.12;p.maxHp=Math.max(30,Math.floor(p.maxHp*0.88));p.hp=Math.min(p.hp,p.maxHp);}},
 
   // ── RANGED ONLY ─────────────────────────────────────────────────
 
@@ -2135,7 +2499,7 @@ const ALL_UPGRADES=[
    apply:p=>{p._firStacks=(p._firStacks||0)+1;p.fireRate=Math.max(130,p.fireRate*(1-(.17*Math.pow(DR_FIR,p._firStacks-1))));}},
   {wtype:'ranged',id:'gatling',name:'GATLING',icon:'🔩',rarity:'rare',
    desc:'-55% fire cooldown in one go. Massively boosts fire rate.',
-   apply:p=>{p._firStacks=(p._firStacks||0)+1;p.fireRate=Math.max(60,Math.round(p.fireRate*0.45));}},
+   apply:p=>{p._firStacks=(p._firStacks||0)+1;p.fireRate=Math.max(80,Math.round(p.fireRate*0.55));}},
 
   // Multishot
   {wtype:'ranged',id:'mul1',name:'BUCKSHOT',icon:'💥',rarity:'rare',
@@ -2310,6 +2674,72 @@ function getUpgradeChoices(pool,count=3){
 
 
 
+
+// ═══════════════════════════════════════════════════════════════════
+//  SAVE SYSTEM — JSON export/import
+// ═══════════════════════════════════════════════════════════════════
+function buildSaveData(){
+  return {
+    version: '3.4',
+    savedAt: new Date().toISOString(),
+    shards: getShards(),
+    ownedUpgrades: getOwnedShardUpgrades(),
+    unlockedChars: (() => { try{ return JSON.parse(localStorage.getItem('spudgeon_unlocked')||'[]'); }catch(e){ return []; } })(),
+    highScore: getHighScore(),
+    achievements: getUnlockedAchievements(),
+  };
+}
+
+function exportSaveData(){
+  const data = buildSaveData();
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'spudgeon_save.json';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  showAchievementToast('💾 SAVE EXPORTED!');
+}
+
+function importSaveData(file){
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if(!data.version) throw new Error('Invalid save');
+      if(data.shards !== undefined) localStorage.setItem('spudgeon_shards', data.shards);
+      if(data.ownedUpgrades) localStorage.setItem('spudgeon_shard_owned', JSON.stringify(data.ownedUpgrades));
+      if(data.unlockedChars) localStorage.setItem('spudgeon_unlocked', JSON.stringify(data.unlockedChars));
+      if(data.highScore){
+        localStorage.setItem('spudgeon_hs_wave', data.highScore.wave||0);
+        localStorage.setItem('spudgeon_hs_kills', data.highScore.kills||0);
+        localStorage.setItem('spudgeon_hs_level', data.highScore.level||0);
+        localStorage.setItem('spudgeon_hs_char', data.highScore.waveChar||'');
+      }
+      if(data.achievements) localStorage.setItem('spudgeon_ach', JSON.stringify(data.achievements));
+      showAchievementToast('✅ SAVE IMPORTED! Reloading...');
+      setTimeout(()=>location.reload(), 1500);
+    } catch(err) {
+      showAchievementToast('❌ IMPORT FAILED: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function triggerImport(){
+  const inp = document.createElement('input');
+  inp.type='file'; inp.accept='.json';
+  inp.onchange = e => { if(e.target.files[0]) importSaveData(e.target.files[0]); };
+  inp.click();
+}
+
+function getSaveDataPreview(){
+  const d = buildSaveData();
+  return `SHARDS: ${d.shards} | UPGRADES: ${d.ownedUpgrades.length} | ACHIEVEMENTS: ${d.achievements.length} | BEST WAVE: ${d.highScore.wave||0}`;
+}
+
+
 // ═══════════════════════════════════════════════════════════════════
 //  META-PROGRESSION — SHARD SYSTEM
 // ═══════════════════════════════════════════════════════════════════
@@ -2356,7 +2786,52 @@ const SHARD_UPGRADES = [
   {id:'sh_sapper_ward',icon:'⚡',  name:'SAPPER WARD',   cost:14, desc:'Sapper debuff duration halved',
    apply(p){ p._sapperWard=true; }},
   {id:'sh_wave_gold',  icon:'🌊',  name:'WAVE BOUNTY',   cost:12, desc:'+10 gold at start of each wave',
-   apply(p){ p._waveBounty=(p._waveBounty||0)+10; }},
+   apply(p){ p._waveBounty=(p._waveBounty||0)+10; } },
+  // CHARACTER UNLOCKS
+  {id:'sh_unlock_marksman', icon:'🔓', name:'UNLOCK MARKSMAN', cost:20, desc:'Unlock the MARKSMAN character.',
+   apply(p){ unlockChar('sniper'); showAchievementToast('🔓 MARKSMAN UNLOCKED!'); } },
+  {id:'sh_unlock_engineer', icon:'🔓', name:'UNLOCK ENGINEER', cost:25, desc:'Unlock the ENGINEER character.',
+   apply(p){ unlockChar('engineer'); showAchievementToast('🔓 ENGINEER UNLOCKED!'); } },
+  {id:'sh_unlock_cryo', icon:'🔓', name:'UNLOCK CRYOMANCER', cost:20, desc:'Unlock the CRYOMANCER character.',
+   apply(p){ unlockChar('cryomancer'); showAchievementToast('🔓 CRYOMANCER UNLOCKED!'); } },
+  {id:'sh_unlock_pyro', icon:'🔓', name:'UNLOCK PYROMANCER', cost:25, desc:'Unlock the PYROMANCER character.',
+   apply(p){ unlockChar('pyro'); showAchievementToast('🔓 PYROMANCER UNLOCKED!'); } },
+  {id:'sh_unlock_knight', icon:'🔓', name:'UNLOCK KNIGHT', cost:20, desc:'Unlock the KNIGHT character.',
+   apply(p){ unlockChar('knight'); showAchievementToast('🔓 KNIGHT UNLOCKED!'); } },
+  {id:'sh_unlock_berserk', icon:'🔓', name:'UNLOCK BERSERKER', cost:25, desc:'Unlock the BERSERKER character.',
+   apply(p){ unlockChar('berserker'); showAchievementToast('🔓 BERSERKER UNLOCKED!'); } },
+  {id:'sh_unlock_ninja', icon:'🔓', name:'UNLOCK NINJA', cost:25, desc:'Unlock the NINJA character.',
+   apply(p){ unlockChar('ninja'); showAchievementToast('🔓 NINJA UNLOCKED!'); } },
+  {id:'sh_unlock_sentinel', icon:'🔓', name:'UNLOCK SENTINEL', cost:30, desc:'Unlock the SENTINEL character.',
+   apply(p){ unlockChar('sentinel'); showAchievementToast('🔓 SENTINEL UNLOCKED!'); } },
+  {id:'sh_unlock_warlock', icon:'🔓', name:'UNLOCK WARLOCK', cost:30, desc:'Unlock the WARLOCK character.',
+   apply(p){ unlockChar('warlock'); showAchievementToast('🔓 WARLOCK UNLOCKED!'); } },
+  {id:'sh_unlock_phantom', icon:'🔓', name:'UNLOCK PHANTOM', cost:35, desc:'Unlock the PHANTOM character.',
+   apply(p){ unlockChar('phantom'); showAchievementToast('🔓 PHANTOM UNLOCKED!'); } },
+  {id:'sh_unlock_alchemist', icon:'🔓', name:'UNLOCK ALCHEMIST', cost:35, desc:'Unlock the ALCHEMIST character.',
+   apply(p){ unlockChar('alchemist'); showAchievementToast('🔓 ALCHEMIST UNLOCKED!'); } },
+  {id:'sh_unlock_reaper', icon:'🔓', name:'UNLOCK REAPER', cost:40, desc:'Unlock the REAPER character.',
+   apply(p){ unlockChar('reaper'); showAchievementToast('🔓 REAPER UNLOCKED!'); } },
+  {id:'sh_unlock_gunslinger', icon:'🔓', name:'UNLOCK GUNSLINGER', cost:30, desc:'Unlock the GUNSLINGER character.',
+   apply(p){ unlockChar('gunslinger'); showAchievementToast('🔓 GUNSLINGER UNLOCKED!'); } },
+  {id:'sh_unlock_druid', icon:'🔓', name:'UNLOCK DRUID', cost:35, desc:'Unlock the DRUID character.',
+   apply(p){ unlockChar('druid'); showAchievementToast('🔓 DRUID UNLOCKED!'); } },
+  {id:'sh_unlock_minigun', icon:'🔓', name:'UNLOCK MINIGUNNER', cost:40, desc:'Unlock the MINIGUNNER character.',
+   apply(p){ unlockChar('minigunner'); showAchievementToast('🔓 MINIGUNNER UNLOCKED!'); } },
+  {id:'sh_unlock_vampire', icon:'🔓', name:'UNLOCK VAMPIRE', cost:50, desc:'Unlock the VAMPIRE character.',
+   apply(p){ unlockChar('vampire_hero'); showAchievementToast('🔓 VAMPIRE UNLOCKED!'); } },
+  {id:'sh_unlock_ironclad', icon:'🔓', name:'UNLOCK IRONCLAD', cost:50, desc:'Unlock the IRONCLAD character.',
+   apply(p){ unlockChar('ironclad'); showAchievementToast('🔓 IRONCLAD UNLOCKED!'); } },
+  {id:'sh_unlock_spellblade', icon:'🔓', name:'UNLOCK SPELLBLADE', cost:55, desc:'Unlock the SPELLBLADE character.',
+   apply(p){ unlockChar('spellblade'); showAchievementToast('🔓 SPELLBLADE UNLOCKED!'); } },
+  {id:'sh_unlock_riftwalker', icon:'🔓', name:'UNLOCK RIFTWALKER', cost:60, desc:'Unlock the RIFTWALKER character.',
+   apply(p){ unlockChar('riftwalker'); showAchievementToast('🔓 RIFTWALKER UNLOCKED!'); } },
+  {id:'sh_unlock_necro', icon:'🔓', name:'UNLOCK NECROMANCER', cost:65, desc:'Unlock the NECROMANCER character.',
+   apply(p){ unlockChar('necromancer_hero'); showAchievementToast('🔓 NECROMANCER UNLOCKED!'); } },
+  {id:'sh_unlock_templar', icon:'🔓', name:'UNLOCK TEMPLAR', cost:65, desc:'Unlock the TEMPLAR character.',
+   apply(p){ unlockChar('templar'); showAchievementToast('🔓 TEMPLAR UNLOCKED!'); } },
+  {id:'sh_unlock_trickster', icon:'🔓', name:'UNLOCK TRICKSTER', cost:60, desc:'Unlock the TRICKSTER character.',
+   apply(p){ unlockChar('trickster'); showAchievementToast('🔓 TRICKSTER UNLOCKED!'); } },
 ];
 
 function getShards(){ try{return parseInt(localStorage.getItem('spudgeon_shards')||'0');}catch(e){return 0;} }
@@ -2371,7 +2846,7 @@ function calcShardReward(s){
   shards += (s._bossKills||0) * 5;
   const grade = calcRunGrade(s);
   if(grade==='S')shards+=20;else if(grade==='A')shards+=12;else if(grade==='B')shards+=6;
-  return Math.max(1, Math.floor(shards));
+  return Math.max(1, Math.floor(shards * (s._shardMult||1.0)));
 }
 
 function applyShardUpgradesToPlayer(p,s){
@@ -2382,33 +2857,104 @@ function applyShardUpgradesToPlayer(p,s){
   }
 }
 
+function setUpgradeTab(tab){
+  document.getElementById('upg-panel-stats').style.display = tab==='stats'?'flex':'none';
+  document.getElementById('upg-panel-chars').style.display = tab==='chars'?'flex':'none';
+  document.querySelectorAll('.upg-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+}
+
 function buildUnlockScreen(){
-  const grid = document.getElementById('unlock-grid');
-  const totalEl = document.getElementById('shard-total-val');
-  if(!grid) return;
-  const shards = getShards();
-  if(totalEl) totalEl.textContent = shards;
-  grid.innerHTML = '';
-  SHARD_UPGRADES.forEach(up => {
-    const owned = isShardOwned(up.id);
-    const canAfford = shards >= up.cost;
-    const node = document.createElement('div');
-    node.className = 'unlock-node' + (owned?' owned':'') + (!owned&&!canAfford?' locked':'');
-    node.innerHTML = `<div class="un-icon">${up.icon}</div>
-      <div class="un-name">${up.name}</div>
-      <div class="un-desc">${up.desc}</div>
-      <div class="un-cost ${owned?'owned':''}">${owned?'✓ OWNED':'💠 '+up.cost+' SHARDS'}</div>`;
-    if(!owned && canAfford){
-      node.onclick = () => {
-        addShards(-up.cost);
-        ownShardUpgrade(up.id);
-        buildUnlockScreen();
-        // Apply unlock-only effects immediately if possible
-        if(up.id.startsWith('sh_unlock_')) up.apply(null);
-      };
+  const prev=document.getElementById('save-preview');
+  if(prev)prev.textContent=getSaveDataPreview();
+  const shards=getShards();
+  const totalEl=document.getElementById('shard-total-val');
+  if(totalEl)totalEl.textContent=shards;
+
+  // ── STAT BOOSTS panel ──────────────────────────────────────────
+  const statPanel=document.getElementById('upg-panel-stats');
+  if(statPanel){
+    statPanel.innerHTML='';
+    const statUps=SHARD_UPGRADES.filter(u=>!u.id.startsWith('sh_unlock_'));
+    // owned first
+    const sorted=[...statUps.filter(u=>isShardOwned(u.id)),...statUps.filter(u=>!isShardOwned(u.id))];
+    sorted.forEach(up=>{
+      const owned=isShardOwned(up.id);
+      const canAfford=shards>=up.cost;
+      const card=document.createElement('div');
+      card.className='upg-card'+(owned?' owned':(!canAfford?' cant':''));
+      card.innerHTML=`
+        <div class="uc-icon">${up.icon}</div>
+        <div class="uc-name">${up.name}</div>
+        <div class="uc-desc">${up.desc}</div>
+        <div class="uc-cost ${owned?'owned':canAfford?'buy':'cant'}">${owned?'✓ OWNED':'💠 '+up.cost}</div>`;
+      if(!owned&&canAfford){
+        card.onclick=()=>{addShards(-up.cost);ownShardUpgrade(up.id);buildUnlockScreen();};
+      }
+      statPanel.appendChild(card);
+    });
+  }
+
+  // ── CHARACTER UNLOCKS panel ────────────────────────────────────
+  const charPanel=document.getElementById('upg-panel-chars');
+  if(charPanel){
+    charPanel.innerHTML='';
+    // Split: already unlocked (any method), shard-buyable, boss-locked
+    const allChars=CHARACTERS.filter(ch=>ch.id!=='potato'&&ch.unlockHint);
+    const unlockedChars=allChars.filter(ch=>isCharUnlocked(ch));
+    const shardChars=allChars.filter(ch=>!isCharUnlocked(ch)&&!ch.unlockReq);
+    const bossChars=allChars.filter(ch=>!isCharUnlocked(ch)&&ch.unlockReq);
+
+    const makeCharCard=(ch,state)=>{
+      const card=document.createElement('div');
+      const up=SHARD_UPGRADES.find(u=>u.id==='sh_unlock_'+ch.id)||
+               SHARD_UPGRADES.find(u=>u.apply&&String(u.apply).includes("'"+ch.id+"'"));
+      const cost=up?up.cost:50;
+      const canAfford=shards>=cost;
+      if(state==='owned'){
+        card.className='char-upg-card owned';
+        card.innerHTML=`<div class="cuc-icon">${ch.icon}</div>
+          <div class="cuc-info"><div class="cuc-name">${ch.name}</div><div class="cuc-tag">${ch.tag}</div></div>
+          <div class="cuc-right"><div class="cuc-badge owned">✓ UNLOCKED</div></div>`;
+      } else if(state==='boss'){
+        card.className='char-upg-card boss-locked';
+        card.innerHTML=`<div class="cuc-icon" style="filter:grayscale(1);opacity:0.5">${ch.icon}</div>
+          <div class="cuc-info"><div class="cuc-name" style="color:#888">${ch.name}</div><div class="cuc-tag">${ch.tag}</div></div>
+          <div class="cuc-right"><div class="cuc-badge boss">🏆 ${ch.unlockHint.toUpperCase()}</div></div>`;
+      } else {
+        card.className='char-upg-card'+(canAfford?'':' cant');
+        card.innerHTML=`<div class="cuc-icon" style="${canAfford?'':'filter:grayscale(1);opacity:0.5'}">${ch.icon}</div>
+          <div class="cuc-info"><div class="cuc-name" style="${canAfford?'':'color:#666'}">${ch.name}</div><div class="cuc-tag">${ch.tag}</div></div>
+          <div class="cuc-right">
+            <div class="cuc-badge ${canAfford?'buy':'cant'}">💠 ${cost} SHARDS</div>
+            ${!canAfford?`<div style="font-family:'Share Tech Mono',monospace;font-size:7px;color:#554466">Need ${cost-shards} more</div>`:''}
+          </div>`;
+        if(canAfford&&up){
+          const badge=card.querySelector('.cuc-badge');
+          card.onclick=()=>{addShards(-cost);ownShardUpgrade(up.id);up.apply(null);buildUnlockScreen();};
+        }
+      }
+      charPanel.appendChild(card);
+    };
+
+    const secLabel=(color,text)=>{const d=document.createElement('div');d.style.cssText=`font-family:'Bebas Neue',sans-serif;font-size:11px;color:${color};letter-spacing:3px;width:100%;margin:6px 0 4px`;d.textContent=text;charPanel.appendChild(d);};
+    if(unlockedChars.length){
+      secLabel('#ffd700','✓ UNLOCKED');
+      unlockedChars.forEach(ch=>makeCharCard(ch,'owned'));
     }
-    grid.appendChild(node);
-  });
+    if(shardChars.length){
+      secLabel('#9933ff','💠 UNLOCK WITH SHARDS');
+      shardChars.sort((a,b)=>{
+        const ca=SHARD_UPGRADES.find(u=>u.id==='sh_unlock_'+a.id);
+        const cb=SHARD_UPGRADES.find(u=>u.id==='sh_unlock_'+b.id);
+        return (ca?ca.cost:99)-(cb?cb.cost:99);
+      }).forEach(ch=>makeCharCard(ch,'shard'));
+    }
+    if(bossChars.length){
+      secLabel('#ff8844','🏆 BOSS UNLOCKS');
+      bossChars.forEach(ch=>makeCharCard(ch,'boss'));
+    }
+  }
 }
 
 function openUnlockScreen(){
@@ -2419,140 +2965,184 @@ function closeUnlockScreen(){
   showScreen('title-screen');
 }
 
+function updateRunModHUD(){
+  const el=document.getElementById('run-mod-hud');
+  if(!el||!activeRunModifier)return;
+  el.textContent=activeRunModifier.icon+' '+activeRunModifier.name;
+  el.style.color=activeRunModifier.cls==='hard'?'#ff8866':activeRunModifier.cls==='easy'?'#88ff88':activeRunModifier.cls==='chaos'?'#00ffcc':'#aaaaaa';
+}
 function updateShardHUD(){
   const el = document.getElementById('shard-val');
   if(el) el.textContent = getShards();
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  WAVE MODIFIERS
+//  RUN MODIFIERS — chosen before each run, affect shard gain
+// ═══════════════════════════════════════════════════════════════════
+const RUN_MODIFIERS = [
+  {id:'none',      name:'STANDARD',     icon:'⚔️', cls:'normal', shardMult:1.0,  desc:'Normal run.'},
+  {id:'glass',     name:'GLASS CANNON', icon:'🔮', cls:'hard',   shardMult:1.5,  desc:'Deal 2× dmg, take 2× dmg. +50% shards.'},
+  {id:'noheal',    name:'BLOOD PACT',   icon:'🩸', cls:'hard',   shardMult:1.6,  desc:'No healing at all. +60% shards.'},
+  {id:'elite_all', name:'ELITE SURGE',  icon:'👑', cls:'hard',   shardMult:1.4,  desc:'All enemies are elites. +40% shards.'},
+  {id:'frenzied',  name:'SPEED DEMON',  icon:'💨', cls:'hard',   shardMult:1.4,  desc:'Enemies move 70% faster. +40% shards.'},
+  {id:'titan',     name:'TITAN RUN',    icon:'💀', cls:'hard',   shardMult:1.8,  desc:'Two bosses per boss wave. +80% shards.'},
+];
+
+let activeRunModifier = RUN_MODIFIERS[2]; // default: STANDARD
+
+function applyRunModifier(s){
+  const m = activeRunModifier;
+  if(!m) return;
+  if(m.id==='slowmo')    s.player.speed = Math.max(0.5, s.player.speed*0.7);
+  if(m.id==='fragile')   { s.player.hp = Math.floor(s.player.maxHp*0.5); }
+  if(m.id==='elite_all') s._modEliteAll = true;
+  if(m.id==='armored')   s._modArmored = true;
+  if(m.id==='frenzied')  s._modFrenzied = true;
+  if(m.id==='glass')     s._modGlass = true;
+  if(m.id==='noheal')    s._modNoHeal = true;
+  if(m.id==='titan')     s._modTitanRun = true;
+  if(m.id==='reversal')  s._modReversal = true;
+  if(m.id==='echo')      s._modEcho = true;
+  // Store multiplier for shard calc
+  s._shardMult = m.shardMult;
+}
+
+// Titan run: spawn second boss on boss waves
+function checkTitanRun(s){
+  if(!s._modTitanRun) return;
+  if(!s._titanSecondSpawned){ s._titanSecondSpawned=true; spawnBoss(s); }
+}
+
+function buildRunModSelect(){
+  const grid = document.getElementById('run-mod-grid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  RUN_MODIFIERS.forEach(m => {
+    const card = document.createElement('div');
+    card.className = 'run-mod-card ' + m.cls + (m===activeRunModifier?' selected':'');
+    const mult = m.shardMult >= 1 ? `+${Math.round((m.shardMult-1)*100)}%` : `${Math.round((m.shardMult-1)*100)}%`;
+    card.innerHTML = `<div class="rmc-icon">${m.icon}</div>
+      <div class="rmc-name">${m.name}</div>
+      <div class="rmc-desc">${m.desc}</div>
+      <div class="rmc-mult ${m.shardMult>=1?'pos':'neg'}">💠 ${mult} SHARDS</div>`;
+    card.onclick = () => {
+      activeRunModifier = m;
+      buildRunModSelect();
+    };
+    grid.appendChild(card);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  (WAVE MODIFIER STUBS — kept for spawn effects used in run mods)
 // ═══════════════════════════════════════════════════════════════════
 const WAVE_MODIFIERS = [
   // DANGER modifiers
   {id:'armored',    name:'ARMORED',     icon:'🛡',  cls:'danger', desc:'Enemies take 40% less damage',
    onWaveStart(s){ s._modArmored=true; },  onWaveEnd(s){ s._modArmored=false; }},
+  {id:'frenzied',   name:'FRENZIED',    icon:'💨',  cls:'danger', desc:'All enemies move 70% faster',
+   onWaveStart(s){ s._modFrenzied=true; }, onWaveEnd(s){ s._modFrenzied=false; }},
+  {id:'vampiric',   name:'VAMPIRIC',    icon:'🩸',  cls:'danger', desc:'Enemies heal 8% max HP on hit',
+   onWaveStart(s){ s._modVampiric=true; }, onWaveEnd(s){ s._modVampiric=false; }},
   {id:'bloodmoon',  name:'BLOOD MOON',  icon:'🌑',  cls:'danger', desc:'No healing this wave',
    onWaveStart(s){ s._modNoHeal=true; },   onWaveEnd(s){ s._modNoHeal=false; }},
   {id:'sapper',     name:'SABOTAGE',    icon:'⚡',  cls:'danger', desc:'Your ability cooldown is doubled',
    onWaveStart(s){ s._modSapper=true; },   onWaveEnd(s){ s._modSapper=false; }},
+  {id:'elite_wave', name:'ELITE SURGE', icon:'👑',  cls:'danger', desc:'All enemies spawn as elites',
+   onWaveStart(s){ s._modEliteAll=true; }, onWaveEnd(s){ s._modEliteAll=false; }},
+  {id:'minefield',  name:'MINEFIELD',   icon:'💣',  cls:'danger', desc:'Random damage zones appear',
+   onWaveStart(s){ s._modMinefield=true; },onWaveEnd(s){ s._modMinefield=false;s._minePatches=[];}},
   // BUFF modifiers (good for player)
   {id:'doubler',    name:'DOUBLE XP',   icon:'⚡',  cls:'buff',   desc:'Enemies drop 2× XP',
    onWaveStart(s){ s._modDoubleXp=true; }, onWaveEnd(s){ s._modDoubleXp=false; }},
   {id:'goldrain',   name:'GOLD RUSH',   icon:'💰',  cls:'buff',   desc:'Enemies drop 3× gold',
    onWaveStart(s){ s._modGoldRush=true; }, onWaveEnd(s){ s._modGoldRush=false; }},
+  {id:'berserker_mod',name:'BLOODLUST', icon:'🔥',  cls:'buff',   desc:'You deal 40% more damage',
+   onWaveStart(s){ s._modPlayerDmg=1.4; }, onWaveEnd(s){ s._modPlayerDmg=1.0; }},
   {id:'guardian',   name:'GUARDIAN',    icon:'🛡',  cls:'buff',   desc:'Start wave with 25% HP shield',
    onWaveStart(s){ s.player._modShield=s.player.maxHp*0.25; },
    onWaveEnd(s){ s.player._modShield=0; }},
+  // CHAOS modifiers
+  {id:'echo',       name:'ECHO',        icon:'👁',  cls:'chaos',  desc:'Enemies spawn a weak copy on death',
+   onWaveStart(s){ s._modEcho=true; },     onWaveEnd(s){ s._modEcho=false; }},
+  {id:'glasscannon',name:'GLASS CANNON',icon:'🔮',  cls:'chaos',  desc:'Deal 2× damage, take 2× damage',
+   onWaveStart(s){ s._modGlass=true; },    onWaveEnd(s){ s._modGlass=false; }},
+  {id:'fog',        name:'BLACKOUT',    icon:'🌫',  cls:'chaos',  desc:'Minimap disabled, reduced vision',
+   onWaveStart(s){ s._modFog=true; },      onWaveEnd(s){ s._modFog=false; }},
+  {id:'reversal',   name:'REVERSAL',    icon:'🔄',  cls:'chaos',  desc:'Enemies deal damage that heals you, healing patches hurt',
+   onWaveStart(s){ s._modReversal=true; }, onWaveEnd(s){ s._modReversal=false; }},
+  {id:'titan',      name:'TITAN WAVE',  icon:'💀',  cls:'danger', desc:'Spawn a random boss mid-wave',
+   onWaveStart(s){ s._modTitan=true; setTimeout(()=>{if(state&&!state.bossAlive)spawnBoss(state);},3000); },
+   onWaveEnd(s){ s._modTitan=false; }},
 ];
 
-function rollWaveModifiers(wave) {
-  // No modifiers on wave 1. Boss waves get 1 buff only.
-  if(wave <= 1) return [];
-  const isBossWave = wave % 5 === 0;
-  if(isBossWave) {
-    const buffs = WAVE_MODIFIERS.filter(m => m.cls === 'buff');
-    return [buffs[Math.floor(Math.random()*buffs.length)]];
-  }
-  const count = wave >= 10 ? 2 : 1;
-  const shuffled = [...WAVE_MODIFIERS].sort(() => Math.random()-.5);
-  const chosen = [];
-  for(const m of shuffled) {
-    if(chosen.length >= count) break;
-    if(!chosen.find(c => c.id === m.id)) chosen.push(m);
-  }
-  return chosen;
-}
+function rollWaveModifiers(wave) { return []; } // disabled - run mods instead
 
-function applyWaveModifiers(s, mods) {
-  // End any previous mods
-  if(s._activeMods) s._activeMods.forEach(m => m.onWaveEnd && m.onWaveEnd(s));
-  s._activeMods = mods;
-  mods.forEach(m => m.onWaveStart && m.onWaveStart(s));
-  renderActiveModStrip(s);
-}
+function applyWaveModifiers(s, mods) { /* disabled */ }
 
-function showWaveModBanner(mods, callback) {
-  const banner = document.getElementById('wave-modifier-banner');
-  const list = document.getElementById('wmod-list');
-  if(!banner || !list) { if(callback) callback(); return; }
-  list.innerHTML = mods.map(m =>
-    `<div class="wmod-item ${m.cls}">${m.icon} ${m.name} — ${m.desc}</div>`
-  ).join('');
-  banner.classList.add('active');
-  setTimeout(() => {
-    banner.classList.remove('active');
-    if(callback) setTimeout(callback, 350);
-  }, 2800);
-}
+function showWaveModBanner(mods, callback) { if(callback) callback(); }
 
-function renderActiveModStrip(s) {
-  const el = document.getElementById('active-mods');
-  if(!el) return;
-  const mods = s._activeMods || [];
-  el.innerHTML = mods.map(m =>
-    `<div class="amod-chip ${m.cls}">${m.icon} ${m.name}</div>`
-  ).join('');
-}
+function renderActiveModStrip(s) {}
 
 // ═══════════════════════════════════════════════════════════════════
 //  ENEMIES — HARDER SCALING
 // ═══════════════════════════════════════════════════════════════════
 const ENEMY_TYPES=[
-  {name:'GRUNT',   color:'#ff4455',r:10,speed:1.5, hp:55, dmgPs:20,xp:3, gold:1,shape:'circle'},
-  {name:'RUNNER',  color:'#ff9900',r:8, speed:2.4, hp:48, dmgPs:17,xp:2, gold:1,shape:'circle'},
-  {name:'TANK',    color:'#cc2200',r:19,speed:0.95, hp:500,dmgPs:28,xp:8, gold:3,shape:'circle'},
-  {name:'SPEEDER', color:'#ffdd00',r:8, speed:3.0, hp:58, dmgPs:21,xp:4, gold:2,shape:'diamond'},
-  {name:'BRUTE',   color:'#cc00ff',r:22,speed:0.95, hp:850,dmgPs:33,xp:15,gold:7,shape:'circle'},
-  {name:'GHOST',   color:'#88aaff',r:11,speed:2.5, hp:70, dmgPs:21,xp:5, gold:2,shape:'circle',alpha:.6},
-  {name:'EXPLODER',color:'#ff6600',r:12,speed:2.2, hp:80, dmgPs:0, xp:6, gold:2,shape:'circle',explodes:true},
-  {name:'SHIELDER',color:'#00ccff',r:13,speed:1.5, hp:130,dmgPs:23,xp:7, gold:3,shape:'circle',shielded:true},
-  {name:'SPLITTER',color:'#aa44ff',r:14,speed:1.6, hp:220,dmgPs:18,xp:10,gold:4,shape:'circle',splits:true},
-  {name:'SNIPER',  color:'#ff4488',r:9, speed:0.7, hp:58, dmgPs:0, xp:6, gold:2,shape:'circle',shoots:true,shootCooldown:1.1},
+  {name:'GRUNT',   color:'#ff4455',r:10,speed:1.5, hp:45, dmgPs:16,xp:3, gold:1,shape:'circle'},
+  {name:'RUNNER',  color:'#ff9900',r:8, speed:2.6, hp:38, dmgPs:14,xp:2, gold:1,shape:'circle'},
+  {name:'TANK',    color:'#cc2200',r:19,speed:0.85, hp:420,dmgPs:24,xp:8, gold:4,shape:'circle'},
+  {name:'SPEEDER', color:'#ffdd00',r:8, speed:3.0, hp:52, dmgPs:18,xp:4, gold:2,shape:'diamond'},
+  {name:'BRUTE',   color:'#cc00ff',r:22,speed:0.90, hp:720,dmgPs:28,xp:16,gold:8,shape:'circle'},
+  {name:'GHOST',   color:'#88aaff',r:11,speed:2.8, hp:60, dmgPs:18,xp:5, gold:2,shape:'circle',alpha:.6},
+  {name:'EXPLODER',color:'#ff6600',r:12,speed:2.4, hp:70, dmgPs:0, xp:6, gold:2,shape:'circle',explodes:true},
+  {name:'SHIELDER',color:'#00ccff',r:13,speed:1.5, hp:120,dmgPs:20,xp:7, gold:3,shape:'circle',shielded:true},
+  {name:'SPLITTER',color:'#aa44ff',r:14,speed:1.6, hp:200,dmgPs:16,xp:10,gold:4,shape:'circle',splits:true},
+  {name:'SNIPER',  color:'#ff4488',r:9, speed:0.7, hp:55, dmgPs:0, xp:7, gold:3,shape:'circle',shoots:true,shootCooldown:1.4},
   // index 10
-  {name:'BERSERKER',color:'#ff2200',r:16,speed:1.2,hp:500,dmgPs:38,xp:13,gold:6,shape:'circle',enrages:true},
-  {name:'NECROMANCER',color:'#8800aa',r:12,speed:1.0,hp:300,dmgPs:13,xp:14,gold:6,shape:'circle',necro:true,necroTimer:5,necroCooldown:5},
+  {name:'BERSERKER',color:'#ff2200',r:16,speed:1.2,hp:440,dmgPs:32,xp:13,gold:6,shape:'circle',enrages:true},
+  {name:'NECROMANCER',color:'#8800aa',r:12,speed:1.0,hp:280,dmgPs:12,xp:15,gold:7,shape:'circle',necro:true,necroTimer:4,necroCooldown:4},
   // NEW ENEMIES (indices 12-14) — Mimic & Vampire removed
-  {name:'BOMBER',   color:'#ff8800',r:13,speed:1.6,hp:95, dmgPs:0, xp:8, gold:3,shape:'circle',isBomber:true},
+  {name:'BOMBER',   color:'#ff8800',r:13,speed:1.8,hp:85, dmgPs:0, xp:8, gold:3,shape:'circle',isBomber:true},
   {name:'TELEPORTER',color:'#00ffcc',r:10,speed:1.8,hp:88,dmgPs:23,xp:9,gold:4,shape:'diamond',isTeleporter:true},
-  {name:'JUGGERNAUT',color:'#8b0000',r:26,speed:0.75,hp:1400,dmgPs:44,xp:24,gold:12,shape:'circle',isJuggernaut:true},
+  {name:'JUGGERNAUT',color:'#8b0000',r:26,speed:0.70,hp:1200,dmgPs:38,xp:24,gold:14,shape:'circle',isJuggernaut:true},
   // NEW v3.4 ENEMY TYPES (indices 15-18)
-  {name:'SHIELDER-BOT',color:'#00aaff',r:11,speed:1.6,hp:110,dmgPs:18,xp:8,gold:3,shape:'circle',isShielderBot:true},
-  {name:'SAPPER',      color:'#ffe000',r:10,speed:2.0,hp:75, dmgPs:25,xp:9,gold:4,shape:'diamond',isSapper:true},
-  {name:'MIMIC',       color:'#ffd700',r:16,speed:0,  hp:180,dmgPs:35,xp:12,gold:8,shape:'circle',isMimic:true},
-  {name:'HERALD',      color:'#ff88ff',r:14,speed:0.8,hp:200,dmgPs:10,xp:14,gold:6,shape:'circle',isHerald:true},
+  {name:'SHIELDER-BOT',color:'#00aaff',r:11,speed:1.6,hp:100,dmgPs:16,xp:8,gold:3,shape:'circle',isShielderBot:true},
+  {name:'SAPPER',      color:'#ffe000',r:10,speed:2.2,hp:70, dmgPs:22,xp:9,gold:4,shape:'diamond',isSapper:true},
+  {name:'MIMIC',       color:'#ffd700',r:16,speed:0,  hp:250,dmgPs:40,xp:14,gold:10,shape:'circle',isMimic:true},
+  {name:'HERALD',      color:'#ff88ff',r:14,speed:0.8,hp:160,dmgPs:8, xp:14,gold:7,shape:'circle',isHerald:true},
 ];
 
 // BOSSES — much more HP, faster projectiles, more aggressive
 const BOSS_TYPES=[
   // 1 — KING SLIME: charges, scatters globs, splits at 50%
-  {name:'KING SLIME',    color:'#00ee88',r:38,speed:1.4, hp:7000, dmgPs:35,xp:40, gold:20,pattern:'charge',
+  {name:'KING SLIME',    color:'#00ee88',r:38,speed:1.4, hp:10000,dmgPs:28,xp:40, gold:25,pattern:'charge',
    chargeTimer:1.8,chargeCooldown:1.8,charging:false,chargeVx:0,chargeVy:0,shootCooldown:0.85,shootTimer:0},
   // 2 — DEATH STAR: orbits centre, bullet rings + aimed laser, spiral phase
-  {name:'DEATH STAR',    color:'#ff2266',r:34,speed:0.65,hp:10000, dmgPs:26,xp:60, gold:30,pattern:'orbit',
+  {name:'DEATH STAR',    color:'#ff2266',r:34,speed:0.65,hp:11500,dmgPs:24,xp:60, gold:32,pattern:'orbit',
    orbitAngle:0,shootCooldown:0.42,shootTimer:0,burstCount:9},
   // 3 — VOID TITAN: gravity pull, 4-arm cross, void collapse at 50%
-  {name:'VOID TITAN',    color:'#7700ff',r:42,speed:0.7, hp:16000,dmgPs:42,xp:80, gold:40,pattern:'summon',
+  {name:'VOID TITAN',    color:'#7700ff',r:42,speed:0.7, hp:13000,dmgPs:36,xp:80, gold:42,pattern:'summon',
    summonTimer:6.0,summonCooldown:6.0,shootCooldown:0.5,shootTimer:0},
   // 4 — FROST LICH: drifts, triple lances + spiral arms, ice wall + shatter at 50%
-  {name:'FROST LICH',    color:'#44ccff',r:36,speed:0.85,hp:12000,dmgPs:35,xp:70, gold:35,pattern:'frost',
+  {name:'FROST LICH',    color:'#44ccff',r:36,speed:0.85,hp:14000,dmgPs:30,xp:70, gold:38,pattern:'frost',
    shootCooldown:0.28,shootTimer:0},
   // 5 — BLOOD MOON: rage-scales speed, rotating spiral, blood clones at 65%, rage burst at 35%
-  {name:'BLOOD MOON',    color:'#cc0000',r:40,speed:1.0, hp:18000,dmgPs:44,xp:90, gold:45,pattern:'bloodmoon',
+  {name:'BLOOD MOON',    color:'#cc0000',r:40,speed:1.0, hp:15500,dmgPs:38,xp:90, gold:48,pattern:'bloodmoon',
    shootCooldown:0.6,shootTimer:0},
   // 6 — SHADOW HYDRA: triple-dash poison combo, 5-spread shots, splits at 50%
-  {name:'SHADOW HYDRA',  color:'#334400',r:44,speed:0.9, hp:22000,dmgPs:40,xp:100,gold:50,pattern:'hydra',
+  {name:'SHADOW HYDRA',  color:'#334400',r:44,speed:0.9, hp:17000,dmgPs:34,xp:52,gold:54,pattern:'hydra',
    hasSplit:false,shootCooldown:0.38,shootTimer:0,_dashCooldown:2.5,_dashing:false,_dashVx:0,_dashVy:0},
   // 7 — INFERNAL COLOSSUS: hunt→stomp→meteor→charge phases, fire trail
-  {name:'INFERNAL COLOSSUS',color:'#ff6600',r:50,speed:0.65,hp:24000,dmgPs:50,xp:120,gold:60,pattern:'colossus',
+  {name:'INFERNAL COLOSSUS',color:'#ff6600',r:50,speed:0.65,hp:18500,dmgPs:44,xp:60,gold:65,pattern:'colossus',
    stompTimer:1.8,stompCooldown:1.8,shootCooldown:0.55,shootTimer:0},
   // 8 — STORM WITCH: teleport+mines, triple bolts, edge convergence storm at 40%
-  {name:'STORM WITCH',   color:'#aaff00',r:32,speed:1.2, hp:14000,dmgPs:30,xp:110,gold:55,pattern:'stormwitch',
+  {name:'STORM WITCH',   color:'#aaff00',r:32,speed:1.2, hp:12500,dmgPs:26,xp:55,gold:58,pattern:'stormwitch',
    teleportTimer:3.0,teleportCooldown:3.0,shootCooldown:0.42,shootTimer:0,lightningTimer:4.0,lightningCooldown:4.0},
   // 9 — PLAGUE LORD: spreading puddles, infection shots, mega horde at 50%
-  {name:'PLAGUE LORD',   color:'#44ff44',r:40,speed:0.8, hp:17000,dmgPs:32,xp:115,gold:58,pattern:'plaguelord',
+  {name:'PLAGUE LORD',   color:'#44ff44',r:40,speed:0.8, hp:16000,dmgPs:28,xp:58,gold:62,pattern:'plaguelord',
    plagueCooldown:2.2,plagueTimer:2.2,minionTimer:5.0,minionCooldown:5.0,shootCooldown:0.5,shootTimer:0},
   // 10 — TITAN WORM: burrows underground, erupts near player, spread volley at 50%
-  {name:'TITAN WORM',    color:'#aa6600',r:48,speed:0.5, hp:20000,dmgPs:44,xp:130,gold:65,pattern:'titanworm',
+  {name:'TITAN WORM',    color:'#aa6600',r:48,speed:0.5, hp:19000,dmgPs:38,xp:65,gold:70,pattern:'titanworm',
    burrowTimer:4.5,burrowCooldown:4.5,isBurrowed:false,burrowedTimer:0,eruptTimer:0,shootCooldown:0.6,shootTimer:0},
 ];
 
@@ -2621,25 +3211,25 @@ function spawnEnemy(s){
   s.enemies.push(e);
 }
 
+// Fixed boss order — waves 5,10,15,...50 map to indices 0–9; then repeats stronger
+// BOSS_TYPES order: King Slime, Death Star, Void Titan, Frost Lich, Blood Moon,
+//                  Shadow Hydra, Infernal Colossus, Storm Witch, Plague Lord, Titan Worm
 function spawnBoss(s){
   if(s.bossAlive)return;
-  // Pick a random boss, never repeat last
-  if(!s._lastBossIdx)s._lastBossIdx=-1;
-  let idx;
-  do { idx=Math.floor(Math.random()*BOSS_TYPES.length); } while(idx===s._lastBossIdx&&BOSS_TYPES.length>1);
-  s._lastBossIdx=idx;
+  const bossNum=Math.max(1,Math.floor(s.wave/5));   // 1 on wave5, 2 on wave10, …20 on wave100
+  const idx=(bossNum-1)%BOSS_TYPES.length;           // cycles 0–9 then repeats
   const boss=JSON.parse(JSON.stringify(BOSS_TYPES[idx]));
-  // Wave scaling: starts at 1.0 on wave 5, +30% per boss wave after that.
-  // Gentler than before so early random tough bosses aren't instant walls.
-  const bossNum=Math.max(1,Math.floor(s.wave/5));
-  const wsc=1+(bossNum-1)*0.30;
+  // Scaling: lap 1 (waves 5-50) = base HP from definition, lap 2+ = +60% per extra lap
+  const lap=Math.floor((bossNum-1)/BOSS_TYPES.length);
+  const wsc=1+lap*0.60;
   boss.hp=Math.round(boss.hp*wsc);
   boss.maxHp=boss.hp;boss.x=W/2;boss.y=-80;boss.hitFlash=0;boss.isBoss=true;
   s.enemies.push(boss);s.bossAlive=true;s.bossSpawned=true;
-  s._bossStartDmg=state.totalDamageTaken; // track for no-damage achievement
+  s._bossStartDmg=state.totalDamageTaken;
   document.getElementById('boss-bar-wrap').classList.add('active');
-  document.getElementById('boss-name').textContent=`⚠ ${boss.name} ⚠`;
-  announceWave(`⚠ BOSS: ${boss.name} ⚠`);
+  const lapLabel=lap>0?` [LVL ${lap+1}]`:'';
+  document.getElementById('boss-name').textContent=`⚠ ${boss.name}${lapLabel} ⚠`;
+  announceWave(`⚠ BOSS: ${boss.name}${lapLabel} ⚠`);
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -2686,7 +3276,7 @@ function update(dt){
 
   // Wave timer
   s.waveTimer-=dt;updateTimerHUD();
-  if(s.wave%5===0&&!s.bossSpawned&&!s.bossAlive)spawnBoss(s);
+  if(s.wave%5===0&&!s.bossSpawned&&!s.bossAlive){spawnBoss(s);checkTitanRun(s);}
   // Boss waves: freeze timer while boss is alive; advance only on boss death
   const isBossWave=s.wave%5===0;
   if(isBossWave&&s.bossAlive){
@@ -2699,6 +3289,7 @@ function update(dt){
     s.spawnRate=Math.max(.30,1.1-(s.wave-1)*.018);
     s.bossSpawned=false;
     s._bossReminderTimer=0;
+    s._titanSecondSpawned=false;
     s._waveStartDamageTaken=s.totalDamageTaken;
     s._minePatches=s._minePatches||[];
     if(p._waveBounty&&s.wave>1){p.gold+=p._waveBounty;addFloat(p.x,p.y-30,`+${p._waveBounty}💰`,"#ffd700");updateKillsHUD();}
@@ -2709,7 +3300,7 @@ function update(dt){
     } else {
       applyWaveModifiers(s,[]);
     }
-    if(s.wave%15===0)triggerWin();
+    if(s.wave>100)triggerWin(); // Win after clearing wave 100
     if(s.wave%5!==0)announceWave(`WAVE ${s.wave}`);
     updateWaveHUD();
   }
@@ -3300,6 +3891,18 @@ function update(dt){
     }
 
 
+    let dead=false;
+    // ── CHRONOMANCER TIME FREEZE ──────────────────────────────────────
+    if(e._timeFrozen>0){
+      e._timeFrozen-=dt;
+      if(e._timeFrozen<=0){e.speed=e._origSpeed||e.speed;}
+      else{e.speed=0.02;}
+    }
+    // TIME DILATION slow from _timeShot bullets (applied at bullet hit, see below)
+    if(e._timeSlowed>0){
+      e._timeSlowed-=dt;
+      if(e._timeSlowed<=0&&e._origSpeed){e.speed=e._origSpeed;e._origSpeed=undefined;}
+    }
     // ── SHIELDER-BOT: orbits a nearby enemy, blocks bullets aimed there ──
     if(e.isShielderBot){
       // Find nearest non-shielderbot enemy to orbit
@@ -3397,7 +4000,6 @@ function update(dt){
       document.getElementById('boss-hp-text').textContent=`${Math.floor(e.hp)}/${Math.floor(e.maxHp)}`;
     }
     // Bullet hits enemy
-    let dead=false;
     if(!(e.isBoss&&e.isBurrowed)){
     for(let j=s.bullets.length-1;j>=0;j--){
       const b=s.bullets[j];
@@ -3406,13 +4008,14 @@ function update(dt){
         if(b.isAoEOrb){
           explodeAt(s,b.x,b.y,b.aoeR||40,b.dmg*1.1);
           spawnParticles(s,b.x,b.y,'#cc44ff',12);
-          s.bullets.splice(j,1);if(e.hp<=0){dead=true;}break;
+          s.bullets.splice(j,1);if(b._timeShot&&!e._timeFrozen){e._origSpeed=e._origSpeed||e.speed;e._timeSlowed=1.5;e.speed=e._origSpeed*(e.isBoss?0.7:0.35);}if(e.hp<=0){dead=true;}break;
         }
         const _bossRes=e.isBoss?0.60:1.0; // bosses take 40% less damage
         if(e.isBoss&&!e._resistAnnounced){e._resistAnnounced=true;addFloat(e.x,e.y,'🛡 RESISTANT!','#ffaa00');}
         const _infernoBonusDmg=e._inferno?b.dmg*0.4:0;
         const _finalDmg=(b.dmg+_infernoBonusDmg)*_bossRes;
         e.hp-=_finalDmg;e.hitFlash=1;s.totalDamageDealt+=_finalDmg;
+        if(p._lifeLeech){const ll=_finalDmg*0.05;p.hp=Math.min(p.maxHp,p.hp+ll);if(ll>=1)updateHpHUD();}
         if(b._isSoulBolt)e._killedBySoulBolt=true;
         if(s._dpsLog)s._dpsLog.push({t:s.totalTime,dmg:_finalDmg});
         if(e._inferno&&_infernoBonusDmg>0)spawnParticles(s,e.x,e.y,'#ff2200',3);
@@ -4122,7 +4725,7 @@ function explodeAt(s,x,y,radius,dmg){
 function killEnemy(s,e,idx){
   const p=s.player;p.kills++;
   // Life leech: 3% max HP on kill (applies to all weapon types)
-  if(p._lifeLeech){const ll=Math.ceil(p.maxHp*0.015);p.hp=Math.min(p.maxHp,p.hp+ll);updateHpHUD();}
+  // life leech is now on-hit (see bullet collision)
   p.gold+=e.gold+(p._goldBonus||0);
   s.combo=Math.min(s.combo+1,10);
   s.comboTimer=s.comboMaxTime;
@@ -4156,6 +4759,20 @@ function killEnemy(s,e,idx){
   }
   spawnParticles(s,e.x,e.y,e.color,16);
   addFloat(e.x,e.y,`+${e.gold}💰`,'#ffd700');
+  // NECROMANCER: raise skeleton from soul-bolt kills
+  if(p._charId==='necromancer_hero'&&e._killedBySoulBolt&&!e.isBoss){
+    if(!s._skeletons)s._skeletons=[];
+    if(s._skeletons.length<5){
+      const sk={
+        x:e.x+(Math.random()-.5)*20, y:e.y+(Math.random()-.5)*20,
+        r:9, speed:1.6, life:20, maxLife:20,
+        dmg:p.damage*0.4,
+      };
+      s._skeletons.push(sk);
+      spawnParticles(s,e.x,e.y,'#aa44ff',12);
+      addFloat(e.x,e.y-16,'💀 RISEN!','#aa44ff');
+    }
+  }
   if(s.combo>=3)addFloat(e.x,e.y-20,`x${s.combo} COMBO!`,'#00ffa3');
   if(e.isBoss&&!e._isMiniboss){
     s.bossAlive=false;
@@ -4176,9 +4793,10 @@ function killEnemy(s,e,idx){
     if(p._warlordCrown){p.hp=Math.min(p.maxHp,p.hp+Math.ceil(p.maxHp*0.15));updateHpHUD();}
     // Check char unlocks based on boss kills
     const bk=s._bossKills;
-    if(bk>=1){const wasNew=unlockChar('ironclad');if(wasNew){showAchievementToast('⚔️ IRONCLAD UNLOCKED!');}}
-    if(bk>=3){const wasNew=unlockChar('spellblade');if(wasNew){showAchievementToast('🔮 SPELLBLADE UNLOCKED!');}}
-    if(bk>=5){const wasNew=unlockChar('riftwalker');if(wasNew){showAchievementToast('🌌 RIFTWALKER UNLOCKED!');}}
+    if(bk>=1){unlockChar('ironclad');unlockChar('vampire_hero');}
+    if(bk>=3){const wasNew=unlockChar('spellblade');if(wasNew)showAchievementToast('🔮 SPELLBLADE UNLOCKED!');}
+    if(bk>=5){const wasNew=unlockChar('riftwalker');if(wasNew)showAchievementToast('🌌 RIFTWALKER UNLOCKED!');}
+    if(bk>=7){const wasNew=unlockChar('chronomancer');if(wasNew)showAchievementToast('⏳ CHRONOMANCER UNLOCKED!');}
     // Open boss loot screen after short delay (let death particles play)
     setTimeout(()=>{ if(state&&!state.gameOver)openBossLoot(state); },900);
   }
@@ -5257,7 +5875,15 @@ function showTitle(){
   document.getElementById('pause-overlay').classList.remove('active');
   showScreen('title-screen');
 }
-function showCharSelect(){buildCharSelect();showScreen('char-screen');}
+function showCharSelect(){
+  buildCharSelect();
+  // Always start on step 1
+  const s1=document.getElementById('char-step-1');
+  const s2=document.getElementById('char-step-2');
+  if(s1){s1.style.display='flex';s1.style.flexDirection='column';}
+  if(s2){s2.classList.remove('visible');}
+  showScreen('char-screen');
+}
 function showHowToPlay(){showScreen('howtoplay-screen');}
 
 function startGame(){
@@ -5267,8 +5893,11 @@ function startGame(){
   state=initState();
   state.player.x=W/2;state.player.y=H/2;
   applyShardUpgradesToPlayer(state.player,state);
+  applyRunModifier(state);
   updateShardHUD();
+  updateRunModHUD();
   const shardHudEl=document.getElementById('shard-hud');if(shardHudEl)shardHudEl.style.display='block';
+  const rmodHud=document.getElementById('run-mod-hud');if(rmodHud)rmodHud.style.display='block';
   showScreen('game-screen');
   document.getElementById('pause-overlay').classList.remove('active');
   document.getElementById('boss-bar-wrap').classList.remove('active');
