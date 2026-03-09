@@ -4223,7 +4223,7 @@ function updateBossAI(s,e,dt){
     if(!e._slimeSplit&&e.hp/e.maxHp<0.5){
       e._slimeSplit=true;
       for(let i=0;i<2;i++){
-        s.enemies.push({x:e.x+(i===0?-60:60),y:e.y,r:e.r*0.6,hp:e.maxHp*0.25,maxHp:e.maxHp*0.25,
+        s.enemies.push({x:e.x+(i===0?-60:60),y:e.y,r:e.r*0.6,hp:e.maxHp*0.05,maxHp:e.maxHp*0.25,
           speed:e.speed*1.4,dmgPs:e.dmgPs*0.7,color:'#88ffaa',name:'SLIME SPAWN',shape:'circle',
           alpha:1,hitFlash:0,isBoss:true,_isMiniboss:true,xp:Math.floor(e.xp/4),gold:Math.floor(e.gold/4),
           pattern:'charge',charging:false,chargeTimer:1.2,chargeCooldown:1.2,chargeVx:0,chargeVy:0,
