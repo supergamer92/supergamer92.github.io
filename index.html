@@ -3323,28 +3323,28 @@ function renderActiveModStrip(s) {}
 //  ENEMIES — HARDER SCALING
 // ═══════════════════════════════════════════════════════════════════
 const ENEMY_TYPES=[
-  {name:'GRUNT',   color:'#ff4455',r:10,speed:1.5, hp:45, dmgPs:16,xp:3, gold:1,shape:'circle'},
-  {name:'RUNNER',  color:'#ff9900',r:8, speed:2.6, hp:38, dmgPs:14,xp:2, gold:1,shape:'circle'},
-  {name:'TANK',    color:'#cc2200',r:19,speed:0.85, hp:420,dmgPs:24,xp:8, gold:4,shape:'circle'},
-  {name:'SPEEDER', color:'#ffdd00',r:8, speed:3.0, hp:52, dmgPs:18,xp:4, gold:2,shape:'diamond'},
-  {name:'BRUTE',   color:'#cc00ff',r:22,speed:0.90, hp:720,dmgPs:28,xp:16,gold:8,shape:'circle'},
-  {name:'GHOST',   color:'#88aaff',r:11,speed:2.8, hp:60, dmgPs:18,xp:5, gold:2,shape:'circle',alpha:.6},
-  {name:'EXPLODER',color:'#ff6600',r:12,speed:2.4, hp:70, dmgPs:0, xp:6, gold:2,shape:'circle',explodes:true},
-  {name:'SHIELDER',color:'#00ccff',r:13,speed:1.5, hp:120,dmgPs:20,xp:7, gold:3,shape:'circle',shielded:true},
-  {name:'SPLITTER',color:'#aa44ff',r:14,speed:1.6, hp:200,dmgPs:16,xp:10,gold:4,shape:'circle',splits:true},
-  {name:'SNIPER',  color:'#ff4488',r:9, speed:0.7, hp:55, dmgPs:0, xp:7, gold:3,shape:'circle',shoots:true,shootCooldown:1.4},
+  {name:'GRUNT',   color:'#ff4455',r:10,speed:1.5, hp:45, dmgPs:16,xp:7, gold:1,shape:'circle'},
+  {name:'RUNNER',  color:'#ff9900',r:8, speed:2.6, hp:38, dmgPs:14,xp:6, gold:1,shape:'circle'},
+  {name:'TANK',    color:'#cc2200',r:19,speed:0.85, hp:420,dmgPs:24,xp:15, gold:4,shape:'circle'},
+  {name:'SPEEDER', color:'#ffdd00',r:8, speed:3.0, hp:52, dmgPs:18,xp:7, gold:2,shape:'diamond'},
+  {name:'BRUTE',   color:'#cc00ff',r:22,speed:0.90, hp:720,dmgPs:28,xp:20,gold:8,shape:'circle'},
+  {name:'GHOST',   color:'#88aaff',r:11,speed:2.8, hp:60, dmgPs:18,xp:7, gold:2,shape:'circle',alpha:.6},
+  {name:'EXPLODER',color:'#ff6600',r:12,speed:2.4, hp:70, dmgPs:0, xp:9, gold:2,shape:'circle',explodes:true},
+  {name:'SHIELDER',color:'#00ccff',r:13,speed:1.5, hp:120,dmgPs:20,xp:14, gold:3,shape:'circle',shielded:true},
+  {name:'SPLITTER',color:'#aa44ff',r:14,speed:1.6, hp:200,dmgPs:16,xp:17,gold:4,shape:'circle',splits:true},
+  {name:'SNIPER',  color:'#ff4488',r:9, speed:0.7, hp:55, dmgPs:0, xp:20, gold:3,shape:'circle',shoots:true,shootCooldown:1.4},
   // index 10
-  {name:'BERSERKER',color:'#ff2200',r:16,speed:1.2,hp:440,dmgPs:32,xp:13,gold:6,shape:'circle',enrages:true},
-  {name:'NECROMANCER',color:'#8800aa',r:12,speed:1.0,hp:280,dmgPs:12,xp:15,gold:7,shape:'circle',necro:true,necroTimer:4,necroCooldown:4},
+  {name:'BERSERKER',color:'#ff2200',r:16,speed:1.2,hp:440,dmgPs:32,xp:25,gold:6,shape:'circle',enrages:true},
+  {name:'NECROMANCER',color:'#8800aa',r:12,speed:1.0,hp:280,dmgPs:12,xp:35,gold:7,shape:'circle',necro:true,necroTimer:4,necroCooldown:4},
   // NEW ENEMIES (indices 12-14) — Mimic & Vampire removed
-  {name:'BOMBER',   color:'#ff8800',r:13,speed:1.8,hp:85, dmgPs:0, xp:8, gold:3,shape:'circle',isBomber:true},
-  {name:'TELEPORTER',color:'#00ffcc',r:10,speed:1.8,hp:88,dmgPs:23,xp:9,gold:4,shape:'diamond',isTeleporter:true},
-  {name:'JUGGERNAUT',color:'#8b0000',r:26,speed:0.70,hp:1200,dmgPs:38,xp:24,gold:14,shape:'circle',isJuggernaut:true},
+  {name:'BOMBER',   color:'#ff8800',r:13,speed:1.8,hp:85, dmgPs:0, xp:14, gold:3,shape:'circle',isBomber:true},
+  {name:'TELEPORTER',color:'#00ffcc',r:10,speed:1.8,hp:88,dmgPs:23,xp:22,gold:4,shape:'diamond',isTeleporter:true},
+  {name:'JUGGERNAUT',color:'#8b0000',r:26,speed:0.70,hp:1200,dmgPs:38,xp:43,gold:14,shape:'circle',isJuggernaut:true},
   // NEW v3.4 ENEMY TYPES (indices 15-18)
-  {name:'SHIELDER-BOT',color:'#00aaff',r:11,speed:1.6,hp:100,dmgPs:16,xp:8,gold:3,shape:'circle',isShielderBot:true},
-  {name:'SAPPER',      color:'#ffe000',r:10,speed:2.2,hp:70, dmgPs:22,xp:9,gold:4,shape:'diamond',isSapper:true},
-  {name:'MIMIC',       color:'#ffd700',r:16,speed:0,  hp:250,dmgPs:40,xp:14,gold:10,shape:'circle',isMimic:true},
-  {name:'HERALD',      color:'#ff88ff',r:14,speed:0.8,hp:160,dmgPs:8, xp:14,gold:7,shape:'circle',isHerald:true},
+  {name:'SHIELDER-BOT',color:'#00aaff',r:11,speed:1.6,hp:100,dmgPs:16,xp:21,gold:3,shape:'circle',isShielderBot:true},
+  {name:'SAPPER',      color:'#ffe000',r:10,speed:2.2,hp:70, dmgPs:22,xp:25,gold:4,shape:'diamond',isSapper:true},
+  {name:'MIMIC',       color:'#ffd700',r:16,speed:0,  hp:250,dmgPs:40,xp:40,gold:10,shape:'circle',isMimic:true},
+  {name:'HERALD',      color:'#ff88ff',r:14,speed:0.8,hp:160,dmgPs:8, xp:44,gold:7,shape:'circle',isHerald:true},
 ];
 
 // BOSSES — much more HP, faster projectiles, more aggressive
