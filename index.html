@@ -1289,40 +1289,64 @@ function showAchievementToast(ach){
 //  BOSS ITEMS — exclusive legendary rewards, only from boss kills
 // ═══════════════════════════════════════════════════════════════════
 const BOSS_ITEMS=[
-  {id:'bi_aegis',     name:"BOSS'S AEGIS",   icon:'🛡️', rarity:'legendary',
+  {id:'bi_aegis',unique:true,     name:"BOSS'S AEGIS",   icon:'🛡️', rarity:'legendary',
    desc:'+30 Max HP. Barrier blocks 1 hit every 5s — recharges automatically.',
    apply:p=>{p._bossBarrierMax=5.0;p._bossBarrierTimer=0;p._bossBarrierReady=true;p.maxHp+=30;p.hp=Math.min(p.maxHp,p.hp+15);}},
-  {id:'bi_tyrant',    name:'TYRANT FIST',    icon:'👊', rarity:'legendary',
+  {id:'bi_tyrant',unique:true,    name:'TYRANT FIST',    icon:'👊', rarity:'legendary',
    desc:'+40% all damage. Touching enemies deals 30 bonus damage to them.',
    apply:p=>{p._tyrantFist=true;p._tyrantContactDmg=30;p.damage=Math.round(p.damage*1.40);}},
   {id:'bi_crown',     name:'WARLORD CROWN',  icon:'👑', rarity:'legendary',
    desc:'+80 Max HP, heal 20% max HP when any boss dies.',
    apply:p=>{p._warlordCrown=true;p.maxHp+=80;p.hp=Math.min(p.maxHp,p.hp+40);}},
-  {id:'bi_soul',      name:'SOUL SHARD',     icon:'💠', rarity:'legendary',
+  {id:'bi_soul',unique:true,      name:'SOUL SHARD',     icon:'💠', rarity:'legendary',
    desc:'Every kill has a 35% chance to drop an XP orb worth 4× normal value.',
    apply:p=>{p._soulShard=true;}},
-  {id:'bi_vortex',    name:'VORTEX CORE',    icon:'🌀', rarity:'legendary',
+  {id:'bi_vortex',unique:true,    name:'VORTEX CORE',    icon:'🌀', rarity:'legendary',
    desc:'Bullets pierce ALL enemies. +25% bullet speed. Damage -10%.',
    apply:p=>{p._vortexCore=true;p.piercing=99;p.damage=Math.max(5,Math.round(p.damage*0.90));p.bulletSpeed*=1.25;}},
   {id:'bi_phoenix',   name:'PHOENIX CROWN',  icon:'🔥', rarity:'legendary',
    desc:'Revive at 80% HP. +40 Max HP. Triggers a massive explosion on revive. (Legendary: stronger than Feather)',
    apply:p=>{p._phoenixCrown=true;p._phoenix=true;p._phoenixCharges=(p._phoenixCharges||0)+1;p.maxHp+=40;p.hp=Math.min(p.maxHp,p.hp+20);}},
-  {id:'bi_blood',     name:'BLOODPACT',      icon:'🩸', rarity:'legendary',
+  {id:'bi_blood',unique:true,     name:'BLOODPACT',      icon:'🩸', rarity:'legendary',
    desc:'Sacrifice 50 max HP. Fire rate +60% permanently. Still a great trade.',
    apply:p=>{p.maxHp=Math.max(30,p.maxHp-50);p.hp=Math.min(p.hp,p.maxHp);p.fireRate=Math.max(80,Math.round(p.fireRate*0.62));}},
-  {id:'bi_storm',     name:'STORM MANTLE',   icon:'⚡', rarity:'legendary',
+  {id:'bi_storm',unique:true,     name:'STORM MANTLE',   icon:'⚡', rarity:'legendary',
    desc:'Every 4s: auto-fires a ring of 16 bolts (full damage) around you.',
    apply:p=>{p._stormMantle=true;p._stormMantleTimer=4.0;}},
-  {id:'bi_hunger',    name:'ENDLESS HUNGER', icon:'😈', rarity:'legendary',
+  {id:'bi_hunger',unique:true,    name:'ENDLESS HUNGER', icon:'😈', rarity:'legendary',
    desc:'Each kill permanently increases your damage by 0.1. Stacks forever.',
    apply:p=>{p._endlessHunger=true;}},
   {id:'bi_titan',     name:'TITAN BLOOD',    icon:'🧬', rarity:'legendary',
    desc:'+80 Max HP, +4 HP/sec regen, +20% move speed, +10% fire rate.',
    apply:p=>{p.maxHp+=80;p.hp=Math.min(p.maxHp,p.hp+40);p._regen+=4.0;p.speed*=1.20;p.fireRate=Math.max(80,Math.round(p.fireRate*0.90));}},
+  // ── NEW LEGENDARIES ──────────────────────────────────────────────
+  {id:'bi_reaper',unique:true,    name:'DEATH SHROUD',   icon:'💀', rarity:'legendary',
+   desc:'On kill: 15% chance to instantly kill the nearest enemy. Does not work on bosses.',
+   apply:p=>{p._deathShroud=true;}},
+  {id:'bi_nova',unique:true,      name:'NOVA CORE',      icon:'💥', rarity:'legendary',
+   desc:'Every 6s: massive explosion around you dealing 3× your damage in a huge radius.',
+   apply:p=>{p._novaCore=true;p._novaCoreTimer=6.0;}},
+  {id:'bi_leech',unique:true,     name:'CRIMSON PACT',   icon:'🩸', rarity:'legendary',
+   desc:'+8% of damage dealt returned as HP. Applies to all damage sources.',
+   apply:p=>{p._crimsonPact=true;}},
+  {id:'bi_echo',unique:true,      name:'ECHO CHAMBER',   icon:'🔊', rarity:'legendary',
+   desc:'Every bullet you fire spawns a weaker echo bullet at 45° offset for 40% damage.',
+   apply:p=>{p._echoChamber=true;}},
+  {id:'bi_time',unique:true,      name:'CHRONOSHIFT',    icon:'⏳', rarity:'legendary',
+   desc:'Killing an enemy has a 12% chance to slow ALL enemies to 20% speed for 2s.',
+   apply:p=>{p._chronoshift=true;}},
+  {id:'bi_gold',unique:true,      name:'MIDAS TOUCH',    icon:'🪙', rarity:'legendary',
+   desc:'+5 gold per kill. Every 100 gold collected permanently adds +3 damage.',
+   apply:p=>{p._midasTouch=true;p._midasGoldAcc=(p._midasGoldAcc||0);}},
+  {id:'bi_colossus',unique:true,  name:'COLOSSUS HEART', icon:'💪', rarity:'legendary',
+   desc:'+120 Max HP. Taking damage grants a 2s window where you deal +30% damage.',
+   apply:p=>{p.maxHp+=120;p.hp=Math.min(p.maxHp,p.hp+60);p._colossusHeart=true;}},
 ];
 
 function getBossLootChoices(){
-  const shuffled=[...BOSS_ITEMS].sort(()=>Math.random()-.5);
+  const owned=new Set((state&&state.collectedItems||[]).map(c=>c.id));
+  const available=BOSS_ITEMS.filter(u=>!(u.unique&&owned.has(u.id)));
+  const shuffled=(available.length>=3?available:[...BOSS_ITEMS]).sort(()=>Math.random()-.5);
   return shuffled.slice(0,3);
 }
 
@@ -2560,7 +2584,7 @@ function initState(){
       x:0,y:0,
       hp:Math.max(30,100+sm.maxHp),maxHp:Math.max(30,100+sm.maxHp),
       speed:2.1+sm.speed,
-      level:1,xp:0,xpNext:18,kills:0,gold:0,
+      level:1,xp:0,xpNext:12,kills:0,gold:0,
       fireRate:Math.max(120,baseFireRate+sm.fireRate),
       bulletSpeed:6.0,damage:14+sm.damage,
       bulletSize:5,
@@ -2672,7 +2696,7 @@ const ALL_UPGRADES=[
   {wtype:'any',id:'thorn',name:'THORNMAIL',icon:'🌵',rarity:'rare',
    desc:'Reflect 30% of melee contact damage back at attackers',
    apply:p=>p._thorns=true},
-  {wtype:'any',id:'new_mirror',name:'MIRROR SHIELD',icon:'🪞',rarity:'epic',
+  {wtype:'any',id:'new_mirror',unique:true,name:'MIRROR SHIELD',icon:'🪞',rarity:'epic',
    desc:'40% chance: reflect contact damage as a bullet at the attacker',
    apply:p=>p._mirrorShield=true},
 
@@ -2683,7 +2707,7 @@ const ALL_UPGRADES=[
   {wtype:'any',id:'new_goldmagnet',name:'GOLD MAGNET',icon:'💰',rarity:'common',
    desc:'+3 gold per kill',
    apply:p=>p._goldBonus=(p._goldBonus||0)+3},
-  {wtype:'any',id:'new_phoenix',name:'PHOENIX FEATHER',icon:'🪶',rarity:'epic',
+  {wtype:'any',id:'new_phoenix',unique:true,name:'PHOENIX FEATHER',icon:'🪶',rarity:'epic',
    desc:'Revive once at 35% HP when you would die. Triggers a shockwave on revive.',
    apply:p=>{p._phoenix=true;p._phoenixCharges=(p._phoenixCharges||0)+1;}},
   {wtype:'any',id:'new_berserker_charm',name:'BERSERKER CHARM',icon:'😤',rarity:'rare',
@@ -2753,22 +2777,22 @@ const ALL_UPGRADES=[
    apply:p=>p.piercing+=3},
 
   // Special ranged
-  {wtype:'ranged',id:'expl',name:'THERMITE',icon:'💣',rarity:'epic',
+  {wtype:'ranged',id:'expl',unique:true,name:'THERMITE',icon:'💣',rarity:'epic',
    desc:'Bullets explode on hit, dealing 50% damage to nearby enemies',
    apply:p=>p._explosiveBullets=true},
-  {wtype:'ranged',id:'lch',name:'CHAIN LIGHTNING',icon:'⚡',rarity:'epic',
+  {wtype:'ranged',id:'lch',unique:true,name:'CHAIN LIGHTNING',icon:'⚡',rarity:'epic',
    desc:'50% chance: bullets arc to a nearby enemy for 55% damage',
    apply:p=>p._chainLightning=true},
-  {wtype:'ranged',id:'ricochet',name:'RICOCHET',icon:'🎱',rarity:'epic',
+  {wtype:'ranged',id:'ricochet',unique:true,name:'RICOCHET',icon:'🎱',rarity:'epic',
    desc:'Bullets bounce to the nearest other enemy after hitting',
    apply:p=>p._ricochet=true},
-  {wtype:'ranged',id:'new_seekers',name:'SEEKER ROUNDS',icon:'🎯',rarity:'epic',
+  {wtype:'ranged',id:'new_seekers',unique:true,name:'SEEKER ROUNDS',icon:'🎯',rarity:'epic',
    desc:'Bullets smoothly home toward the nearest enemy',
    apply:p=>p._seekerBullets=true},
-  {wtype:'ranged',id:'new_incendiary',name:'INCENDIARY ROUNDS',icon:'🔥',rarity:'rare',
+  {wtype:'ranged',id:'new_incendiary',unique:true,name:'INCENDIARY ROUNDS',icon:'🔥',rarity:'rare',
    desc:'25% chance bullets ignite enemies — 3 sec burn DoT',
    apply:p=>p._incendiaryBullets=true},
-  {wtype:'ranged',id:'new_icebullet',name:'CRYO ROUNDS',icon:'❄️',rarity:'rare',
+  {wtype:'ranged',id:'new_icebullet',unique:true,name:'CRYO ROUNDS',icon:'❄️',rarity:'rare',
    desc:'40% chance bullets slow enemies to 40% speed for 1 sec',
    apply:p=>p._cryoRounds=true},
 
@@ -2824,7 +2848,7 @@ const ALL_UPGRADES=[
    apply:p=>{p._vampiric=true;p._vampHpPerKill=(p._vampHpPerKill||0)+3;p._regen+=1.5;}},
 
   // Melee on-hit effects
-  {wtype:'melee',id:'m_bleed',name:'BLEED',icon:'🩸',rarity:'rare',
+  {wtype:'melee',id:'m_bleed',unique:true,name:'BLEED',icon:'🩸',rarity:'rare',
    desc:'Hits apply bleed — 4 sec damage over time',
    apply:p=>p._meleeBleed=true},
   {wtype:'melee',id:'m_stun',name:'STAGGERING BLOW',icon:'⭐',rarity:'rare',
@@ -2900,7 +2924,9 @@ function getCardDesc(u, p) {
 }
 
 function getUpgradeChoices(pool,count=3){
-  const sh=[...pool].sort(()=>Math.random()-.5);
+  const owned=new Set((state&&state.collectedItems||[]).map(c=>c.id));
+  const available=pool.filter(u=>!(u.unique&&owned.has(u.id)));
+  const sh=[...available].sort(()=>Math.random()-.5);
   let c=[];
   ['epic','rare','common'].forEach(r=>{const f=sh.find(u=>u.rarity===r&&!c.includes(u));if(f&&c.length<count)c.push(f);});
   while(c.length<count){const e=sh.find(u=>!c.includes(u));if(!e)break;c.push(e);}
@@ -3323,28 +3349,28 @@ function renderActiveModStrip(s) {}
 //  ENEMIES — HARDER SCALING
 // ═══════════════════════════════════════════════════════════════════
 const ENEMY_TYPES=[
-  {name:'GRUNT',   color:'#ff4455',r:10,speed:1.5, hp:45, dmgPs:16,xp:7, gold:1,shape:'circle'},
-  {name:'RUNNER',  color:'#ff9900',r:8, speed:2.6, hp:38, dmgPs:14,xp:6, gold:1,shape:'circle'},
-  {name:'TANK',    color:'#cc2200',r:19,speed:0.85, hp:420,dmgPs:24,xp:15, gold:4,shape:'circle'},
-  {name:'SPEEDER', color:'#ffdd00',r:8, speed:3.0, hp:52, dmgPs:18,xp:7, gold:2,shape:'diamond'},
-  {name:'BRUTE',   color:'#cc00ff',r:22,speed:0.90, hp:720,dmgPs:28,xp:20,gold:8,shape:'circle'},
-  {name:'GHOST',   color:'#88aaff',r:11,speed:2.8, hp:60, dmgPs:18,xp:7, gold:2,shape:'circle',alpha:.6},
-  {name:'EXPLODER',color:'#ff6600',r:12,speed:2.4, hp:70, dmgPs:0, xp:9, gold:2,shape:'circle',explodes:true},
-  {name:'SHIELDER',color:'#00ccff',r:13,speed:1.5, hp:120,dmgPs:20,xp:14, gold:3,shape:'circle',shielded:true},
-  {name:'SPLITTER',color:'#aa44ff',r:14,speed:1.6, hp:200,dmgPs:16,xp:17,gold:4,shape:'circle',splits:true},
-  {name:'SNIPER',  color:'#ff4488',r:9, speed:0.7, hp:55, dmgPs:0, xp:20, gold:3,shape:'circle',shoots:true,shootCooldown:1.4},
+  {name:'GRUNT',   color:'#ff4455',r:10,speed:1.5, hp:45, dmgPs:16,xp:3, gold:1,shape:'circle'},
+  {name:'RUNNER',  color:'#ff9900',r:8, speed:2.6, hp:38, dmgPs:14,xp:2, gold:1,shape:'circle'},
+  {name:'TANK',    color:'#cc2200',r:19,speed:0.85, hp:420,dmgPs:24,xp:8, gold:4,shape:'circle'},
+  {name:'SPEEDER', color:'#ffdd00',r:8, speed:3.0, hp:52, dmgPs:18,xp:4, gold:2,shape:'diamond'},
+  {name:'BRUTE',   color:'#cc00ff',r:22,speed:0.90, hp:720,dmgPs:28,xp:16,gold:8,shape:'circle'},
+  {name:'GHOST',   color:'#88aaff',r:11,speed:2.8, hp:60, dmgPs:18,xp:5, gold:2,shape:'circle',alpha:.6},
+  {name:'EXPLODER',color:'#ff6600',r:12,speed:2.4, hp:70, dmgPs:0, xp:6, gold:2,shape:'circle',explodes:true},
+  {name:'SHIELDER',color:'#00ccff',r:13,speed:1.5, hp:120,dmgPs:20,xp:7, gold:3,shape:'circle',shielded:true},
+  {name:'SPLITTER',color:'#aa44ff',r:14,speed:1.6, hp:200,dmgPs:16,xp:10,gold:4,shape:'circle',splits:true},
+  {name:'SNIPER',  color:'#ff4488',r:9, speed:0.7, hp:55, dmgPs:0, xp:7, gold:3,shape:'circle',shoots:true,shootCooldown:1.4},
   // index 10
-  {name:'BERSERKER',color:'#ff2200',r:16,speed:1.2,hp:440,dmgPs:32,xp:25,gold:6,shape:'circle',enrages:true},
-  {name:'NECROMANCER',color:'#8800aa',r:12,speed:1.0,hp:280,dmgPs:12,xp:35,gold:7,shape:'circle',necro:true,necroTimer:4,necroCooldown:4},
+  {name:'BERSERKER',color:'#ff2200',r:16,speed:1.2,hp:440,dmgPs:32,xp:13,gold:6,shape:'circle',enrages:true},
+  {name:'NECROMANCER',color:'#8800aa',r:12,speed:1.0,hp:280,dmgPs:12,xp:15,gold:7,shape:'circle',necro:true,necroTimer:4,necroCooldown:4},
   // NEW ENEMIES (indices 12-14) — Mimic & Vampire removed
-  {name:'BOMBER',   color:'#ff8800',r:13,speed:1.8,hp:85, dmgPs:0, xp:14, gold:3,shape:'circle',isBomber:true},
-  {name:'TELEPORTER',color:'#00ffcc',r:10,speed:1.8,hp:88,dmgPs:23,xp:22,gold:4,shape:'diamond',isTeleporter:true},
-  {name:'JUGGERNAUT',color:'#8b0000',r:26,speed:0.70,hp:1200,dmgPs:38,xp:43,gold:14,shape:'circle',isJuggernaut:true},
+  {name:'BOMBER',   color:'#ff8800',r:13,speed:1.8,hp:85, dmgPs:0, xp:8, gold:3,shape:'circle',isBomber:true},
+  {name:'TELEPORTER',color:'#00ffcc',r:10,speed:1.8,hp:88,dmgPs:23,xp:9,gold:4,shape:'diamond',isTeleporter:true},
+  {name:'JUGGERNAUT',color:'#8b0000',r:26,speed:0.70,hp:1200,dmgPs:38,xp:24,gold:14,shape:'circle',isJuggernaut:true},
   // NEW v3.4 ENEMY TYPES (indices 15-18)
-  {name:'SHIELDER-BOT',color:'#00aaff',r:11,speed:1.6,hp:100,dmgPs:16,xp:21,gold:3,shape:'circle',isShielderBot:true},
-  {name:'SAPPER',      color:'#ffe000',r:10,speed:2.2,hp:70, dmgPs:22,xp:25,gold:4,shape:'diamond',isSapper:true},
-  {name:'MIMIC',       color:'#ffd700',r:16,speed:0,  hp:250,dmgPs:40,xp:40,gold:10,shape:'circle',isMimic:true},
-  {name:'HERALD',      color:'#ff88ff',r:14,speed:0.8,hp:160,dmgPs:8, xp:44,gold:7,shape:'circle',isHerald:true},
+  {name:'SHIELDER-BOT',color:'#00aaff',r:11,speed:1.6,hp:100,dmgPs:16,xp:8,gold:3,shape:'circle',isShielderBot:true},
+  {name:'SAPPER',      color:'#ffe000',r:10,speed:2.2,hp:70, dmgPs:22,xp:9,gold:4,shape:'diamond',isSapper:true},
+  {name:'MIMIC',       color:'#ffd700',r:16,speed:0,  hp:250,dmgPs:40,xp:14,gold:10,shape:'circle',isMimic:true},
+  {name:'HERALD',      color:'#ff88ff',r:14,speed:0.8,hp:160,dmgPs:8, xp:14,gold:7,shape:'circle',isHerald:true},
 ];
 
 // BOSSES — much more HP, faster projectiles, more aggressive
@@ -3740,6 +3766,31 @@ function update(dt){
       if(p._bossBarrierTimer>=p._bossBarrierMax){p._bossBarrierReady=true;p._bossBarrierTimer=0;addFloat(p.x,p.y,'BARRIER READY!','#aaaaff');}
     }
   }
+  // Nova Core: big explosion every 6s
+  if(p._novaCore){
+    p._novaCoreTimer=(p._novaCoreTimer||6.0)-dt;
+    if(p._novaCoreTimer<=0){
+      p._novaCoreTimer=6.0;
+      explodeAt(s,p.x,p.y,200,p.damage*3);
+      spawnParticles(s,p.x,p.y,'#ff8800',30);spawnParticles(s,p.x,p.y,'#ffffff',15);
+      abilityRing(s,p.x,p.y,'#ff8800',120,.4);abilityRing(s,p.x,p.y,'#ffff00',200,.6);
+      addFloat(p.x,p.y,'💥 NOVA!','#ff8800');triggerShake(8);
+    }
+  }
+  // Chronoshift: on-kill slow — timer counts down
+  if(p._chronoshiftActive){
+    p._chronoshiftTimer=(p._chronoshiftTimer||0)-dt;
+    if(p._chronoshiftTimer<=0){
+      p._chronoshiftActive=false;
+      // Restore speeds
+      for(const e of s.enemies){if(e._chronoSlowed){e.speed=e._chronoBaseSpeed||e.speed;delete e._chronoSlowed;delete e._chronoBaseSpeed;}}
+    }
+  }
+  // Colossus Heart: damage boost timer after taking a hit
+  if(p._colossusActive){
+    p._colossusTimer=(p._colossusTimer||0)-dt;
+    if(p._colossusTimer<=0)p._colossusActive=false;
+  }
   // Endless Hunger: +0.3 damage per kill (applied in killEnemy)
   // Iron Skin (Ironclad): passive -25% damage reduction
   if(p._charId==='ironclad'){p._reduceDmg=0.75;p._thorns=true;}
@@ -3883,6 +3934,7 @@ function update(dt){
   if(p._adrenalineBonus)effDmg*=p._adrenalineBonus;
   if(p._alchemyBoost&&p._alchemyBoost>1)effDmg*=p._alchemyBoost;
   if(p._rampageActive)effDmg*=1.5;
+  if(p._colossusActive)effDmg*=1.30;
   // Momentum: speed above 2 boosts damage
   if(p._momentum&&p.speed>2)effDmg+=Math.floor((p.speed-2)*5);
   // Glass cannon / berserker charm already applied via multiplier in contact hit
@@ -3896,12 +3948,20 @@ function update(dt){
   }else s.orbitalBullets=[];
 
   // Bullets move
-  const _bl=s.bullets;for(let i=_bl.length-1;i>=0;i--){
+  // Bullet cap — prevents O(n²) blowup with echo/multishot/storm
+  if(s.bullets.length>300){s.bullets.splice(0,s.bullets.length-280);}
+  const _bl=s.bullets;
+  // Cache nearest enemy for seeker once per frame (not once per bullet)
+  let _seekTarget=null;
+  if(p._seekerBullets&&s.enemies.length>0){
+    let _snd=Infinity;
+    for(const _se of s.enemies){const _sd=Math.hypot(_se.x-p.x,_se.y-p.y);if(_sd<_snd){_seekTarget=_se;_snd=_sd;}}
+  }
+  for(let i=_bl.length-1;i>=0;i--){
     const b=_bl[i];
-    // Seeker homing: gently steer toward nearest enemy
+    // Seeker homing: gently steer toward cached nearest enemy
     if(p._seekerBullets&&!b.isTurret&&s.enemies.length>0&&!(Math.floor(s.totalTime*30)%2)){
-      let nt=null,nd=Infinity;
-      for(const e of s.enemies){const d=Math.hypot(e.x-b.x,e.y-b.y);if(d<nd){nt=e;nd=d;}}
+      const nt=_seekTarget,nd=_seekTarget?Math.hypot(_seekTarget.x-b.x,_seekTarget.y-b.y):Infinity;
       if(nt&&nd<300){
         const ta=Math.atan2(nt.y-b.y,nt.x-b.x);
         const ca=Math.atan2(b.vy,b.vx);
@@ -4252,10 +4312,13 @@ function update(dt){
       document.getElementById('boss-bar-fill').style.width=bpct+'%';
       document.getElementById('boss-hp-text').textContent=`${Math.floor(e.hp)}/${Math.floor(e.maxHp)}`;
     }
-    // Bullet hits enemy
+    // Bullet hits enemy — broad-phase AABB skip before expensive hypot
     if(!(e.isBoss&&e.isBurrowed)){
+    const _eR=e.r+12; // max bullet size buffer
     for(let j=s.bullets.length-1;j>=0;j--){
       const b=s.bullets[j];
+      // AABB broad-phase: skip hypot if clearly out of range
+      if(Math.abs(e.x-b.x)>_eR+b.r||Math.abs(e.y-b.y)>_eR+b.r)continue;
       if(Math.hypot(e.x-b.x,e.y-b.y)<e.r+b.r){
         if(e.shielded&&e.shieldHp>0){e.shieldHp-=b.dmg;e.hitFlash=.5;if(e.shieldHp<=0){e.shielded=false;addFloat(e.x,e.y,'SHIELD BROKEN','#00ccff');}b.pierce--;if(b.pierce<0)s.bullets[j]=s.bullets[s.bullets.length-1];s.bullets.pop();continue;}
         if(b.isAoEOrb){
@@ -4271,6 +4334,7 @@ function update(dt){
         const _finalDmg=(b.dmg+_infernoBonusDmg)*_bossRes;
         e.hp-=_finalDmg;e.hitFlash=1;s.totalDamageDealt+=_finalDmg;
         if(p._lifeLeech){const ll=_finalDmg*0.05;p.hp=Math.min(p.maxHp,p.hp+ll);if(ll>=1)updateHpHUD();}
+        if(p._crimsonPact){const cp=_finalDmg*0.08;p.hp=Math.min(p.maxHp,p.hp+cp);if(cp>=1)updateHpHUD();}
         if(b._isSoulBolt)e._killedBySoulBolt=true;
         if(s._dpsLog)s._dpsLog.push({t:s.totalTime,dmg:_finalDmg});
         if(e._inferno&&_infernoBonusDmg>0)spawnParticles(s,e.x,e.y,'#ff2200',3);
@@ -4299,11 +4363,13 @@ function update(dt){
           spawnParticles(s,e.x,e.y,'#88ff00',8);
         }
         // (vine rooting removed)
-        spawnParticles(s,e.x,e.y,e.color,3);
-        const fdmg=Math.floor(b.dmg);
-        const fcol=fdmg>=80?'#ff4444':fdmg>=40?'#ff8800':'#ffd700';
-        const fsize=fdmg>=80?1.4:fdmg>=40?1.15:1.0;
-        state.floatTexts.push({x:e.x,y:e.y-10,text:`-${fdmg}`,color:fcol,life:1.0,scale:fsize});
+        if(!b._isEcho)spawnParticles(s,e.x,e.y,e.color,2);
+        if(!b._isEcho&&Math.random()<0.35){
+          const fdmg=Math.floor(b.dmg);
+          const fcol=fdmg>=80?'#ff4444':fdmg>=40?'#ff8800':'#ffd700';
+          const fsize=fdmg>=80?1.4:fdmg>=40?1.15:1.0;
+          state.floatTexts.push({x:e.x,y:e.y-10,text:`-${fdmg}`,color:fcol,life:1.0,scale:fsize});
+        }
         if(p._explosiveBullets)explodeAt(s,e.x,e.y,42,p.damage*.5);
         // Flame bullet: apply burn stacks
         if(b._flameBullet&&p._charId==='pyro'){
@@ -4318,7 +4384,7 @@ function update(dt){
             spawnParticles(s,e.x,e.y,'#ff2200',12);
           }
         }
-        if(p._chainLightning&&!b.isTurret&&Math.random()<.50){
+        if(p._chainLightning&&!b.isTurret&&!b._isEcho&&Math.random()<.50){
           let cn=null,cd=Infinity;
           for(const ce of s.enemies){if(ce!==e){const d=Math.hypot(ce.x-e.x,ce.y-e.y);if(d<cd&&d<220){cn=ce;cd=d;}}}
           if(cn){
@@ -4328,11 +4394,12 @@ function update(dt){
             spawnParticles(s,cn.x,cn.y,'#00d4ff',6);
             if(!s.laserBeams)s.laserBeams=[];
             s.laserBeams.push({x1:e.x,y1:e.y,x2:cn.x,y2:cn.y,color:'#00d4ff',w:3,life:.15,maxLife:.15});
-            if(cn.hp<=0){const _ci=s.enemies.indexOf(cn);if(_ci>=0)killEnemy(s,cn,_ci);}
+            // Defer kill to avoid splicing enemies array mid-collision loop
+            if(cn.hp<=0){if(!s._deferredKills)s._deferredKills=[];s._deferredKills.push(cn);}
           }
         }
         // Ricochet: redirect bullet toward nearest OTHER enemy before consuming it
-        if(p._ricochet&&!b.isTurret&&!b._ricochetDone&&b.pierce<=0){
+        if(p._ricochet&&!b.isTurret&&!b._isEcho&&!b._ricochetDone&&b.pierce<=0){
           let rb=null,rd=Infinity;
           for(const re of s.enemies){if(re!==e){const rdd=Math.hypot(re.x-b.x,re.y-b.y);if(rdd<rd&&rdd<280){rb=re;rd=rdd;}}}
           if(rb){
@@ -4353,6 +4420,8 @@ function update(dt){
         b.pierce--;if(b.pierce<0){s.bullets[j]=s.bullets[s.bullets.length-1];s.bullets.pop();}
         if(e.hp<=0){dead=true;break;}
       }
+      // Guard: re-read bullet at j after any pops (swap may have changed it)
+      if(j>=0&&j<s.bullets.length&&s.bullets[j]&&s.bullets[j]!==b){}// intentional — b already captured above
     }
     } // end bullet-hit burrowed guard
     // Orbital hits
@@ -4391,6 +4460,8 @@ function update(dt){
       if(s._modReversal){p.hp=Math.min(p.maxHp,p.hp+dmg*0.5);dmg=0;}
       if(s._modVampiric){e.hp=Math.min(e.maxHp,e.hp+rawDmg*0.1);}
       if(!s._adminMode){p.hp-=dmg;p.immune=0.22;s.totalDamageTaken+=dmg;}
+      if(p._colossusHeart){p._colossusActive=true;p._colossusTimer=2.0;}
+      if(p._crimsonPact){/* applied on bullet hit */}
       if(p._thorns&&!e.isBoss)e.hp-=dmg*.3;
       if(p._tyrantFist&&!e.isBoss){e.hp-=p._tyrantContactDmg||30;spawnParticles(s,e.x,e.y,'#ff8800',4);}
       // Mirror shield: reflect dmg as bullet
@@ -4412,6 +4483,14 @@ function update(dt){
       if(p.hp<=0){if(!tryRevive(s,e.name))return;}continue;
     }
   }
+  // Flush deferred kills (chain lightning, etc.) — safe now that enemy loop is done
+  if(s._deferredKills&&s._deferredKills.length){
+    for(const dk of s._deferredKills){
+      const _dki=s.enemies.indexOf(dk);
+      if(_dki>=0)killEnemy(s,dk,_dki);
+    }
+    s._deferredKills=[];
+  }
   if(p.immune>0)p.immune-=dt;
 
   // Chests
@@ -4429,6 +4508,9 @@ function update(dt){
   const _pickupR=(p.r+5)*(p.r+5);
   for(let i=s.xpOrbs.length-1;i>=0;i--){
     const o=s.xpOrbs[i];
+    // Lifetime — orbs expire after 8s (last 2s they shrink/fade as warning)
+    o.life=(o.life!==undefined?o.life:8.0)-dt;
+    if(o.life<=0){s.xpOrbs.splice(i,1);continue;}
     const odx=p.x-o.x,ody=p.y-o.y,odSq=odx*odx+ody*ody;
     if(odSq<_magRangeSq){const od=Math.sqrt(odSq)||1;const spd=Math.min(18,7+(_magRangeSq-odSq)/_magRangeSq*14);o.x+=odx/od*spd;o.y+=ody/od*spd;}
     if(odSq<_pickupR){
@@ -5516,6 +5598,24 @@ function killEnemy(s,e,idx){
   if(p._vampiric){p.hp=Math.min(p.maxHp,p.hp+(p._vampHpPerKill||1));updateHpHUD();}
   if(p._endlessHunger){p.damage+=0.1;}
   if(p._soulLink){p.hp=Math.min(p.maxHp,p.hp+3);updateHpHUD();}
+  // Death Shroud: 15% chance to chain-kill nearest non-boss enemy
+  if(p._deathShroud&&Math.random()<0.15){
+    let nearest=null,nd=Infinity;
+    for(const ce of s.enemies){if(!ce.isBoss){const cd=Math.hypot(ce.x-e.x,ce.y-e.y);if(cd<nd){nearest=ce;nd=cd;}}}
+    if(nearest){nearest.hp=0;spawnParticles(s,nearest.x,nearest.y,'#aa00ff',14);addFloat(nearest.x,nearest.y,'💀 SHROUD','#aa00ff');}
+  }
+  // Chronoshift: 12% chance to slow all enemies for 2s
+  if(p._chronoshift&&!p._chronoshiftActive&&Math.random()<0.12){
+    p._chronoshiftActive=true;p._chronoshiftTimer=2.0;
+    for(const ce of s.enemies){if(!ce._chronoSlowed){ce._chronoBaseSpeed=ce.speed;ce.speed*=0.2;ce._chronoSlowed=true;}}
+    spawnParticles(s,p.x,p.y,'#00ccff',20);abilityRing(s,p.x,p.y,'#00ccff',300,.5);
+    addFloat(p.x,p.y,'⏳ CHRONOSHIFT!','#00ccff');
+  }
+  // Midas Touch: +5 gold per kill, every 100 gold → +3 damage
+  if(p._midasTouch){
+    p.gold+=5;p._midasGoldAcc=(p._midasGoldAcc||0)+5;
+    if(p._midasGoldAcc>=100){p._midasGoldAcc-=100;p.damage+=3;addFloat(p.x,p.y,'🪙 MIDAS +3 DMG','#ffd700');}
+  }
   // RAMPAGE: 10 kills in 6s
   s.killStreak=(s.killStreak||0)+1;s.killStreakTimer=6.0;
   if(s.killStreak>=10&&!p._rampageActive){
@@ -5580,7 +5680,7 @@ function killEnemy(s,e,idx){
     abilityRing(s,e.x,e.y,'#ff4400',360,1.3);
     // XP explosion from boss position
     const bossXp=e.xp*3;
-    for(let _xi=0;_xi<12;_xi++){const _xa=Math.random()*Math.PI*2,_xd=10+Math.random()*80;s.xpOrbs.push({x:e.x+Math.cos(_xa)*_xd,y:e.y+Math.sin(_xa)*_xd,r:7,value:Math.ceil(bossXp/12)});}
+    for(let _xi=0;_xi<12;_xi++){const _xa=Math.random()*Math.PI*2,_xd=10+Math.random()*80;s.xpOrbs.push({x:e.x+Math.cos(_xa)*_xd,y:e.y+Math.sin(_xa)*_xd,r:7,value:Math.ceil(bossXp/12),life:10.0});}
     addFloat(e.x,e.y,'★ BOSS SLAIN ★','#ffd700');
     triggerShake(18);
     // Screen flash
@@ -5616,6 +5716,8 @@ function autoShoot(s,dmg){
     // First bullet: full damage. Extra bullets: 40% damage (60% penalty)
     const bDmg=(i===0)?dmg:dmg*(1-MULTISHOT_DMG_PENALTY);
     s.bullets.push({x:p.x,y:p.y,vx:Math.cos(a)*p.bulletSpeed,vy:Math.sin(a)*p.bulletSpeed,r:p.bulletSize,dmg:bDmg,pierce:p.piercing,life:1.9});
+    // Echo Chamber: 40% damage ghost bullet at 45° offset
+    if(p._echoChamber){const ea=a+Math.PI/4;s.bullets.push({x:p.x,y:p.y,vx:Math.cos(ea)*p.bulletSpeed,vy:Math.sin(ea)*p.bulletSpeed,r:p.bulletSize*0.8,dmg:bDmg*0.4,pierce:0,life:1.5,_isEcho:true});}
   }
 }
 
@@ -5624,13 +5726,10 @@ function spawnXpOrbs(s,x,y,total){
   const val=Math.ceil(total/c);
   for(let i=0;i<c;i++){
     const a=Math.random()*Math.PI*2,d=4+Math.random()*18;
-    s.xpOrbs.push({x:x+Math.cos(a)*d,y:y+Math.sin(a)*d,r:5,value:val});
+    s.xpOrbs.push({x:x+Math.cos(a)*d,y:y+Math.sin(a)*d,r:5,value:val,life:8.0});
   }
-  // Hard cap — auto-collect oldest if too many
-  if(s.xpOrbs.length>300){
-    const toCollect=s.xpOrbs.splice(0,s.xpOrbs.length-250);
-    for(const o of toCollect)p_addXp(s,o.value);
-  }
+  // Hard cap — drop oldest if somehow flooded
+  if(s.xpOrbs.length>2000){s.xpOrbs.splice(0,s.xpOrbs.length-1800);}
 }
 function p_addXp(s,val){
   const p=s.player;
@@ -5649,7 +5748,7 @@ function addFloat(x,y,text,color){if(state){if(state.floatTexts.length>60)state.
 function checkLevelUp(s){
   const p=s.player;
   if(p.xp>=p.xpNext){
-    p.xp-=p.xpNext;p.level++;p.xpNext=Math.floor(p.xpNext*1.28);p.maxHp+=3;p.hp=Math.min(p.hp+3,p.maxHp);updateLevelHUD();updateHpHUD();
+    p.xp-=p.xpNext;p.level++;p.xpNext=Math.floor(p.xpNext*1.18);p.maxHp+=3;p.hp=Math.min(p.hp+3,p.maxHp);updateLevelHUD();updateHpHUD();
     const bonus=p._luckyClover>0?2:0;
     if(bonus>0)p._luckyClover--;
     pauseForUpgrade(s,3+bonus,false);
@@ -5783,13 +5882,13 @@ function _showBossLootPicker(s,choices,screen,splash,picker,container){
       s.collectedItems.push({...item,_count:1});
       updateHpHUD();
       for(const k in keys) keys[k]=false;
-      screen.classList.remove('active');
+      showScreen('game-screen');
       s.paused=false;
       // Big XP dump on claim
       const xpDump=60+s.wave*12;
       for(let i=0;i<8;i++){
         const a=Math.random()*Math.PI*2,d=20+Math.random()*60;
-        state.xpOrbs.push({x:state.player.x+Math.cos(a)*d,y:state.player.y+Math.sin(a)*d,r:6,value:Math.ceil(xpDump/8)});
+        state.xpOrbs.push({x:state.player.x+Math.cos(a)*d,y:state.player.y+Math.sin(a)*d,r:6,value:Math.ceil(xpDump/8),life:10.0});
       }
     };
     container.appendChild(card);
@@ -5884,7 +5983,10 @@ function draw(){
   // XP orbs — flat diamond, no gradient/shadow/rotation
   ctx.fillStyle='#00ffaa';
   for(const o of s.xpOrbs){
-    const r=o.r;
+    const life=o.life!==undefined?o.life:8.0;
+    const fade=life<2.0?life/2.0:1.0;
+    const r=o.r*(life<2.0?0.5+0.5*(life/2.0):1.0);
+    ctx.globalAlpha=fade*0.85;
     ctx.beginPath();
     ctx.moveTo(o.x,o.y-r*1.4);ctx.lineTo(o.x+r*0.9,o.y);
     ctx.lineTo(o.x,o.y+r*1.4);ctx.lineTo(o.x-r*0.9,o.y);
@@ -5892,8 +5994,13 @@ function draw(){
   }
   ctx.fillStyle='rgba(255,255,255,0.85)';
   for(const o of s.xpOrbs){
-    ctx.beginPath();ctx.arc(o.x,o.y,o.r*0.3,0,Math.PI*2);ctx.fill();
+    const life=o.life!==undefined?o.life:8.0;
+    const fade=life<2.0?life/2.0:1.0;
+    const r=o.r*(life<2.0?0.5+0.5*(life/2.0):1.0);
+    ctx.globalAlpha=fade*0.85;
+    ctx.beginPath();ctx.arc(o.x,o.y,r*0.3,0,Math.PI*2);ctx.fill();
   }
+  ctx.globalAlpha=1.0;
 
   for(const c of s.chests){
     const bob=Math.sin(c.bob)*4;
@@ -6497,85 +6604,69 @@ function draw(){
     ctx.restore();ctx.shadowBlur=0;
   }}
 
+  const _defaultBullets=[];
+  const _echoBullets=[];
   for(const b of s.bullets){
     const bAng=Math.atan2(b.vy,b.vx);
     if(b.isSniper){
-      ctx.save();
-      // Long elongated beam
-      const tlen=b.r*12;
-      ctx.globalAlpha=0.85;
-      const sg=ctx.createLinearGradient(b.x-Math.cos(bAng)*tlen,b.y-Math.sin(bAng)*tlen,b.x,b.y);
-      sg.addColorStop(0,'transparent');sg.addColorStop(1,'#ff8800');
-      ctx.strokeStyle=sg;ctx.lineWidth=b.r*1.8;
-      ctx.beginPath();ctx.moveTo(b.x,b.y);ctx.lineTo(b.x-Math.cos(bAng)*tlen,b.y-Math.sin(bAng)*tlen);ctx.stroke();
-      // Bright core
-      ctx.globalAlpha=0.95;ctx.strokeStyle='#fff';ctx.lineWidth=b.r*0.6;
-      ctx.beginPath();ctx.moveTo(b.x,b.y);ctx.lineTo(b.x-Math.cos(bAng)*tlen*0.4,b.y-Math.sin(bAng)*tlen*0.4);ctx.stroke();
-      ctx.restore();ctx.shadowBlur=0;
+      // Simple bright line — no gradient
+      const tlen=b.r*10;
+      ctx.save();ctx.translate(b.x,b.y);ctx.rotate(bAng);
+      ctx.globalAlpha=0.9;ctx.strokeStyle='#ff8800';ctx.lineWidth=b.r*1.6;
+      ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-tlen,0);ctx.stroke();
+      ctx.globalAlpha=1;ctx.strokeStyle='#fff';ctx.lineWidth=b.r*0.5;
+      ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-tlen*0.4,0);ctx.stroke();
+      ctx.restore();
     } else if(b.isAoEOrb){
-      ctx.save();
-      // Spinning hexagon orb
-      const rot=s.totalTime*3;
-      ctx.translate(b.x,b.y);ctx.rotate(rot);
-      const g=ctx.createRadialGradient(0,0,0,0,0,b.r*2);
-      g.addColorStop(0,'#fff');g.addColorStop(.4,'#cc44ff');g.addColorStop(1,'transparent');
-      ctx.beginPath();
+      // Simple hexagon — no gradient
+      ctx.save();ctx.translate(b.x,b.y);ctx.rotate(s.totalTime*3);
+      ctx.fillStyle='#cc44ff';ctx.beginPath();
       for(let k=0;k<6;k++){const a=k/6*Math.PI*2;ctx.lineTo(Math.cos(a)*b.r,Math.sin(a)*b.r);}
-      ctx.closePath();ctx.fillStyle=g;ctx.fill();
+      ctx.closePath();ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,0.6)';ctx.beginPath();ctx.arc(0,0,b.r*0.4,0,Math.PI*2);ctx.fill();
       ctx.restore();
     } else if(b.isAcidFlask){
+      // Simple ellipse
       ctx.save();ctx.translate(b.x,b.y);ctx.rotate(bAng);
-      // Teardrop shape
-      const g=ctx.createRadialGradient(0,0,0,0,0,b.r*2.2);
-      g.addColorStop(0,'#fff');g.addColorStop(.5,'#88ff00');g.addColorStop(1,'transparent');
-      ctx.beginPath();ctx.ellipse(0,0,b.r,b.r*1.6,0,0,Math.PI*2);
-      ctx.fillStyle=g;ctx.fill();
-      ctx.restore();
-    } else if(b.isVine){
-      ctx.save();
-      const g=ctx.createRadialGradient(b.x,b.y,0,b.x,b.y,b.r*2);
-      g.addColorStop(0,'#fff');g.addColorStop(.5,'#44ff66');g.addColorStop(1,'transparent');
-      ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
-      ctx.fillStyle=g;ctx.fill();
+      ctx.fillStyle='#88ff00';ctx.beginPath();ctx.ellipse(0,0,b.r,b.r*1.5,0,0,Math.PI*2);ctx.fill();
       ctx.restore();
     } else if(b.isPhantom){
+      // Simple line + dot
       ctx.save();ctx.translate(b.x,b.y);ctx.rotate(bAng);
-      const tlen=b.r*8;
-      ctx.globalAlpha=0.55;
-      const pg=ctx.createLinearGradient(-tlen,0,0,0);
-      pg.addColorStop(0,'transparent');pg.addColorStop(1,'#aaaaff');
-      ctx.strokeStyle=pg;ctx.lineWidth=b.r*1.4;
-      ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-tlen,0);ctx.stroke();
-      ctx.globalAlpha=0.85;ctx.beginPath();ctx.arc(0,0,b.r*0.9,0,Math.PI*2);
-      const g=ctx.createRadialGradient(0,0,0,0,0,b.r*2);
-      g.addColorStop(0,'#fff');g.addColorStop(.5,'#aaaaff');g.addColorStop(1,'transparent');
-      ctx.fillStyle=g;ctx.fill();
+      ctx.globalAlpha=0.5;ctx.strokeStyle='#aaaaff';ctx.lineWidth=b.r*1.2;
+      ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-b.r*7,0);ctx.stroke();
+      ctx.globalAlpha=0.9;ctx.fillStyle='#ccccff';ctx.beginPath();ctx.arc(0,0,b.r*0.9,0,Math.PI*2);ctx.fill();
       ctx.restore();
     } else if(b._arcaneOrb){
-      ctx.save();ctx.translate(b.x,b.y);
-      const rot=s.totalTime*4+b.x*0.05;
-      const g=ctx.createRadialGradient(0,0,0,0,0,b.r*2.2);
-      g.addColorStop(0,'#fff');g.addColorStop(.4,'#cc44ff');g.addColorStop(1,'transparent');
-      // Star shape
-      ctx.beginPath();
-      for(let k=0;k<8;k++){
-        const a=rot+k/8*Math.PI*2;const rr=k%2===0?b.r:b.r*0.5;
-        ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr);
-      }
-      ctx.closePath();ctx.fillStyle=g;ctx.fill();
+      // Simple 4-point star
+      ctx.save();ctx.translate(b.x,b.y);ctx.rotate(s.totalTime*4);
+      ctx.fillStyle='#cc44ff';ctx.beginPath();
+      for(let k=0;k<8;k++){const a=k/8*Math.PI*2;const rr=k%2===0?b.r:b.r*0.45;ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr);}
+      ctx.closePath();ctx.fill();
       ctx.restore();
+    } else if(b._isEcho){
+      _echoBullets.push(b);
     } else {
-      // Default: flat elongated bullet, no gradients
-      const col=b.isTurret?'#44aaff':'#ffd700';
-      const tlen=Math.min(b.r*6,(Math.hypot(b.vx,b.vy)||5)*1.8);
-      ctx.save();ctx.translate(b.x,b.y);ctx.rotate(bAng);
-      ctx.globalAlpha=0.3;ctx.fillStyle=col;
-      ctx.fillRect(-tlen,-b.r*0.5,tlen,b.r);
-      ctx.globalAlpha=1;ctx.fillStyle=col;
-      ctx.beginPath();ctx.arc(0,0,b.r,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(0,0,b.r*0.4,0,Math.PI*2);ctx.fill();
-      ctx.restore();
+      _defaultBullets.push(b);
     }
+  }
+  // Batch default bullets — gold outer + white inner, two passes
+  ctx.globalAlpha=1;
+  ctx.fillStyle='#ffd700';
+  ctx.beginPath();
+  for(const b of _defaultBullets){ctx.moveTo(b.x+b.r,b.y);ctx.arc(b.x,b.y,b.r,0,Math.PI*2);}
+  ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.beginPath();
+  for(const b of _defaultBullets){ctx.moveTo(b.x+b.r*0.4,b.y);ctx.arc(b.x,b.y,b.r*0.4,0,Math.PI*2);}
+  ctx.fill();
+  // Batch echo bullets — dim cyan, single pass
+  if(_echoBullets.length){
+    ctx.globalAlpha=0.45;ctx.fillStyle='#88ddff';
+    ctx.beginPath();
+    for(const b of _echoBullets){ctx.moveTo(b.x+b.r,b.y);ctx.arc(b.x,b.y,b.r,0,Math.PI*2);}
+    ctx.fill();
+    ctx.globalAlpha=1;
   }
 
   for(const ob of s.orbitalBullets){
@@ -6812,7 +6903,7 @@ function pauseForUpgrade(s,count=3,isChest=false){
     ch.forEach(u=>{
       const card=document.createElement('div');
       card.className='upgrade-card '+(isChest?'chest-card ':'')+u.rarity;
-      card.innerHTML=`<div class="ucard-icon">${u.icon}</div><div class="ucard-name">${u.name}</div><div class="ucard-desc">${getCardDesc(u,s.player)}</div><div class="ucard-rarity ${u.rarity}">${u.rarity.toUpperCase()}</div>`;
+      card.innerHTML=`<div class="ucard-icon">${u.icon}</div><div class="ucard-name">${u.name}</div><div class="ucard-desc">${getCardDesc(u,s.player)}</div><div class="ucard-rarity ${u.rarity}">${u.rarity.toUpperCase()}${u.unique?' · ✦ UNIQUE':''}</div>`;
       card.onclick=()=>{
         u.apply(s.player);
         s.collectedItems.push({...u,_count:(s.collectedItems.filter(c=>c.id===u.id).length+1)});
@@ -7113,9 +7204,9 @@ const ADMIN_CHARACTER={
   statMods:{speed:2.4,damage:9985,fireRate:-9999,maxHp:99899},
   ability(s){
     const p=s.player;
-    // Nuke every enemy on screen
-    for(const e of s.enemies){e.hp=0;}
-    spawnParticles(s,p.x,p.y,'#ffd700',40);
+    // Area nuke — explodeAt handles the damage, deferred kills handle cleanup
+    explodeAt(s,p.x,p.y,600,99999);
+    spawnParticles(s,p.x,p.y,'#ffd700',30);
     abilityRing(s,p.x,p.y,'#ffd700',500,0.8);
     addFloat(p.x,p.y,'👑 ADMIN OVERRIDE','#ffd700');
     triggerShake(20);
@@ -7133,43 +7224,34 @@ function startAdminRun(){
   const p=state.player;
   p.x=W/2;p.y=H/2;
 
-  // God-mode overrides
+  // God-mode overrides — damage is so high everything dies in 1 hit anyway
   p.hp=99999;p.maxHp=99999;
   p._regen=999;
   p.damage=9999;
   p.speed=4.5;
-  p.fireRate=80;
+  p.fireRate=120;      // fast but not frame-melting
   p.bulletSpeed=10;
-  p.bulletSize=9;
-  p.piercing=99;
-  p.multishot=5;
+  p.bulletSize=8;
+  p.piercing=3;        // 3 is enough — 9999 dmg kills everything in 1 hit
+  p.multishot=3;       // 3 shots spread, not 5
   p._magnetRange=300;
 
-  // All item flags
+  // Passive survivability — no expensive per-hit procs
   p._vampiric=true;p._vampHpPerKill=10;
-  p._lifeLeech=true;
   p._thorns=true;
-  p._mirrorShield=true;
-  p._explosiveBullets=true;
-  p._chainLightning=true;
-  p._ricochet=true;
-  p._seekerBullets=true;
-  p._incendiaryBullets=true;
-  p._cryoRounds=true;
-  p._orbitalCount=5;
-  p._adrenaline=true;
-  p._berserkerCharm=true;
-  p._counterStrike=true;
-  p._executioner=true;
-  p._endlessHunger=true;
-  p._stormMantle=true;p._stormMantleTimer=0.1;
   p._bossBarrierMax=1;p._bossBarrierReady=true;
   p._warlordCrown=true;
-  p._soulShard=true;
   p._phoenix=true;p._phoenixCrown=true;p._phoenixCharges=99;
-  p._tyrantFist=true;p._tyrantContactDmg=200;
-  p._vortexCore=true;
+  p._tyrantFist=true;p._tyrantContactDmg=500;
+  p._orbitalCount=3;
+  p._endlessHunger=true;
+  p._stormMantle=true;p._stormMantleTimer=0.1;
+  p._soulShard=true;
   p._goldBonus=100;
+  p._executioner=true;
+  p._novaCore=true;p._novaCoreTimer=3.0;
+  // Skip the chain lightning / explosive / echo / seeker — they cause O(n²) blowup
+  // Nova core + high damage + orbital is more than enough
 
   // Skip to chosen wave
   if(_adminWave>1){
