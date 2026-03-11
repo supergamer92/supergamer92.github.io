@@ -849,6 +849,7 @@ body {
     <div class="title-sub">Roguelike · Survivor · Bullet Hell</div>
     <div class="title-version">v3.4 — 24 CHARACTERS · 100 WAVES · 10 BOSSES</div>
     <div id="title-hs" style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;text-align:center;line-height:2;min-height:34px;"></div>
+    <div id="title-run-history" style="width:380px;max-width:92vw;margin:0 auto 4px;padding:4px 0;"></div>
     <div class="title-btn-row">
       <button class="pixel-btn green" onclick="showCharSelect()">▶ PLAY</button>
       <button class="pixel-btn cyan" onclick="showHowToPlay()">HOW TO PLAY</button>
@@ -979,6 +980,7 @@ body {
     <div class="hud-section grow">
       <div class="wave-display">
         <div id="wave-display">WAVE 1</div>
+        <div id="zone-display" style="font-family:'Barlow Condensed',sans-serif;font-size:9px;color:#555;letter-spacing:2px;text-align:center;"></div>
         <div id="wave-timer-bar-wrap"><div id="wave-timer-fill" style="width:100%"></div></div>
         <div id="timer">0:14</div>
       </div>
@@ -2604,7 +2606,7 @@ function initState(){
     chests:[],turrets:[],firePatches:[],meleeSwings:[],_pendingSwings:[],
     xpOrbs:[],particles:[],floatTexts:[],
     collectedItems:[],
-    wave:1,waveTimer:14,spawnTimer:0,spawnRate:1.1,
+    wave:1,waveTimer:20,spawnTimer:0,spawnRate:1.1,
     paused:false,gameOver:false,won:false,
     lastTime:0,totalTime:0,
     upgradePool:buildUpgradePool(),
@@ -3447,12 +3449,14 @@ function spawnEnemy(s){
   if(w>=12)pool.push(18);  // Herald
   const t=ENEMY_TYPES[pool[Math.floor(Math.random()*pool.length)]];
   const pos=getEdgePos();
-  const hpScale=1+(w-1)*.35;
+  const _zoneHpMult=getZone(w).enemyHpMult;
+  const hpScale=(1+(w-1)*.35)*_zoneHpMult;
   const spdScale=1+(w-1)*.06;
   const e={x:pos.x,y:pos.y,r:t.r,hp:t.hp*hpScale,maxHp:t.hp*hpScale,speed:t.speed*spdScale,
     dmgPs:t.dmgPs*(1+(w-1)*.06),
     xp:t.xp,gold:t.gold,color:t.color,name:t.name,shape:t.shape||'circle',
     alpha:t.alpha||1,hitFlash:0,isBoss:false};
+  const _zt=getZone(w).enemyTint;if(_zt)e._zoneTint=_zt;
   if(t.explodes)e.explodes=true;if(t.splits)e.splits=true;
   if(t.shielded){e.shielded=true;e.shieldHp=50+(w*4);}
   if(t.shoots){e.shoots=true;e.shootTimer=Math.random()*2;e.shootCooldown=Math.max(0.8,t.shootCooldown-(w*0.05));}
@@ -3525,6 +3529,12 @@ function gameLoop(ts){
 
 function update(dt){
   const s=state,p=s.player;
+  // Hit-stop: freeze briefly on big hits
+  if(s._hitStopActive){
+    s._hitStopTimer=(s._hitStopTimer||0)-dt;
+    if(s._hitStopTimer<=0)s._hitStopActive=false;
+    else return;
+  }
   s.totalTime+=dt;
   s._achTimer=(s._achTimer||0)+dt;if(s._achTimer>1.0){s._achTimer=0;checkAchievements(s);}
   // Pending staggered melee swings
@@ -3558,14 +3568,28 @@ function update(dt){
   if(s.wave%5===0&&!s.bossSpawned&&!s.bossAlive){spawnBoss(s);checkTitanRun(s);}
   // Boss waves: freeze timer while boss is alive; advance only on boss death
   const isBossWave=s.wave%5===0;
+  // Zone transition check
+  const _prevZoneIdx=getZoneIndex(s.wave-1);
+  const _curZoneIdx=getZoneIndex(s.wave);
+  if(s.wave>1&&_curZoneIdx!==_prevZoneIdx){
+    const _zone=getZone(s.wave);
+    announceWave(_zone.entryMsg);
+    spawnParticles(s,s.player.x,s.player.y,_zone.accent,30);
+    abilityRing(s,s.player.x,s.player.y,_zone.accent,400,1.2);
+    triggerShake(12);
+    // Rebuild hex cache for new zone color
+    _hexCache=null;
+    _zoneHexColor=_zone.hexColor;
+    _zoneDustColor=_zone.dustColor;
+  }
   if(isBossWave&&s.bossAlive){
     // Show "DEFEAT THE BOSS!" reminder periodically
     if(!s._bossReminderTimer||s._bossReminderTimer<=0){s._bossReminderTimer=8;addFloat(W/2,40,'⚠ DEFEAT THE BOSS!','#ff4488');}
     s._bossReminderTimer=(s._bossReminderTimer||8)-dt;
   } else if(s.waveTimer<=0||(isBossWave&&s.bossSpawned&&!s.bossAlive&&s.enemies.length===0)){
     s.wave++;
-    s.waveTimer=Math.min(38, 12+s.wave*1.3);
-    s.spawnRate=Math.max(.30,1.1-(s.wave-1)*.018);
+    s.waveTimer=Math.min(30, 10+s.wave*0.65);
+    s.spawnRate=Math.max(.22,0.9-(s.wave-1)*.016);
     s.bossSpawned=false;
     s._bossReminderTimer=0;
     s._titanSecondSpawned=false;
@@ -3757,8 +3781,33 @@ function update(dt){
       for(let i=0;i<16;i++){const a=i/16*Math.PI*2;s.bullets.push({x:p.x,y:p.y,vx:Math.cos(a)*p.bulletSpeed*1.1,vy:Math.sin(a)*p.bulletSpeed*1.1,r:p.bulletSize+1,dmg:p.damage*1.0,pierce:1,life:1.6});}
       spawnParticles(s,p.x,p.y,'#ffff00',18);abilityRing(s,p.x,p.y,'#ffff44',60,.3);
       addFloat(p.x,p.y,'⚡ STORM!','#ffff00');
+      if(p._syn_stormChain){
+        // Thundergod synergy: storm bolts also chain
+        for(let i=0;i<16;i++){
+          let cn=null,cd=Infinity;
+          for(const ce of s.enemies){const d=Math.hypot(ce.x-p.x,ce.y-p.y);if(d<cd&&d<300){cn=ce;cd=d;}}
+          if(cn){cn.hp-=p.damage*0.4;cn.hitFlash=0.6;spawnParticles(s,cn.x,cn.y,'#00d4ff',3);}
+        }
+      }
     }
   }
+  // ── ZONE ITEM EFFECTS ──────────────────────────────────────────────
+  // Shadow Cloak: auto-cloak every 8s
+  if(p._autoCloakItem){
+    p._autoCloakTimer=(p._autoCloakTimer||8.0)-dt;
+    if(p._autoCloakTimer<=0&&!p._cloaked){
+      p._autoCloakTimer=8.0;p._cloaked=true;p._cloakTimer=1.5;
+      spawnParticles(s,p.x,p.y,'#4400aa',12);addFloat(p.x,p.y,'🌑 CLOAKED','#8844ff');
+    }
+    if(p._cloaked){p._cloakTimer-=dt;if(p._cloakTimer<=0){p._cloaked=false;}}
+  }
+  // Berserker Fury: taking damage boosts dmg up to 5 stacks
+  if(p._berserkFury&&p._berserkFuryStacks>0){
+    p._berserkFuryTimer=(p._berserkFuryTimer||0)-dt;
+    if(p._berserkFuryTimer<=0)p._berserkFuryStacks=Math.max(0,(p._berserkFuryStacks||0)-1);
+  }
+  // Null Anchor: cannot move
+  if(p._nullAnchor){p.speed=0;}
   // Boss Barrier passive: auto-recharging block
   if(p._bossBarrierMax){
     if(!p._bossBarrierReady){
@@ -3790,6 +3839,18 @@ function update(dt){
   if(p._colossusActive){
     p._colossusTimer=(p._colossusTimer||0)-dt;
     if(p._colossusTimer<=0)p._colossusActive=false;
+  }
+  // Void Rifts: gravity pull nearby enemies inward
+  if(s.voidRifts){
+    for(let vi=s.voidRifts.length-1;vi>=0;vi--){
+      const vr=s.voidRifts[vi];vr.life-=dt;
+      if(vr.life<=0){s.voidRifts.splice(vi,1);continue;}
+      for(const ve of s.enemies){
+        const vd=Math.hypot(ve.x-vr.x,ve.y-vr.y);
+        if(vd<vr.r&&vd>2){const va=Math.atan2(vr.y-ve.y,vr.x-ve.x);ve.x+=Math.cos(va)*vr.pull*dt;ve.y+=Math.sin(va)*vr.pull*dt;}
+      }
+      spawnParticles(s,vr.x,vr.y,'#0088cc',2);
+    }
   }
   // Endless Hunger: +0.3 damage per kill (applied in killEnemy)
   // Iron Skin (Ironclad): passive -25% damage reduction
@@ -3935,6 +3996,8 @@ function update(dt){
   if(p._alchemyBoost&&p._alchemyBoost>1)effDmg*=p._alchemyBoost;
   if(p._rampageActive)effDmg*=1.5;
   if(p._colossusActive)effDmg*=1.30;
+  if(p._berserkFury&&p._berserkFuryStacks>0)effDmg*=(1+0.08*(p._berserkFuryStacks||0));
+  if(p._cursedBlade)effDmg*=1.80;
   // Momentum: speed above 2 boosts damage
   if(p._momentum&&p.speed>2)effDmg+=Math.floor((p.speed-2)*5);
   // Glass cannon / berserker charm already applied via multiplier in contact hit
@@ -4333,8 +4396,13 @@ function update(dt){
         const _infernoBonusDmg=e._inferno?b.dmg*0.4:0;
         const _finalDmg=(b.dmg+_infernoBonusDmg)*_bossRes;
         e.hp-=_finalDmg;e.hitFlash=1;s.totalDamageDealt+=_finalDmg;
+        // Hit-stop: freeze frame briefly on big hits
+        if(_finalDmg>200&&!e.isBoss&&!s._hitStopActive){
+          s._hitStopActive=true;s._hitStopTimer=0.04;
+        }
         if(p._lifeLeech){const ll=_finalDmg*0.05;p.hp=Math.min(p.maxHp,p.hp+ll);if(ll>=1)updateHpHUD();}
         if(p._crimsonPact){const cp=_finalDmg*0.08;p.hp=Math.min(p.maxHp,p.hp+cp);if(cp>=1)updateHpHUD();}
+  if(p._cursedBlade){const cl=_finalDmg*0.08;p.hp=Math.min(p.maxHp,p.hp+cl);if(cl>=1)updateHpHUD();}
         if(b._isSoulBolt)e._killedBySoulBolt=true;
         if(s._dpsLog)s._dpsLog.push({t:s.totalTime,dmg:_finalDmg});
         if(e._inferno&&_infernoBonusDmg>0)spawnParticles(s,e.x,e.y,'#ff2200',3);
@@ -4461,6 +4529,7 @@ function update(dt){
       if(s._modVampiric){e.hp=Math.min(e.maxHp,e.hp+rawDmg*0.1);}
       if(!s._adminMode){p.hp-=dmg;p.immune=0.22;s.totalDamageTaken+=dmg;}
       if(p._colossusHeart){p._colossusActive=true;p._colossusTimer=2.0;}
+      if(p._berserkFury){p._berserkFuryStacks=Math.min(5,(p._berserkFuryStacks||0)+1);p._berserkFuryTimer=4.0;}
       if(p._crimsonPact){/* applied on bullet hit */}
       if(p._thorns&&!e.isBoss)e.hp-=dmg*.3;
       if(p._tyrantFist&&!e.isBoss){e.hp-=p._tyrantContactDmg||30;spawnParticles(s,e.x,e.y,'#ff8800',4);}
@@ -5616,6 +5685,14 @@ function killEnemy(s,e,idx){
     p.gold+=5;p._midasGoldAcc=(p._midasGoldAcc||0)+5;
     if(p._midasGoldAcc>=100){p._midasGoldAcc-=100;p.damage+=3;addFloat(p.x,p.y,'🪙 MIDAS +3 DMG','#ffd700');}
   }
+  if(p._syn_hungerMidas){p.gold+=2;}
+  // Void Rift: 20% chance to spawn a gravity pull
+  if(p._voidRift&&!e.isBoss&&Math.random()<0.20){
+    if(!s.voidRifts)s.voidRifts=[];
+    s.voidRifts.push({x:e.x,y:e.y,r:80,life:1.8,maxLife:1.8,pull:220});
+    spawnParticles(s,e.x,e.y,'#00ccff',10);
+    addFloat(e.x,e.y,'🌀 RIFT','#00ccff');
+  }
   // RAMPAGE: 10 kills in 6s
   s.killStreak=(s.killStreak||0)+1;s.killStreakTimer=6.0;
   if(s.killStreak>=10&&!p._rampageActive){
@@ -5641,6 +5718,14 @@ function killEnemy(s,e,idx){
     addFloat(e.x,e.y-14,'💠 SOUL!','#4488ff');
   }
   spawnParticles(s,e.x,e.y,e.color,6);
+  // Death burst: expanding ring
+  if(e.isBoss){
+    abilityRing(s,e.x,e.y,e.color,e.r*4,0.6);
+    abilityRing(s,e.x,e.y,'#ffffff',e.r*6,0.8);
+  } else {
+    s.particles.push({x:e.x,y:e.y,vx:0,vy:0,color:e._zoneTint||e.color,r:e.r*2.5,
+      life:0.28,maxLife:0.28,isExpandRing:true});
+  }
   addFloat(e.x,e.y,`+${e.gold}💰`,'#ffd700');
   // NECROMANCER: raise skeleton from soul-bolt kills
   if(p._charId==='necromancer_hero'&&e._killedBySoulBolt&&!e.isBoss){
@@ -5881,6 +5966,7 @@ function _showBossLootPicker(s,choices,screen,splash,picker,container){
       item.apply(s.player);
       s.collectedItems.push({...item,_count:1});
       updateHpHUD();
+      checkSynergies(s);
       for(const k in keys) keys[k]=false;
       showScreen('game-screen');
       s.paused=false;
@@ -6849,14 +6935,15 @@ function updateKillsHUD(){
   document.getElementById('gold-display').textContent=state.player.gold;
 }
 function updateLevelHUD(){document.getElementById('level-display').textContent=state.player.level;}
-function updateWaveHUD(){document.getElementById('wave-display').textContent=`WAVE ${state.wave}`;}
+function updateWaveHUD(){
+  if(state){const _zh=document.getElementById('zone-display');if(_zh){const _z=getZone(state.wave);_zh.textContent=_z.icon+' '+_z.name;_zh.style.color=_z.accent;}}document.getElementById('wave-display').textContent=`WAVE ${state.wave}`;}
 function updateTimerHUD(){
   const t=Math.max(0,Math.ceil(state.waveTimer));
   const el=document.getElementById('timer');
   el.textContent=`${Math.floor(t/60)}:${(t%60).toString().padStart(2,'0')}`;
   el.className=t<=5?'urgent':'';
   // Wave timer bar
-  const maxT=Math.min(38, 12+state.wave*1.3);
+  const maxT=Math.min(30, 10+state.wave*0.65);
   const pct=Math.max(0,Math.min(100,(state.waveTimer/maxT)*100));
   const fill=document.getElementById('wave-timer-fill');
   if(fill){fill.style.width=pct+'%';fill.style.background=pct<20?'var(--warning)':'var(--accent2)';}
@@ -6896,18 +6983,35 @@ function initAbilityHUD(ch){
 // ═══════════════════════════════════════════════════════════════════
 function pauseForUpgrade(s,count=3,isChest=false){
   s.paused=true;
-  let choices=getUpgradeChoices(s.upgradePool,count);
+  // Inject zone-exclusive items into chest pools
+  if(isChest){
+    const zone=getZone(s.wave);
+    const zItems=(ZONE_ITEMS[zone.id]||[]);
+    const owned=new Set(s.collectedItems.map(c=>c.id));
+    const available=zItems.filter(u=>!owned.has(u.id));
+    if(available.length&&Math.random()<0.45){
+      // 45% chance a chest slot is a zone item
+      const zi=available[Math.floor(Math.random()*available.length)];
+      const base=getUpgradeChoices(s.upgradePool,count-1);
+      var choices=[zi,...base].slice(0,count);
+    } else {
+      var choices=getUpgradeChoices(s.upgradePool,count);
+    }
+  } else {
+    var choices=getUpgradeChoices(s.upgradePool,count);
+  }
   const renderCards=(ch)=>{
     const container=document.getElementById('upgrade-cards');
     container.innerHTML='';
     ch.forEach(u=>{
       const card=document.createElement('div');
       card.className='upgrade-card '+(isChest?'chest-card ':'')+u.rarity;
-      card.innerHTML=`<div class="ucard-icon">${u.icon}</div><div class="ucard-name">${u.name}</div><div class="ucard-desc">${getCardDesc(u,s.player)}</div><div class="ucard-rarity ${u.rarity}">${u.rarity.toUpperCase()}${u.unique?' · ✦ UNIQUE':''}</div>`;
+    card.innerHTML=`<div class="ucard-icon">${u.icon}</div><div class="ucard-name" style="${u.cursed?'color:#ff4444':u.zone?'color:#00ccff':''}">${u.name}</div><div class="ucard-desc">${getCardDesc(u,s.player)}</div><div class="ucard-rarity ${u.rarity}">${u.rarity.toUpperCase()}${u.unique?' · ✦ UNIQUE':''}${u.cursed?' · ⚠ CURSED':''}${u.zone?' · 📍 ZONE':''}${SYNERGIES.some(syn=>syn.needs.some(id=>id===u.id))?' · ✨ SYNERGY':''}</div>`;
       card.onclick=()=>{
         u.apply(s.player);
         s.collectedItems.push({...u,_count:(s.collectedItems.filter(c=>c.id===u.id).length+1)});
         updateHpHUD();
+        checkSynergies(s);
         // Clear any stuck keys — keyup events are missed while the levelup screen is active
         for(const k in keys) keys[k]=false;
         showScreen('game-screen');s.paused=false;
@@ -7084,6 +7188,7 @@ function triggerGameOver(killerName){
   const killerRow=killerName?`<div class="stat-row" style="color:#ff4455"><span>💀 KILLED BY</span><span>${killerName}</span></div>`:'';
   const earned=calcShardReward(state);
   addShards(earned);
+  saveRunHistory(state);
   const newBest=saveHighScore(state.wave,p.kills,p.level,state.char.name);
   const hs=getHighScore();
   const bRow=newBest?`<div class="stat-row" style="color:#ffd700"><span>🏆 NEW RECORD!</span><span>✨</span></div>`:'';
@@ -7128,6 +7233,7 @@ function showScreen(id){
 function showTitle(){
   if(raf){cancelAnimationFrame(raf);raf=null;}
   state=null;
+  renderRunHistory();
   // Display highscores on title
   const hs=getHighScore();
   const hsel=document.getElementById('title-hs');
@@ -7212,6 +7318,120 @@ const ADMIN_CHARACTER={
     triggerShake(20);
   },
 };
+
+
+// ═══════════════════════════════════════════════════════════════════
+//  ZONES
+// ═══════════════════════════════════════════════════════════════════
+const ZONES=[
+  {id:'dungeon',name:'THE DUNGEON', waves:[1,33],  icon:'🏰',
+   hexColor:'rgba(60,45,100,0.22)',  dustColor:'255,255,255', accent:'#8866ff',
+   enemyTint:null,   enemyHpMult:1.0,  entryMsg:'⚔️ ENTER THE DUNGEON'},
+  {id:'volcano',name:'THE VOLCANO', waves:[34,66], icon:'🌋',
+   hexColor:'rgba(120,40,10,0.28)', dustColor:'255,140,60',  accent:'#ff6600',
+   enemyTint:'#ff4400', enemyHpMult:1.25, entryMsg:'🌋 DESCEND INTO THE VOLCANO'},
+  {id:'void',   name:'THE VOID',   waves:[67,100],icon:'🌀',
+   hexColor:'rgba(0,60,80,0.32)',   dustColor:'80,220,255',  accent:'#00ccff',
+   enemyTint:'#0044ff', enemyHpMult:1.55, entryMsg:'🌀 ENTER THE VOID'},
+];
+function getZone(wave){return ZONES.find(z=>wave>=z.waves[0]&&wave<=z.waves[1])||ZONES[0];}
+function getZoneIndex(wave){return ZONES.findIndex(z=>wave>=z.waves[0]&&wave<=z.waves[1]);}
+
+// Zone-exclusive items
+const ZONE_ITEMS={
+  dungeon:[
+    {id:'zi_dungeon_shadow',name:'SHADOW CLOAK',icon:'🌑',rarity:'epic',zone:'dungeon',unique:true,
+     desc:'Every 8s auto-cloak for 1.5s. Attacks from cloak deal +60% damage.',
+     apply(p){p._autoCloakItem=true;p._autoCloakTimer=8.0;}},
+    {id:'zi_dungeon_blood', name:'CURSED BLADE', icon:'🗡️',rarity:'epic',zone:'dungeon',unique:true,cursed:true,
+     desc:'⚠ CURSED: -30 Max HP. Your damage +80%, stealing 8% as HP on hit.',
+     apply(p){p.maxHp=Math.max(30,p.maxHp-30);p.hp=Math.min(p.hp,p.maxHp);p._cursedBlade=true;}},
+  ],
+  volcano:[
+    {id:'zi_volcano_magma', name:'MAGMA CORE',  icon:'🔥',rarity:'epic',zone:'volcano',unique:true,
+     desc:'Bullets leave fire patches on hit. Fire damage +40% in the Volcano.',
+     apply(p){p._magmaCore=true;p._incendiaryBullets=true;}},
+    {id:'zi_volcano_fury',  name:'BERSERKER FURY',icon:'😡',rarity:'epic',zone:'volcano',unique:true,cursed:true,
+     desc:'⚠ CURSED: Taking damage boosts damage +8% for 4s, stacking up to 5×.',
+     apply(p){p._berserkFury=true;}},
+  ],
+  void:[
+    {id:'zi_void_rift',     name:'VOID RIFT',  icon:'🌀',rarity:'epic',zone:'void',unique:true,
+     desc:'Kills have 20% chance to spawn a rift that pulls nearby enemies in.',
+     apply(p){p._voidRift=true;}},
+    {id:'zi_void_anchor',   name:'NULL ANCHOR', icon:'⚓',rarity:'epic',zone:'void',unique:true,cursed:true,
+     desc:'⚠ CURSED: You cannot move. +120% damage, +6 orbitals.',
+     apply(p){p._nullAnchor=true;p.damage=Math.round(p.damage*2.2);p._orbitalCount+=6;}},
+  ],
+};
+
+// ═══════════════════════════════════════════════════════════════════
+//  ITEM SYNERGIES
+// ═══════════════════════════════════════════════════════════════════
+const SYNERGIES=[
+  {id:'syn_storm_chain',    name:'THUNDERGOD',      icon:'⚡',  needs:['lch','bi_storm'],
+   desc:'Storm bolts proc Chain Lightning.',
+   apply(p){p._syn_stormChain=true;}},
+  {id:'syn_vortex_ricochet',name:'SPIRAL DEATH',    icon:'🌀',  needs:['ricochet','bi_vortex'],
+   desc:'Ricochet bullets pierce 3 extra enemies.',
+   apply(p){p._syn_vortexRicochet=true;}},
+  {id:'syn_hunger_midas',   name:'GOLDEN HUNGER',   icon:'🪙',  needs:['bi_hunger','bi_gold'],
+   desc:'Endless Hunger also grants +2 gold per kill.',
+   apply(p){p._syn_hungerMidas=true;}},
+  {id:'syn_cryo_chain',     name:'FROZEN THUNDER',  icon:'❄️',  needs:['new_icebullet','lch'],
+   desc:'Chain Lightning 2× proc on frozen enemies.',
+   apply(p){p._syn_cryoChain=true;}},
+  {id:'syn_phoenix_leech',  name:'ETERNAL FLAME',   icon:'🔥',  needs:['new_phoenix','bi_leech'],
+   desc:'Phoenix revive heals to 100% HP.',
+   apply(p){p._syn_phoenixLeech=true;}},
+  {id:'syn_echo_boom',      name:'ECHO BOOM',        icon:'💥',  needs:['bi_echo','expl'],
+   desc:'Echo bullets also trigger explosions.',
+   apply(p){p._syn_echoBoom=true;}},
+  {id:'syn_seeker_ricochet',name:'HOMING RICOCHET', icon:'🎯',  needs:['new_seekers','ricochet'],
+   desc:'Ricochet bullets home to nearest enemy.',
+   apply(p){p._syn_seekerRicochet=true;}},
+];
+function checkSynergies(s){
+  const p=s.player;
+  const owned=new Set(s.collectedItems.map(c=>c.id));
+  for(const syn of SYNERGIES){
+    if(!p['_synOwned_'+syn.id]&&syn.needs.every(id=>owned.has(id))){
+      p['_synOwned_'+syn.id]=true;syn.apply(p);
+      addFloat(p.x,p.y-40,'✨ SYNERGY: '+syn.name+'!','#ffd700');
+      spawnParticles(s,p.x,p.y,'#ffd700',20);
+      showAchievementToast('✨ SYNERGY: '+syn.name);
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  RUN HISTORY
+// ═══════════════════════════════════════════════════════════════════
+function getRunHistory(){try{return JSON.parse(localStorage.getItem('spudgeon_history')||'[]');}catch(e){return [];}}
+function saveRunHistory(s){
+  const p=s.player;
+  const run={date:new Date().toLocaleDateString(),char:s.char.icon+' '+s.char.name,
+    wave:s.wave,kills:p.kills,level:p.level,grade:calcRunGrade(s),
+    zone:getZone(s.wave).icon,items:s.collectedItems.map(i=>i.icon).join('').slice(0,10),
+    time:Math.floor(s.totalTime)};
+  const hist=getRunHistory();hist.unshift(run);if(hist.length>5)hist.length=5;
+  try{localStorage.setItem('spudgeon_history',JSON.stringify(hist));}catch(e){}
+}
+function renderRunHistory(){
+  const hist=getRunHistory();
+  const el=document.getElementById('title-run-history');
+  if(!el)return;
+  if(!hist.length){el.innerHTML='';return;}
+  el.innerHTML='<div style="font-family:&quot;Barlow Condensed&quot;,sans-serif;font-size:9px;color:#444;letter-spacing:2px;margin-bottom:5px;text-align:center;">RECENT RUNS</div>'+
+  hist.map(r=>'<div style="display:flex;gap:8px;align-items:center;font-family:&quot;JetBrains Mono&quot;,monospace;font-size:8px;padding:3px 0;border-bottom:1px solid #12122a;">'+
+    '<span style="color:#bbb;min-width:55px;overflow:hidden;">'+r.char+'</span>'+
+    '<span style="color:#ffd700;min-width:26px;">W'+r.wave+'</span>'+
+    '<span style="color:#ff8800;min-width:16px;">'+r.grade+'</span>'+
+    '<span style="color:#888;min-width:12px;">'+r.zone+'</span>'+
+    '<span style="color:#666;letter-spacing:-1px;">'+r.items+'</span>'+
+    '<span style="color:#444;margin-left:auto;">'+r.date+'</span>'+
+  '</div>').join('');
+}
 
 function startAdminRun(){
   closeAdminPanel();
@@ -7326,11 +7546,13 @@ function initStarfield(){
 }
 // Cached hex grid — drawn once to an offscreen canvas
 let _hexCache=null;
+let _zoneHexColor='rgba(60,45,100,0.22)';
+let _zoneDustColor='255,255,255';
 function buildHexCache(W2,H2){
   const oc=document.createElement('canvas');oc.width=W2;oc.height=H2;
   const octx=oc.getContext('2d');
   const HEX=36,hh=HEX*Math.sqrt(3)/2;
-  octx.lineWidth=0.7;octx.strokeStyle='rgba(60,45,100,0.22)';
+  octx.lineWidth=0.7;octx.strokeStyle=_zoneHexColor;
   for(let row=-1;row<H2/hh+2;row++){
     for(let col=-1;col<W2/(HEX*1.5)+2;col++){
       const cx=col*HEX*1.5;
@@ -7363,7 +7585,7 @@ function drawStarfield(dt){
     const tw=0.25+Math.sin(t*1.5+st.bright*8)*0.2;
     sctx.globalAlpha=tw;
     // Color motes: mostly white but occasional tinted
-    const hue=st.bright>0.85?'200,180,255':st.bright>0.7?'150,255,220':'255,255,255';
+    const hue=_zoneDustColor||'255,255,255';
     sctx.fillStyle=`rgb(${hue})`;
     sctx.beginPath();sctx.arc(st.x,st.y,st.r,0,Math.PI*2);sctx.fill();
   }
