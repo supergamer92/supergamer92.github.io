@@ -10,11 +10,12 @@ const finalScoreEl = document.getElementById('final-score');
 const gridSize = 20;
 let tileCount;
 let snake = [];
+let particles = [];
 let food = { x: 5, y: 5 };
-let dx = 0;
-let dy = 0;
-let score = 0;
-let highScore = localStorage.getItem('snakeHighScore') || 0;
+let dx = 0, dy = 0;
+let nextDirection = { x: 0, y: -1 }; // Buffered next move
+let currentDirection = { x: 0, y: -1 }; // Direction currently being processed
+let score = 0, highScore = localStorage.getItem('snakeHighScore') || 0;
 let gameLoop;
 let pulseAmount = 0;
 
@@ -25,7 +26,7 @@ function setup() {
     canvas.height = 400;
     tileCount = canvas.width / gridSize;
     resetGame();
-    drawGrid(); // Initial draw
+    draw();
 }
 
 function resetGame() {
@@ -34,11 +35,12 @@ function resetGame() {
         { x: 10, y: 11 },
         { x: 10, y: 12 }
     ];
-    dx = 0;
-    dy = -1;
-    score = 0;
-    scoreEl.textContent = score;
+    dx = 0; dy = -1;
+    nextDirection = { x: 0, y: -1 };
+    currentDirection = { x: 0, y: -1 };
+    score = 0; scoreEl.textContent = score;
     placeFood();
+    particles = [];
 }
 
 function startGame() {
@@ -49,146 +51,156 @@ function startGame() {
     gameLoop = setInterval(gameStep, 100);
 }
 
-function screenShake() {
-    canvas.classList.add('shake');
-    setTimeout(() => canvas.classList.remove('shake'), 300);
+function createParticles(x, y) {
+    for (let i = 0; i < 10; i++) {
+        particles.push({
+            x: x * gridSize + gridSize / 2,
+            y: y * gridSize + gridSize / 2,
+            vx: (Math.random() - 0.5) * 8,
+            vy: (Math.random() - 0.5) * 8,
+            life: 1.0,
+            color: '#ff00ff'
+        });
+    }
 }
 
 function gameStep() {
-    moveSnake();
-    
-    if (checkGameOver()) {
-        clearInterval(gameLoop);
-        finalScoreEl.textContent = score;
-        gameOverStats.classList.remove('hidden');
-        overlay.classList.remove('hidden');
-        startBtn.textContent = 'REBOOT SYSTEM';
-        screenShake();
+    // 1. Process Buffered Input
+    dx = nextDirection.x;
+    dy = nextDirection.y;
+    currentDirection = { x: dx, y: dy };
+
+    // 2. Calculate New Head
+    const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+
+    // 3. Collision Detection (Walls and Body)
+    if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount || 
+        snake.some(part => part.x === head.x && part.y === head.y)) {
+        handleGameOver();
         return;
     }
 
-    checkFoodCollision();
-    draw();
-}
-
-function placeFood() {
-    food.x = Math.floor(Math.random() * tileCount);
-    food.y = Math.floor(Math.random() * tileCount);
-    snake.forEach(part => {
-        if (part.x === food.x && part.y === food.y) placeFood();
-    });
-}
-
-function drawGrid() {
-    ctx.strokeStyle = 'rgba(0, 255, 255, 0.05)';
-    ctx.lineWidth = 0.5;
-    for (let i = 0; i <= canvas.width; i += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(i, 0);
-        ctx.lineTo(i, canvas.height);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(0, i);
-        ctx.lineTo(canvas.width, i);
-        ctx.stroke();
-    }
-}
-
-function draw() {
-    // Clear Canvas with slight fade for trail effect
-    ctx.fillStyle = '#050505';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    drawGrid();
-
-    // Draw Food (Pulsing Neon Circle)
-    pulseAmount += 0.1;
-    const pulse = Math.sin(pulseAmount) * 3;
-    ctx.shadowBlur = 15 + pulse;
-    ctx.shadowColor = '#ff0055';
-    ctx.fillStyle = '#ff0055';
-    ctx.beginPath();
-    ctx.arc(food.x * gridSize + gridSize/2, food.y * gridSize + gridSize/2, (gridSize/2 - 4) + pulse/2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-
-    // Draw Snake
-    snake.forEach((part, index) => {
-        const ratio = index / snake.length;
-        // Gradient from #00ffff to #004444
-        ctx.fillStyle = `rgb(0, ${255 - (ratio * 150)}, ${255 - (ratio * 150)})`;
-        ctx.shadowBlur = index === 0 ? 15 : 5;
-        ctx.shadowColor = '#00ffff';
-        
-        // Rounded Rectangle for segments
-        const r = 5;
-        const x = part.x * gridSize + 2;
-        const y = part.y * gridSize + 2;
-        const w = gridSize - 4;
-        const h = gridSize - 4;
-        
-        ctx.beginPath();
-        ctx.moveTo(x + r, y);
-        ctx.lineTo(x + w - r, y);
-        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-        ctx.lineTo(x + w, y + h - r);
-        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-        ctx.lineTo(x + r, y + h);
-        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-        ctx.lineTo(x, y + r);
-        ctx.quadraticCurveTo(x, y, x + r, y);
-        ctx.closePath();
-        ctx.fill();
-    });
-    ctx.shadowBlur = 0;
-}
-
-function moveSnake() {
-    const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+    // 4. Move Snake
     snake.unshift(head);
-    snake.pop();
-}
 
-function checkFoodCollision() {
-    if (snake[0].x === food.x && snake[0].y === food.y) {
-        score += 10;
-        scoreEl.textContent = score;
+    // 5. Check Food Collision
+    if (head.x === food.x && head.y === food.y) {
+        score += 10; scoreEl.textContent = score;
         if (score > highScore) {
             highScore = score;
             highScoreEl.textContent = highScore;
             localStorage.setItem('snakeHighScore', highScore);
         }
-        
-        const tail = { ...snake[snake.length - 1] };
-        snake.push(tail);
+        createParticles(food.x, food.y);
         placeFood();
-        screenShake(); // Shake on eat
+        canvas.classList.add('shake');
+        setTimeout(() => canvas.classList.remove('shake'), 200);
+        // Do NOT pop tail so snake grows
+    } else {
+        snake.pop();
+    }
+
+    draw();
+}
+
+function handleGameOver() {
+    clearInterval(gameLoop);
+    finalScoreEl.textContent = score;
+    gameOverStats.classList.remove('hidden');
+    overlay.classList.remove('hidden');
+    startBtn.textContent = 'REBOOT SYSTEM';
+    canvas.classList.add('shake');
+    setTimeout(() => canvas.classList.remove('shake'), 300);
+}
+
+function placeFood() {
+    food.x = Math.floor(Math.random() * tileCount);
+    food.y = Math.floor(Math.random() * tileCount);
+    // Ensure food doesn't spawn on snake body
+    if (snake.some(part => part.x === food.x && part.y === food.y)) {
+        placeFood();
     }
 }
 
-function checkGameOver() {
-    const head = snake[0];
-    if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) return true;
-    for (let i = 1; i < snake.length; i++) {
-        if (snake[i].x === head.x && snake[i].y === head.y) return true;
+function draw() {
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = '#050505';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Background Grid
+    ctx.strokeStyle = '#003333';
+    ctx.lineWidth = 0.5;
+    for (let i = 0; i <= canvas.width; i += gridSize) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
     }
-    return false;
+
+    ctx.globalCompositeOperation = 'lighter';
+
+    // Food (Glitchy Neon Circle)
+    pulseAmount += 0.15;
+    const glitch = Math.random() > 0.95 ? 10 : 0;
+    const pulse = Math.sin(pulseAmount) * 4;
+    ctx.shadowBlur = 20 + pulse + glitch;
+    ctx.shadowColor = '#ff00ff';
+    ctx.fillStyle = '#ff00ff';
+    ctx.beginPath();
+    ctx.arc(food.x * gridSize + gridSize / 2, food.y * gridSize + gridSize / 2, (gridSize / 2 - 5) + (glitch ? 2 : 0), 0, Math.PI * 2);
+    ctx.fill();
+
+    // Particles
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx; p.y += p.vy;
+        p.life -= 0.05;
+        if (p.life <= 0) {
+            particles.splice(i, 1);
+            continue;
+        }
+        ctx.fillStyle = `rgba(255, 0, 255, ${p.life})`;
+        ctx.fillRect(p.x, p.y, 2, 2);
+    }
+
+    // Snake (Bloom & Gradient Trail)
+    snake.forEach((part, index) => {
+        const ratio = index / snake.length;
+        const x = part.x * gridSize + 2;
+        const y = part.y * gridSize + 2;
+        const size = gridSize - 4;
+
+        // Bloom Effect (Drawn underneath)
+        ctx.shadowBlur = index === 0 ? 30 : 25;
+        ctx.shadowColor = '#00ffcc';
+        ctx.fillStyle = `rgba(0, 255, 204, ${0.3 * (1 - ratio)})`;
+        drawRoundedRect(x - 2, y - 2, size + 4, size + 4, 6);
+
+        // Main Segment
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = index === 0 ? '#00ffcc' : `rgba(0, 255, 204, ${1 - ratio})`;
+        drawRoundedRect(x, y, size, size, 4);
+    });
+}
+
+function drawRoundedRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.fill();
 }
 
 window.addEventListener('keydown', e => {
-    switch (e.key) {
-        case 'ArrowUp': case 'w': case 'W':
-            if (dy !== 1) { dx = 0; dy = -1; }
-            break;
-        case 'ArrowDown': case 's': case 'S':
-            if (dy !== -1) { dx = 0; dy = 1; }
-            break;
-        case 'ArrowLeft': case 'a': case 'A':
-            if (dx !== 1) { dx = -1; dy = 0; }
-            break;
-        case 'ArrowRight': case 'd': case 'D':
-            if (dx !== -1) { dx = 1; dy = 0; }
-            break;
+    // Prevention of 180-degree turns and input buffering
+    const key = e.key.toLowerCase();
+    if ((key === 'arrowup' || key === 'w') && currentDirection.y !== 1) {
+        nextDirection = { x: 0, y: -1 };
+    } else if ((key === 'arrowdown' || key === 's') && currentDirection.y !== -1) {
+        nextDirection = { x: 0, y: 1 };
+    } else if ((key === 'arrowleft' || key === 'a') && currentDirection.x !== 1) {
+        nextDirection = { x: -1, y: 0 };
+    } else if ((key === 'arrowright' || key === 'd') && currentDirection.x !== -1) {
+        nextDirection = { x: 1, y: 0 };
     }
 });
 
