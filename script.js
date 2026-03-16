@@ -1,11 +1,14 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const scoreEl = document.getElementById('score');
+const levelEl = document.getElementById('level');
 const highScoreEl = document.getElementById('high-score');
 const startBtn = document.getElementById('start-btn');
 const overlay = document.getElementById('overlay');
 const gameOverStats = document.getElementById('game-over-stats');
 const finalScoreEl = document.getElementById('final-score');
+const gameTitle = document.getElementById('game-title');
+const statBoxes = document.querySelectorAll('.stat-box');
 
 const gridSize = 20;
 let tileCount;
@@ -13,11 +16,13 @@ let snake = [];
 let particles = [];
 let food = { x: 5, y: 5 };
 let dx = 0, dy = 0;
-let nextDirection = { x: 0, y: -1 }; // Buffered next move
-let currentDirection = { x: 0, y: -1 }; // Direction currently being processed
+let nextDirection = { x: 0, y: -1 };
+let currentDirection = { x: 0, y: -1 };
 let score = 0, highScore = localStorage.getItem('snakeHighScore') || 0;
 let gameLoop;
 let pulseAmount = 0;
+let currentSpeed = 100;
+let level = 1;
 
 highScoreEl.textContent = highScore;
 
@@ -39,6 +44,8 @@ function resetGame() {
     nextDirection = { x: 0, y: -1 };
     currentDirection = { x: 0, y: -1 };
     score = 0; scoreEl.textContent = score;
+    level = 1; levelEl.textContent = level;
+    currentSpeed = 100;
     placeFood();
     particles = [];
 }
@@ -47,64 +54,81 @@ function startGame() {
     overlay.classList.add('hidden');
     gameOverStats.classList.add('hidden');
     resetGame();
-    if (gameLoop) clearInterval(gameLoop);
-    gameLoop = setInterval(gameStep, 100);
+    scheduleNextStep();
+}
+
+function scheduleNextStep() {
+    if (gameLoop) clearTimeout(gameLoop);
+    gameLoop = setTimeout(gameStep, currentSpeed);
 }
 
 function createParticles(x, y) {
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 12; i++) {
         particles.push({
             x: x * gridSize + gridSize / 2,
             y: y * gridSize + gridSize / 2,
-            vx: (Math.random() - 0.5) * 8,
-            vy: (Math.random() - 0.5) * 8,
+            vx: (Math.random() - 0.5) * 10,
+            vy: (Math.random() - 0.5) * 10,
             life: 1.0,
             color: '#ff00ff'
         });
     }
 }
 
+function triggerUIPulse() {
+    gameTitle.classList.add('pulse-ui');
+    statBoxes.forEach(box => box.classList.add('pulse-ui'));
+    canvas.classList.add('shake');
+    setTimeout(() => {
+        gameTitle.classList.remove('pulse-ui');
+        statBoxes.forEach(box => box.classList.remove('pulse-ui'));
+        canvas.classList.remove('shake');
+    }, 200);
+}
+
 function gameStep() {
-    // 1. Process Buffered Input
     dx = nextDirection.x;
     dy = nextDirection.y;
     currentDirection = { x: dx, y: dy };
 
-    // 2. Calculate New Head
     const head = { x: snake[0].x + dx, y: snake[0].y + dy };
 
-    // 3. Collision Detection (Walls and Body)
     if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount || 
         snake.some(part => part.x === head.x && part.y === head.y)) {
         handleGameOver();
         return;
     }
 
-    // 4. Move Snake
     snake.unshift(head);
 
-    // 5. Check Food Collision
     if (head.x === food.x && head.y === food.y) {
-        score += 10; scoreEl.textContent = score;
+        score += 10; 
+        scoreEl.textContent = score;
+        
+        // Dynamic Difficulty Scaling
+        level = Math.floor(score / 50) + 1;
+        levelEl.textContent = level;
+        currentSpeed = Math.max(40, 100 - (Math.floor(score / 10) * 2));
+
         if (score > highScore) {
             highScore = score;
             highScoreEl.textContent = highScore;
             localStorage.setItem('snakeHighScore', highScore);
         }
+
         createParticles(food.x, food.y);
         placeFood();
-        canvas.classList.add('shake');
-        setTimeout(() => canvas.classList.remove('shake'), 200);
-        // Do NOT pop tail so snake grows
+        triggerUIPulse();
     } else {
         snake.pop();
     }
 
     draw();
+    scheduleNextStep();
 }
 
 function handleGameOver() {
-    clearInterval(gameLoop);
+    clearTimeout(gameLoop);
     finalScoreEl.textContent = score;
     gameOverStats.classList.remove('hidden');
     overlay.classList.remove('hidden');
@@ -116,7 +140,6 @@ function handleGameOver() {
 function placeFood() {
     food.x = Math.floor(Math.random() * tileCount);
     food.y = Math.floor(Math.random() * tileCount);
-    // Ensure food doesn't spawn on snake body
     if (snake.some(part => part.x === food.x && part.y === food.y)) {
         placeFood();
     }
@@ -124,7 +147,10 @@ function placeFood() {
 
 function draw() {
     ctx.globalCompositeOperation = 'source-over';
-    ctx.fillStyle = '#050505';
+    
+    // Dynamic background intensity based on snake length
+    const energyFactor = Math.min(snake.length * 2, 80);
+    ctx.fillStyle = `rgb(${energyFactor/4}, 5, ${energyFactor/8})`;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Background Grid
@@ -137,7 +163,7 @@ function draw() {
 
     ctx.globalCompositeOperation = 'lighter';
 
-    // Food (Glitchy Neon Circle)
+    // Food
     pulseAmount += 0.15;
     const glitch = Math.random() > 0.95 ? 10 : 0;
     const pulse = Math.sin(pulseAmount) * 4;
@@ -161,20 +187,19 @@ function draw() {
         ctx.fillRect(p.x, p.y, 2, 2);
     }
 
-    // Snake (Bloom & Gradient Trail)
+    // Snake
+    const energyBloom = Math.min(25 + (snake.length / 2), 50);
     snake.forEach((part, index) => {
         const ratio = index / snake.length;
         const x = part.x * gridSize + 2;
         const y = part.y * gridSize + 2;
         const size = gridSize - 4;
 
-        // Bloom Effect (Drawn underneath)
-        ctx.shadowBlur = index === 0 ? 30 : 25;
+        ctx.shadowBlur = index === 0 ? energyBloom + 5 : energyBloom;
         ctx.shadowColor = '#00ffcc';
         ctx.fillStyle = `rgba(0, 255, 204, ${0.3 * (1 - ratio)})`;
         drawRoundedRect(x - 2, y - 2, size + 4, size + 4, 6);
 
-        // Main Segment
         ctx.shadowBlur = 0;
         ctx.fillStyle = index === 0 ? '#00ffcc' : `rgba(0, 255, 204, ${1 - ratio})`;
         drawRoundedRect(x, y, size, size, 4);
@@ -191,7 +216,6 @@ function drawRoundedRect(x, y, w, h, r) {
 }
 
 window.addEventListener('keydown', e => {
-    // Prevention of 180-degree turns and input buffering
     const key = e.key.toLowerCase();
     if ((key === 'arrowup' || key === 'w') && currentDirection.y !== 1) {
         nextDirection = { x: 0, y: -1 };
