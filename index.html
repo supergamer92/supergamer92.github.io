@@ -3,19 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retro Snake</title>
+    <title>Neon Snake - Cyberpunk Edition</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="game-container">
-        <h1>SNAKE</h1>
+        <h1 class="neon-text">NEON SNAKE</h1>
         <div id="score-board">
-            <div>Score: <span id="score">0</span></div>
-            <div>High Score: <span id="high-score">0</span></div>
+            <div class="stat-box">SCORE <span id="score">0</span></div>
+            <div class="stat-box">BEST <span id="high-score">0</span></div>
         </div>
         <canvas id="gameCanvas"></canvas>
         <div id="overlay">
-            <button id="start-btn">Start Game</button>
+            <div id="game-over-stats" class="hidden">
+                <h2 class="neon-text-red">GAME OVER</h2>
+                <p>FINAL SCORE: <span id="final-score">0</span></p>
+            </div>
+            <button id="start-btn">INITIALIZE SYSTEM</button>
         </div>
     </div>
     <script src="script.js"></script>
