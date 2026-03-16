@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JS RPG Engine - Pro</title>
+    <title>Gothic Medieval Adventure</title>
+    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Almendra:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,36 +12,40 @@
         <canvas id="gameCanvas"></canvas>
         
         <div id="ui-layer">
-            <div id="hud">
-                <div class="stat-box">HP: <span id="hp-val">100</span>/100</div>
-                <div class="stat-box">Gold: <span id="gold-val">0</span></div>
+            <div id="hud" class="parchment">
+                <div class="stat-box">Level <span id="lvl-val">1</span> &nbsp; HP: <span id="hp-val">100</span>/<span id="hp-max">100</span></div>
+                <div class="stat-box">Gold: <span id="gold-val">0</span> &nbsp; EXP: <span id="exp-val">0</span></div>
+                <div id="stamina-container">
+                   <label>Stamina</label>
+                   <div class="bar-bg"><div id="stamina-bar"></div></div>
+                </div>
             </div>
 
-            <div id="dialogue-box" class="hidden">
+            <div id="dialogue-box" class="hidden parchment border-ornate">
                 <p id="dialogue-text"></p>
-                <div class="hint">Press 'E' to continue</div>
+                <div class="hint">[ Press 'E' to continue ]</div>
             </div>
 
-            <div id="inventory" class="hidden">
-                <h3>Inventory</h3>
+            <div id="inventory" class="hidden parchment border-ornate">
+                <h3>Manuscript Bag</h3>
                 <ul id="item-list"></ul>
-                <div class="hint">Press 'I' to close</div>
+                <div class="hint">[ Press 'I' to close ]</div>
             </div>
 
             <div id="combat-overlay" class="hidden">
-                <div id="combat-arena">
+                <div id="combat-arena" class="parchment border-ornate">
                     <div id="enemy-info">
-                        <div id="enemy-name">SLIME BOSS</div>
+                        <div id="enemy-name">👹 FOUL CREATURE</div>
                         <div class="hp-bar-bg"><div id="enemy-hp-bar"></div></div>
-                        <div id="enemy-hp-text">50/50</div>
                     </div>
-                    <div id="enemy-render">ENEMY</div>
-                    <div id="combat-log">A wild Slime appears!</div>
+                    <div id="enemy-render">⚔️</div>
+                    <div id="combat-log">A skirmish begins!</div>
                     <div id="combat-actions">
-                        <button id="btn-attack" onclick="gameState.combat.playerAction('ATTACK')">Attack</button>
-                        <button id="btn-defend" onclick="gameState.combat.playerAction('DEFEND')">Defend</button>
-                        <button id="btn-heal" onclick="gameState.combat.playerAction('HEAL')">Heal</button>
+                        <button id="btn-attack" onclick="gameState.combat.playerAction('ATTACK')">⚔️ Strike</button>
+                        <button id="btn-defend" onclick="gameState.combat.playerAction('DEFEND')">🛡️ Guard</button>
+                        <button id="btn-heal" onclick="gameState.combat.playerAction('HEAL')">🍷 Potion</button>
                     </div>
+                    <p id="exhausted-msg" class="hidden">! EXHAUSTED !</p>
                 </div>
             </div>
         </div>

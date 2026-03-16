@@ -1,20 +1,50 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #222; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: monospace; }
-#game-container { position: relative; border: 4px solid #444; }
+body { background: #1a1510; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: 'Almendra', serif; }
+#game-container { position: relative; border: 8px solid #3d2b1f; box-shadow: 0 0 50px #000; }
 canvas { display: block; background: #000; image-rendering: pixelated; }
 #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-#hud { padding: 10px; display: flex; gap: 20px; color: white; background: rgba(0,0,0,0.5); }
-.stat-box { font-size: 18px; }
-#dialogue-box { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 80%; background: #fff; padding: 20px; border: 4px solid #333; pointer-events: auto; }
-#inventory { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; background: #333; color: white; padding: 20px; border: 2px solid #fff; pointer-events: auto; }
-#combat-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; pointer-events: auto; }
-#combat-arena { text-align: center; color: white; width: 300px; }
-#enemy-info { margin-bottom: 10px; }
-.hp-bar-bg { width: 100%; height: 15px; background: #555; border: 1px solid #fff; margin: 5px 0; }
-#enemy-hp-bar { width: 100%; height: 100%; background: #f00; transition: width 0.3s; }
-#enemy-render { width: 100px; height: 100px; background: #2d2; margin: 0 auto 20px; line-height: 100px; font-weight: bold; border-radius: 50%; transition: transform 0.1s; }
-.flicker { opacity: 0.3; transform: scale(0.9); }
-#combat-log { margin-bottom: 20px; min-height: 60px; font-size: 14px; color: #aaa; }
-button { padding: 8px 15px; cursor: pointer; background: #fff; border: 2px solid #333; font-weight: bold; margin: 2px; }
-button:disabled { background: #888; cursor: not-allowed; }
+
+.parchment { 
+    background: #e4d5b7; 
+    background-image: url('https://www.transparenttextures.com/patterns/paper-fibers.png');
+    color: #2c1e10; 
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+}
+
+.border-ornate {
+    border: 15px solid transparent;
+    border-image: url('https://upload.wikimedia.org/wikipedia/commons/d/d3/Ornamental_border_1.png') 30 stretch;
+    padding: 20px;
+}
+
+#hud { position: absolute; top: 10px; left: 10px; right: 10px; padding: 10px; display: flex; flex-direction: column; gap: 5px; font-family: 'MedievalSharp', cursive; font-size: 1.2rem; border: 2px solid #5d4037; }
+#stamina-container { display: flex; align-items: center; gap: 10px; }
+.bar-bg { flex: 1; height: 10px; background: #333; border: 1px solid #000; }
+#stamina-bar { width: 100%; height: 100%; background: #ebac05; transition: width 0.2s; }
+
+#dialogue-box { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); width: 70%; pointer-events: auto; text-align: center; }
+#inventory { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); width: 300px; pointer-events: auto; min-height: 200px; }
+
+#combat-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; pointer-events: auto; }
+#combat-arena { width: 400px; text-align: center; position: relative; }
+#enemy-render { font-size: 80px; margin: 20px 0; transition: transform 0.1s; }
+.hp-bar-bg { width: 100%; height: 20px; background: #444; margin-top: 5px; border: 2px solid #222; }
+#enemy-hp-bar { width: 100%; height: 100%; background: #8b0000; transition: width 0.3s; }
+#combat-log { font-style: italic; color: #4e342e; height: 50px; overflow: hidden; }
+
+button { 
+    font-family: 'MedievalSharp', cursive; 
+    padding: 10px 15px; 
+    background: #3d2b1f; 
+    color: #e4d5b7; 
+    border: 2px solid #a1887f; 
+    cursor: pointer; 
+    margin: 5px; 
+    transition: 0.2s;
+}
+button:hover { background: #5d4037; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+#exhausted-msg { color: #8b0000; font-weight: bold; font-family: 'MedievalSharp'; }
 .hidden { display: none !important; }
+.flicker { opacity: 0.3; transform: scale(1.2) rotate(10deg); }
