@@ -3,25 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Snake - High Glow Edition</title>
+    <title>JS RPG Engine - Pro</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="game-container">
-        <div class="scanlines"></div>
-        <h1 id="game-title" class="neon-text flicker">NEON SNAKE</h1>
-        <div id="score-board">
-            <div class="stat-box">SCORE <span id="score">0</span></div>
-            <div class="stat-box">LEVEL <span id="level">1</span></div>
-            <div class="stat-box">BEST <span id="high-score">0</span></div>
-        </div>
         <canvas id="gameCanvas"></canvas>
-        <div id="overlay">
-            <div id="game-over-stats" class="hidden">
-                <h2 class="neon-text-red flicker">SYSTEM CRITICAL</h2>
-                <p>FINAL SCORE: <span id="final-score">0</span></p>
+        
+        <div id="ui-layer">
+            <div id="hud">
+                <div class="stat-box">HP: <span id="hp-val">100</span>/100</div>
+                <div class="stat-box">Gold: <span id="gold-val">0</span></div>
             </div>
-            <button id="start-btn">INITIALIZE SYSTEM</button>
+
+            <div id="dialogue-box" class="hidden">
+                <p id="dialogue-text"></p>
+                <div class="hint">Press 'E' to continue</div>
+            </div>
+
+            <div id="inventory" class="hidden">
+                <h3>Inventory</h3>
+                <ul id="item-list"></ul>
+                <div class="hint">Press 'I' to close</div>
+            </div>
+
+            <div id="combat-overlay" class="hidden">
+                <div id="combat-arena">
+                    <div id="enemy-info">
+                        <div id="enemy-name">SLIME BOSS</div>
+                        <div class="hp-bar-bg"><div id="enemy-hp-bar"></div></div>
+                        <div id="enemy-hp-text">50/50</div>
+                    </div>
+                    <div id="enemy-render">ENEMY</div>
+                    <div id="combat-log">A wild Slime appears!</div>
+                    <div id="combat-actions">
+                        <button id="btn-attack" onclick="gameState.combat.playerAction('ATTACK')">Attack</button>
+                        <button id="btn-defend" onclick="gameState.combat.playerAction('DEFEND')">Defend</button>
+                        <button id="btn-heal" onclick="gameState.combat.playerAction('HEAL')">Heal</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <script src="script.js"></script>

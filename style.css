@@ -1,148 +1,20 @@
-body {
-    background: radial-gradient(circle, #0d0d0d 0%, #000000 100%);
-    color: #00ffcc;
-    font-family: 'Courier New', Courier, monospace;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-    overflow: hidden;
-}
-
-#game-container {
-    position: relative;
-    text-align: center;
-    width: 100%;
-    max-width: 460px;
-    padding: 20px;
-    z-index: 1;
-}
-
-.scanlines {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: repeating-linear-gradient(
-        0deg,
-        rgba(0, 0, 0, 0.15),
-        rgba(0, 0, 0, 0.15) 1px,
-        transparent 1px,
-        transparent 2px
-    );
-    pointer-events: none;
-    z-index: 5;
-}
-
-.neon-text {
-    color: #00ffcc;
-    text-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc;
-    letter-spacing: 5px;
-    margin-top: 0;
-    transition: transform 0.1s ease-out;
-}
-
-.neon-text-red {
-    color: #ff00ff;
-    text-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff;
-}
-
-.flicker {
-    animation: flicker 2s infinite alternate;
-}
-
-@keyframes flicker {
-    0%, 18%, 22%, 25%, 53%, 57%, 100% { 
-        opacity: 1;
-        text-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc; 
-    }
-    20%, 24%, 55% { 
-        opacity: 0.7;
-        text-shadow: none;
-    }
-}
-
-#score-board {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 15px;
-    font-weight: bold;
-    gap: 10px;
-}
-
-.stat-box {
-    flex: 1;
-    background: rgba(0, 255, 204, 0.1);
-    padding: 5px 5px;
-    border: 1px solid #00ffcc;
-    box-shadow: inset 0 0 10px rgba(0, 255, 204, 0.2);
-    text-shadow: 0 0 5px #00ffcc;
-    font-size: 0.9rem;
-    white-space: nowrap;
-    transition: transform 0.1s ease-out;
-}
-
-canvas {
-    background-color: #050505;
-    border: 3px solid #00ffcc;
-    display: block;
-    width: 100%;
-    max-width: 400px;
-    box-shadow: 0 0 25px rgba(0, 255, 204, 0.4), inset 0 0 15px rgba(0, 255, 204, 0.6);
-    border-radius: 4px;
-    margin: 0 auto;
-}
-
-#overlay {
-    position: absolute;
-    top: 55%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 80%;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    padding: 30px;
-    border-radius: 5px;
-    border: 1px solid #00ffcc;
-    z-index: 10;
-}
-
-button {
-    padding: 12px 24px;
-    font-size: 1.1rem;
-    font-family: inherit;
-    background: rgba(0, 255, 204, 0.2);
-    border: 1px solid #00ffcc;
-    color: #00ffcc;
-    cursor: pointer;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-top: 10px;
-    transition: background 0.3s;
-}
-
-button:hover {
-    background: #00ffcc;
-    color: #000;
-    box-shadow: 0 0 20px #00ffcc;
-}
-
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #222; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: monospace; }
+#game-container { position: relative; border: 4px solid #444; }
+canvas { display: block; background: #000; image-rendering: pixelated; }
+#ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+#hud { padding: 10px; display: flex; gap: 20px; color: white; background: rgba(0,0,0,0.5); }
+.stat-box { font-size: 18px; }
+#dialogue-box { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 80%; background: #fff; padding: 20px; border: 4px solid #333; pointer-events: auto; }
+#inventory { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; background: #333; color: white; padding: 20px; border: 2px solid #fff; pointer-events: auto; }
+#combat-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; pointer-events: auto; }
+#combat-arena { text-align: center; color: white; width: 300px; }
+#enemy-info { margin-bottom: 10px; }
+.hp-bar-bg { width: 100%; height: 15px; background: #555; border: 1px solid #fff; margin: 5px 0; }
+#enemy-hp-bar { width: 100%; height: 100%; background: #f00; transition: width 0.3s; }
+#enemy-render { width: 100px; height: 100px; background: #2d2; margin: 0 auto 20px; line-height: 100px; font-weight: bold; border-radius: 50%; transition: transform 0.1s; }
+.flicker { opacity: 0.3; transform: scale(0.9); }
+#combat-log { margin-bottom: 20px; min-height: 60px; font-size: 14px; color: #aaa; }
+button { padding: 8px 15px; cursor: pointer; background: #fff; border: 2px solid #333; font-weight: bold; margin: 2px; }
+button:disabled { background: #888; cursor: not-allowed; }
 .hidden { display: none !important; }
-
-.shake {
-    animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
-}
-
-.pulse-ui {
-    transform: scale(1.05);
-}
-
-@keyframes shake {
-    10%, 90% { transform: translate3d(-2px, 0, 0); }
-    20%, 80% { transform: translate3d(4px, 0, 0); }
-    30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
-    40%, 60% { transform: translate3d(6px, 0, 0); }
-}
