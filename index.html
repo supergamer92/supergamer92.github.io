@@ -3,53 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gothic Medieval Adventure</title>
-    <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Almendra:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <title>Snake Game</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="game-container">
+    <div class="game-container">
+        <h1>Snake Roguelike</h1>
+        <div class="score-panel">
+            Score: <span id="score">0</span>
+        </div>
         <canvas id="gameCanvas"></canvas>
-        
-        <div id="ui-layer">
-            <div id="hud" class="parchment">
-                <div class="stat-box">Level <span id="lvl-val">1</span> &nbsp; HP: <span id="hp-val">100</span>/<span id="hp-max">100</span></div>
-                <div class="stat-box">Gold: <span id="gold-val">0</span> &nbsp; EXP: <span id="exp-val">0</span></div>
-                <div id="stamina-container">
-                   <label>Stamina</label>
-                   <div class="bar-bg"><div id="stamina-bar"></div></div>
-                </div>
-            </div>
-
-            <div id="dialogue-box" class="hidden parchment border-ornate">
-                <p id="dialogue-text"></p>
-                <div class="hint">[ Press 'E' to continue ]</div>
-            </div>
-
-            <div id="inventory" class="hidden parchment border-ornate">
-                <h3>Manuscript Bag</h3>
-                <ul id="item-list"></ul>
-                <div class="hint">[ Press 'I' to close ]</div>
-            </div>
-
-            <div id="combat-overlay" class="hidden">
-                <div id="combat-arena" class="parchment border-ornate">
-                    <div id="enemy-info">
-                        <div id="enemy-name">👹 FOUL CREATURE</div>
-                        <div class="hp-bar-bg"><div id="enemy-hp-bar"></div></div>
-                    </div>
-                    <div id="enemy-render">⚔️</div>
-                    <div id="combat-log">A skirmish begins!</div>
-                    <div id="combat-actions">
-                        <button id="btn-attack" onclick="gameState.combat.playerAction('ATTACK')">⚔️ Strike</button>
-                        <button id="btn-defend" onclick="gameState.combat.playerAction('DEFEND')">🛡️ Guard</button>
-                        <button id="btn-heal" onclick="gameState.combat.playerAction('HEAL')">🍷 Potion</button>
-                    </div>
-                    <p id="exhausted-msg" class="hidden">! EXHAUSTED !</p>
-                </div>
-            </div>
+        <div class="instructions">
+            <p>Use arrow keys to move.</p>
+            <p>Press SPACE to pause/resume. Press ENTER to restart.</p>
+            <p>Survive and eat indefinitely!</p>
+        </div>
+        <div id="gameOver" class="game-over-message">
+            Game Over! Press ENTER to restart.
         </div>
     </div>
-    <script src="script.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
