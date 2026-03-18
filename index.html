@@ -3,32 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cookie Clicker</title>
+    <title>Cookie Clicker Deluxe</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="game-container">
-        <h1>Super Cookie Clicker</h1>
-        <div class="score-display">
-            Cookies: <span id="cookie-count">0</span>
+        <h1><i class="fas fa-cookie-bite"></i> Cookie Clicker Deluxe</h1>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Cookies</h3>
+                <div class="value" id="cookie-count">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Click Multiplier</h3>
+                <div class="value" id="cookie-multiplier">1</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Clicks</h3>
+                <div class="value" id="total-clicks">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Cookies/Second</h3>
+                <div class="value" id="production-rate">0</div>
+            </div>
         </div>
-        <div id="cookie" class="cookie"></div>
+        
+        <div class="cookie-container">
+            <div id="cookie" class="cookie" title="Click me!">
+                <div class="cookie-chips"></div>
+            </div>
+            <div class="click-hint">Click the cookie!</div>
+        </div>
         
         <div class="upgrades-container">
-            <h2>Upgrades</h2>
+            <h2><i class="fas fa-arrow-up"></i> Upgrades</h2>
             <div class="upgrade-item">
-                <button id="upgrade-clicker-btn">Buy Auto Clicker</button>
-                <span class="upgrade-info">(<span id="auto-clicker-count">0</span>) - Cost: <span id="upgrade-clicker-cost">10</span> cookies</span>
+                <button id="upgrade-clicker-btn">
+                    <i class="fas fa-robot"></i> Buy Auto Clicker
+                </button>
+                <span class="upgrade-info">
+                    <span class="upgrade-count"><i class="fas fa-spinner"></i> Owned: <span id="auto-clicker-count">0</span></span>
+                    <span class="upgrade-cost"><i class="fas fa-coins"></i> Cost: <span id="upgrade-clicker-cost">10</span></span>
+                </span>
             </div>
             <div class="upgrade-item">
-                <button id="upgrade-grandma-btn">Buy Grandma</button>
-                <span class="upgrade-info">(<span id="grandma-count">0</span>) - Cost: <span id="upgrade-grandma-cost">100</span> cookies</span>
+                <button id="upgrade-grandma-btn">
+                    <i class="fas fa-user-friends"></i> Hire Grandma
+                </button>
+                <span class="upgrade-info">
+                    <span class="upgrade-count"><i class="fas fa-bread-slice"></i> Hired: <span id="grandma-count">0</span></span>
+                    <span class="upgrade-cost"><i class="fas fa-coins"></i> Cost: <span id="upgrade-grandma-cost">100</span></span>
+                </span>
+            </div>
+            <div class="upgrade-item">
+                <button id="upgrade-multiplier-btn">
+                    <i class="fas fa-bolt"></i> Buy Multiplier
+                </button>
+                <span class="upgrade-info">
+                    <span class="upgrade-count"><i class="fas fa-rocket"></i> Current: 2x per click</span>
+                    <span class="upgrade-cost"><i class="fas fa-coins"></i> Cost: <span id="upgrade-multiplier-cost">200</span></span>
+                </span>
             </div>
         </div>
 
         <div class="instructions-container">
-            <p>Click the cookie to bake more cookies!</p>
-            <p>Buy upgrades to automate your cookie production.</p>
+            <p><i class="fas fa-info-circle"></i> Click the giant cookie to bake cookies!</p>
+            <p><i class="fas fa-shopping-cart"></i> Buy upgrades to automate your cookie production.</p>
+            <p><i class="fas fa-database"></i> Your progress is automatically saved.</p>
         </div>
     </div>
 
