@@ -1,7 +1,7 @@
 # Implementation Plan
 
 Project: cookie clicker
-Request: full html website cookie clicker game
+Request: make me a fully functional html pong
 
 ## Plan
 - [ ] Planner: translate the request into milestones and checklists in this file.
@@ -12,26 +12,20 @@ Request: full html website cookie clicker game
 - [ ] DevOps: confirm scripts, env vars, and build steps.
 
 ## System Breakdown
-- - Gameplay loop (tick/update + render cadence)
-- - Input system (keyboard, optional mobile controls)
-- - State model (board grid, snake body, direction, food, score)
-- - Collision system (walls, self-collision, food pickup)
-- - Difficulty pacing (speed scaling, level or speed ramp)
-- - Game states (start, running, paused, game over, restart)
-- - UI overlay (score, instructions, restart prompt)
 - - Deliverables: index.html, styles.css, app.js (no build step)
 - - Rendering: canvas or DOM grid (choose based on request)
 
 ## Requirements
 Functional Requirements:
 - Implement the core request end-to-end with working behavior.
-- Provide a complete game loop, input handling, and scoring.
 - Deliver runnable HTML/CSS/JS without a build step.
 
 Non-Functional Requirements:
 - Run locally with no additional manual steps.
 - Avoid console errors and obvious performance issues.
 - Keep changes minimal and aligned with the existing repo structure.
+- Prefer calm, minimalist UI decisions over clutter, duplication, or decorative noise.
+- Keep the output high-signal: concise labels, specific task wording, and useful status text.
 
 Acceptance Criteria:
 - Primary user flow works from start to finish.

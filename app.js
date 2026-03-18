@@ -1,309 +1,287 @@
-let cookieCount = 0;
-let autoClickers = 0;
-let grandmas = 0;
-let cookieMultiplier = 1;
-let totalClicks = 0;
+// Pong - Canvas-based game implementation
+// No external dependencies, no build step required
 
-const cookieElement = document.getElementById('cookie');
-const cookieCountElement = document.getElementById('cookie-count');
-const clickerUpgradeElement = document.getElementById('upgrade-clicker-btn');
-const grandmaUpgradeElement = document.getElementById('upgrade-grandma-btn');
-const autoClickerDisplay = document.getElementById('auto-clicker-count');
-const grandmaDisplay = document.getElementById('grandma-count');
-const cookieMultiplierDisplay = document.getElementById('cookie-multiplier');
-const totalClicksDisplay = document.getElementById('total-clicks');
-const productionRateDisplay = document.getElementById('production-rate');
-
-// Audio context for sound effects
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
-// --- Game Configuration ---
-const upgradeCosts = {
-    clicker: 10,
-    grandma: 100,
-    multiplier: 200
+// Game state
+const gameState = {
+  running: false,
+  paused: false,
+  gameOver: false,
+  playerScore: 0,
+  aiScore: 0,
+  winningScore: 5
 };
 
-const upgradeRates = {
-    clicker: 1,
-    grandma: 10
+// Canvas setup
+const canvas = document.getElementById('pong');
+const ctx = canvas.getContext('2d');
+
+// Logical resolution for consistent physics
+const LOGICAL_WIDTH = 800;
+const LOGICAL_HEIGHT = 500;
+
+// Scale factor for canvas rendering
+function scaleContext() {
+  const scaleX = canvas.width / LOGICAL_WIDTH;
+  const scaleY = canvas.height / LOGICAL_HEIGHT;
+  ctx.scale(scaleX, scaleY);
+}
+
+// Entities
+const paddle = {
+  x: 20,
+  y: LOGICAL_HEIGHT / 2 - 40,
+  width: 12,
+  height: 80,
+  color: '#ecf0f1',
+  speed: 8,
+  dy: 0
 };
 
-// --- Sound Functions ---
-function playClickSound() {
-    try {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
-        oscillator.type = 'sine';
-        
-        gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-        
-        oscillator.start();
-        oscillator.stop(audioContext.currentTime + 0.1);
-    } catch (e) {
-        // Audio not supported, continue silently
-    }
+const aiPaddle = {
+  x: LOGICAL_WIDTH - 32,
+  y: LOGICAL_HEIGHT / 2 - 40,
+  width: 12,
+  height: 80,
+  color: '#ecf0f1',
+  speed: 6, // Slightly slower than player for fairness
+  dy: 0
+};
+
+const ball = {
+  x: LOGICAL_WIDTH / 2,
+  y: LOGICAL_HEIGHT / 2,
+  radius: 8,
+  color: '#ecf0f1',
+  speed: 6,
+  dx: 6,
+  dy: 6,
+  minSpeed: 6,
+  maxSpeed: 12,
+  speedIncrement: 0.5
+};
+
+// Input tracking
+const keys = { w: false, s: false, W: false, S: false };
+let mouseY = null;
+
+// DOM Elements
+const uiStartBtn = document.getElementById('start-btn');
+const uiRestartBtn = document.getElementById('restart-btn');
+const uiMessage = document.getElementById('message-area');
+const uiPlayerScore = document.getElementById('player-score');
+const uiAiScore = document.getElementById('ai-score');
+
+// Event Listeners
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'w' || e.key === 'W') keys.w = true;
+  if (e.key === 's' || e.key === 'S') keys.s = true;
+});
+
+window.addEventListener('keyup', (e) => {
+  if (e.key === 'w' || e.key === 'W') keys.w = false;
+  if (e.key === 's' || e.key === 'S') keys.s = false;
+});
+
+canvas.addEventListener('mousemove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const scaleY = LOGICAL_HEIGHT / rect.height;
+  const canvasY = (e.clientY - rect.top) * scaleY;
+  mouseY = canvasY;
+});
+
+uiStartBtn.addEventListener('click', startGame);
+uiRestartBtn.addEventListener('click', resetGame);
+
+// Game Control Functions
+function startGame() {
+  if (gameState.gameOver) {
+    resetGame();
+    return;
+  }
+  gameState.running = true;
+  gameState.gameOver = false;
+  uiStartBtn.classList.add('hidden');
+  uiRestartBtn.classList.add('hidden');
+  uiMessage.textContent = '';
+  requestAnimationFrame(gameLoop);
 }
 
-function playPurchaseSound() {
-    try {
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime); // E5
-        oscillator.type = 'triangle';
-        
-        gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-        
-        oscillator.start();
-        oscillator.stop(audioContext.currentTime + 0.2);
-    } catch (e) {
-        // Audio not supported
-    }
+function resetGame() {
+  gameState.playerScore = 0;
+  gameState.aiScore = 0;
+  gameState.gameOver = false;
+  gameState.running = true;
+  updateScoreDisplay();
+  resetBall();
+  uiStartBtn.classList.add('hidden');
+  uiRestartBtn.classList.add('hidden');
+  uiMessage.textContent = '';
+  requestAnimationFrame(gameLoop);
 }
 
-// --- Visual Feedback Functions ---
-function createCookieEffect(x, y) {
-    const effect = document.createElement('div');
-    effect.className = 'click-effect';
-    effect.textContent = '+' + cookieMultiplier;
-    effect.style.left = x + 'px';
-    effect.style.top = y + 'px';
-    effect.style.position = 'absolute';
-    
-    document.body.appendChild(effect);
-    
-    setTimeout(() => {
-        effect.remove();
-    }, 800);
+function stopGame(message) {
+  gameState.running = false;
+  gameState.gameOver = true;
+  uiMessage.textContent = message;
+  uiRestartBtn.classList.remove('hidden');
 }
 
-function showPurchaseFeedback(type) {
-    const feedback = document.createElement('div');
-    feedback.className = 'purchase-feedback';
-    feedback.textContent = type === 'clicker' ? 'Auto Clicker Purchased!' : 'Grandma Hired!';
-    feedback.style.position = 'fixed';
-    feedback.style.top = '20px';
-    feedback.style.left = '50%';
-    feedback.style.transform = 'translateX(-50%)';
-    
-    document.body.appendChild(feedback);
-    
-    setTimeout(() => {
-        feedback.remove();
-    }, 1500);
-}
-
-// --- Game Logic ---
-function bakeCookie(event) {
-    const rect = cookieElement.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    
-    cookieCount += cookieMultiplier;
-    totalClicks++;
-    
-    playClickSound();
-    createCookieEffect(event.clientX, event.clientY);
-    updateScoreDisplay();
+function resetBall() {
+  ball.x = LOGICAL_WIDTH / 2;
+  ball.y = LOGICAL_HEIGHT / 2;
+  ball.speed = ball.minSpeed;
+  ball.dx = (Math.random() > 0.5 ? 1 : -1) * ball.speed;
+  ball.dy = (Math.random() > 0.5 ? 1 : -1) * ball.speed;
 }
 
 function updateScoreDisplay() {
-    cookieCountElement.textContent = Math.floor(cookieCount).toLocaleString();
-    totalClicksDisplay.textContent = totalClicks.toLocaleString();
-    cookieMultiplierDisplay.textContent = cookieMultiplier;
+  uiPlayerScore.textContent = gameState.playerScore;
+  uiAiScore.textContent = gameState.aiScore;
+}
+
+// Physics Functions
+function updatePaddles() {
+  // Player paddle
+  if (mouseY !== null) {
+    paddle.y = mouseY - paddle.height / 2;
+  } else {
+    if (keys.w) paddle.y -= paddle.speed;
+    if (keys.s) paddle.y += paddle.speed;
+  }
+  
+  // Clamp player paddle
+  paddle.y = Math.max(0, Math.min(LOGICAL_HEIGHT - paddle.height, paddle.y));
+
+  // AI paddle
+  const center = aiPaddle.y + aiPaddle.height / 2;
+  if (center < ball.y - 10) {
+    aiPaddle.y += aiPaddle.speed;
+  } else if (center > ball.y + 10) {
+    aiPaddle.y -= aiPaddle.speed;
+  }
+  
+  // Clamp AI paddle
+  aiPaddle.y = Math.max(0, Math.min(LOGICAL_HEIGHT - aiPaddle.height, aiPaddle.y));
+}
+
+function updateBall() {
+  ball.x += ball.dx;
+  ball.y += ball.dy;
+
+  // Top/bottom collision
+  if (ball.y - ball.radius < 0 || ball.y + ball.radius > LOGICAL_HEIGHT) {
+    ball.dy = -ball.dy;
+  }
+
+  // Paddle collision detection
+  // Player paddle
+  if (
+    ball.x - ball.radius < paddle.x + paddle.width &&
+    ball.x + ball.radius > paddle.x &&
+    ball.y > paddle.y &&
+    ball.y < paddle.y + paddle.height
+  ) {
+    // Calculate hit position relative to paddle center
+    const hitPos = (ball.y - (paddle.y + paddle.height / 2)) / (paddle.height / 2);
     
-    // Update production rate display
-    const productionRate = (autoClickers * upgradeRates.clicker) + (grandmas * upgradeRates.grandma);
-    productionRateDisplay.textContent = productionRate.toFixed(1);
+    // Increase speed and redirect ball
+    ball.speed = Math.min(ball.speed + ball.speedIncrement, ball.maxSpeed);
+    ball.dx = -ball.dx * Math.abs(ball.dx) / ball.dx; // preserve direction
+    ball.dy = hitPos * ball.speed * 0.75;
     
-    updateUpgradeButtons();
-}
+    // Normalize ball velocity vector
+    const magnitude = Math.sqrt(ball.dx * ball.dx + ball.dy * ball.dy);
+    ball.dx = (ball.dx / magnitude) * ball.speed;
+    ball.dy = (ball.dy / magnitude) * ball.speed;
+  }
 
-function buyUpgrade(type) {
-    let cost = 0;
-    switch (type) {
-        case 'clicker':
-            cost = upgradeCosts.clicker;
-            if (cookieCount >= cost) {
-                cookieCount -= cost;
-                autoClickers++;
-                upgradeCosts.clicker = Math.ceil(cost * 1.25);
-                updateAutoClickerDisplay();
-                updateScoreDisplay();
-                
-                playPurchaseSound();
-                showPurchaseFeedback('clicker');
-            } else {
-                showInsufficientFunds();
-            }
-            break;
-        case 'grandma':
-            cost = upgradeCosts.grandma;
-            if (cookieCount >= cost) {
-                cookieCount -= cost;
-                grandmas++;
-                upgradeCosts.grandma = Math.ceil(cost * 1.3);
-                updateGrandmaDisplay();
-                updateScoreDisplay();
-                
-                playPurchaseSound();
-                showPurchaseFeedback('grandma');
-            } else {
-                showInsufficientFunds();
-            }
-            break;
-        case 'multiplier':
-            cost = upgradeCosts.multiplier;
-            if (cookieCount >= cost) {
-                cookieCount -= cost;
-                cookieMultiplier *= 2;
-                upgradeCosts.multiplier = Math.ceil(cost * 3);
-                updateMultiplierDisplay();
-                updateScoreDisplay();
-                
-                playPurchaseSound();
-                showPurchaseFeedback('multiplier');
-            } else {
-                showInsufficientFunds();
-            }
-            break;
-    }
-    saveGame();
-}
-
-function showInsufficientFunds() {
-    const feedback = document.createElement('div');
-    feedback.className = 'insufficient-funds';
-    feedback.textContent = 'Not enough cookies!';
-    feedback.style.position = 'fixed';
-    feedback.style.top = '60px';
-    feedback.style.left = '50%';
-    feedback.style.transform = 'translateX(-50%)';
+  // AI paddle
+  if (
+    ball.x + ball.radius > aiPaddle.x &&
+    ball.x - ball.radius < aiPaddle.x + aiPaddle.width &&
+    ball.y > aiPaddle.y &&
+    ball.y < aiPaddle.y + aiPaddle.height
+  ) {
+    const hitPos = (ball.y - (aiPaddle.y + aiPaddle.height / 2)) / (aiPaddle.height / 2);
     
-    document.body.appendChild(feedback);
+    ball.speed = Math.min(ball.speed + ball.speedIncrement, ball.maxSpeed);
+    ball.dx = -ball.dx * Math.abs(ball.dx) / ball.dx;
+    ball.dy = hitPos * ball.speed * 0.75;
     
-    setTimeout(() => {
-        feedback.remove();
-    }, 1200);
-}
+    const magnitude = Math.sqrt(ball.dx * ball.dx + ball.dy * ball.dy);
+    ball.dx = (ball.dx / magnitude) * ball.speed;
+    ball.dy = (ball.dy / magnitude) * ball.speed;
+  }
 
-function updateAutoClickerDisplay() {
-    autoClickerDisplay.textContent = autoClickers;
-    document.getElementById('upgrade-clicker-cost').textContent = upgradeCosts.clicker.toLocaleString();
-}
-
-function updateGrandmaDisplay() {
-    grandmaDisplay.textContent = grandmas;
-    document.getElementById('upgrade-grandma-cost').textContent = upgradeCosts.grandma.toLocaleString();
-}
-
-function updateMultiplierDisplay() {
-    cookieMultiplierDisplay.textContent = cookieMultiplier;
-    document.getElementById('upgrade-multiplier-cost').textContent = upgradeCosts.multiplier.toLocaleString();
-}
-
-function updateUpgradeButtons() {
-    clickerUpgradeElement.disabled = cookieCount < upgradeCosts.clicker;
-    grandmaUpgradeElement.disabled = cookieCount < upgradeCosts.grandma;
-    document.getElementById('upgrade-multiplier-btn').disabled = cookieCount < upgradeCosts.multiplier;
-}
-
-// --- Background Production ---
-function produceCookies() {
-    cookieCount += autoClickers * upgradeRates.clicker;
-    cookieCount += grandmas * upgradeRates.grandma;
+  // Scoring
+  if (ball.x < 0) {
+    gameState.aiScore++;
     updateScoreDisplay();
-}
-
-// --- Persistence ---
-function saveGame() {
-    localStorage.setItem('cookieClickerGame', JSON.stringify({
-        cookieCount,
-        autoClickers,
-        grandmas,
-        cookieMultiplier,
-        totalClicks,
-        upgradeCosts
-    }));
-}
-
-function loadGame() {
-    const savedGame = localStorage.getItem('cookieClickerGame');
-    if (savedGame) {
-        try {
-            const parsedGame = JSON.parse(savedGame);
-            cookieCount = parsedGame.cookieCount || 0;
-            autoClickers = parsedGame.autoClickers || 0;
-            grandmas = parsedGame.grandmas || 0;
-            cookieMultiplier = parsedGame.cookieMultiplier || 1;
-            totalClicks = parsedGame.totalClicks || 0;
-            upgradeCosts = parsedGame.upgradeCosts || {
-                clicker: 10,
-                grandma: 100,
-                multiplier: 200
-            };
-        } catch (e) {
-            console.log('Failed to load saved game');
-        }
+    if (gameState.aiScore >= gameState.winningScore) {
+      stopGame('AI Wins!');
+    } else {
+      resetBall();
     }
+  } else if (ball.x > LOGICAL_WIDTH) {
+    gameState.playerScore++;
     updateScoreDisplay();
-    updateAutoClickerDisplay();
-    updateGrandmaDisplay();
-    updateMultiplierDisplay();
-    updateUpgradeButtons();
+    if (gameState.playerScore >= gameState.winningScore) {
+      stopGame('You Win!');
+    } else {
+      resetBall();
+    }
+  }
 }
 
-// --- Event Listeners ---
-cookieElement.addEventListener('click', bakeCookie);
+// Rendering Functions
+function drawRect(x, y, width, height, color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, width, height);
+}
 
-clickerUpgradeElement.addEventListener('click', () => {
-    buyUpgrade('clicker');
-});
+function drawCircle(x, y, radius, color) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2, false);
+  ctx.closePath();
+  ctx.fill();
+}
 
-grandmaUpgradeElement.addEventListener('click', () => {
-    buyUpgrade('grandma');
-});
+function drawNet() {
+  ctx.strokeStyle = '#7f8c8d';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([10, 15]);
+  ctx.beginPath();
+  ctx.moveTo(LOGICAL_WIDTH / 2, 0);
+  ctx.lineTo(LOGICAL_WIDTH / 2, LOGICAL_HEIGHT);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
 
-// Reset game button
-const resetButton = document.createElement('button');
-resetButton.id = 'reset-btn';
-resetButton.textContent = 'Reset Game';
-resetButton.addEventListener('click', () => {
-    if (confirm('Are you sure you want to reset all progress?')) {
-        localStorage.removeItem('cookieClickerGame');
-        location.reload();
-    }
-});
+function render() {
+  // Clear canvas
+  ctx.fillStyle = '#2c3e50';
+  ctx.fillRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
 
-document.querySelector('.game-container').appendChild(resetButton);
+  drawNet();
+  drawRect(paddle.x, paddle.y, paddle.width, paddle.height, paddle.color);
+  drawRect(aiPaddle.x, aiPaddle.y, aiPaddle.width, aiPaddle.height, aiPaddle.color);
+  drawCircle(ball.x, ball.y, ball.radius, ball.color);
+}
 
-// --- Initial Setup ---
-loadGame();
+// Main Game Loop
+function gameLoop() {
+  if (!gameState.running) return;
 
-// Start background production interval with visual progress
-setInterval(produceCookies, 1000);
+  updatePaddles();
+  updateBall();
+  render();
 
-// Auto-save every 10 seconds
-setInterval(saveGame, 10000);
+  if (gameState.running) {
+    requestAnimationFrame(gameLoop);
+  }
+}
 
-// Initialize multiplier button
-const multiplierBtn = document.createElement('button');
-multiplierBtn.id = 'upgrade-multiplier-btn';
-multiplierBtn.textContent = 'Buy Cookie Multiplier';
-multiplierBtn.addEventListener('click', () => {
-    buyUpgrade('multiplier');
-});
-
-const multiplierInfo = document.createElement('span');
-mul
+// Initialize
+scaleContext();
+render();
