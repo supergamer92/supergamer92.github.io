@@ -8,14 +8,27 @@
 </head>
 <body>
     <div class="game-container">
-        <h1>Cookie Clicker</h1>
+        <h1>Super Cookie Clicker</h1>
         <div class="score-display">
             Cookies: <span id="cookie-count">0</span>
         </div>
         <div id="cookie" class="cookie"></div>
-        <div class="instructions">
+        
+        <div class="upgrades-container">
+            <h2>Upgrades</h2>
+            <div class="upgrade-item">
+                <button id="upgrade-clicker-btn">Buy Auto Clicker</button>
+                <span class="upgrade-info">(<span id="auto-clicker-count">0</span>) - Cost: <span id="upgrade-clicker-cost">10</span> cookies</span>
+            </div>
+            <div class="upgrade-item">
+                <button id="upgrade-grandma-btn">Buy Grandma</button>
+                <span class="upgrade-info">(<span id="grandma-count">0</span>) - Cost: <span id="upgrade-grandma-cost">100</span> cookies</span>
+            </div>
+        </div>
+
+        <div class="instructions-container">
             <p>Click the cookie to bake more cookies!</p>
-            <p>More features coming soon!</p>
+            <p>Buy upgrades to automate your cookie production.</p>
         </div>
     </div>
 

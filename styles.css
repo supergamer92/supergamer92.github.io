@@ -1,59 +1,128 @@
 body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f0e6d2;
-    color: #5a3a3a;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #ffeeba;
+    color: #855c36;
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
     margin: 0;
     text-align: center;
+    background-image: linear-gradient(to bottom, #ffeeba, #ffc107);
 }
 
 .game-container {
-    background-color: #e8d2a3;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
     width: 90%;
-    max-width: 500px;
+    max-width: 600px;
+    border: 3px solid #d4a017;
 }
 
 h1 {
-    color: #8b4513;
-    margin-bottom: 20px;
+    color: #b8860b;
+    margin-bottom: 30px;
+    font-size: 3em;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
 }
 
 .score-display {
-    font-size: 1.5em;
-    margin-bottom: 30px;
+    font-size: 2em;
+    margin-bottom: 40px;
     color: #8b4513;
+    font-weight: bold;
 }
 
 #cookie {
-    width: 200px;
-    height: 200px;
+    width: 250px;
+    height: 250px;
     background-color: #d2691e;
     border-radius: 50%;
-    margin: 0 auto 30px auto;
+    margin: 0 auto 40px auto;
     cursor: pointer;
-    box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
-    transition: transform 0.1s ease-out;
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.4), 0 5px 15px rgba(0,0,0,0.2);
+    transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
+    border: 5px solid #8b4513;
 }
 
 #cookie:hover {
-    background-color: #d27a1e;
+    background-color: #e07b2a;
+    transform: scale(1.05);
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.5), 0 8px 20px rgba(0,0,0,0.3);
 }
 
 #cookie:active {
-    transform: scale(0.95);
+    transform: scale(0.97);
+    box-shadow: inset 0 0 25px rgba(0,0,0,0.3), 0 3px 10px rgba(0,0,0,0.2);
 }
 
-.instructions {
+.upgrades-container {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px dashed #d4a017;
+}
+
+.upgrades-container h2 {
+    color: #8b4513;
+    margin-bottom: 20px;
+    font-size: 1.8em;
+}
+
+.upgrade-item {
+    margin-bottom: 15px;
+    background-color: #fff8dc;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #deb887;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.upgrade-item button {
+    background-color: #d2691e;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
     font-size: 1.1em;
-    line-height: 1.5;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    flex-shrink: 0;
 }
 
-.instructions p {
-    margin: 5px 0;
+.upgrade-item button:hover {
+    background-color: #e07b2a;
+}
+
+.upgrade-item button:active {
+    transform: scale(0.98);
+}
+
+.upgrade-item button:disabled {
+    background-color: #a0522d;
+    cursor: not-allowed;
+}
+
+.upgrade-info {
+    font-size: 0.95em;
+    color: #5a3a3a;
+    text-align: right;
+}
+
+.instructions-container {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px dashed #d4a017;
+    font-size: 1.1em;
+    line-height: 1.6;
+    color: #6b4226;
+}
+
+.instructions-container p {
+    margin: 8px 0;
 }
