@@ -3,25 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Snake Game</title>
+    <title>Cookie Clicker</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="game-container">
-        <h1>Snake Roguelike</h1>
-        <div class="score-panel">
-            Score: <span id="score">0</span>
+        <h1>Cookie Clicker</h1>
+        <div class="score-display">
+            Cookies: <span id="cookie-count">0</span>
         </div>
-        <canvas id="gameCanvas"></canvas>
+        <div id="cookie" class="cookie"></div>
         <div class="instructions">
-            <p>Use arrow keys to move.</p>
-            <p>Press SPACE to pause/resume. Press ENTER to restart.</p>
-            <p>Survive and eat indefinitely!</p>
-        </div>
-        <div id="gameOver" class="game-over-message">
-            Game Over! Press ENTER to restart.
+            <p>Click the cookie to bake more cookies!</p>
+            <p>More features coming soon!</p>
         </div>
     </div>
+
     <script src="app.js"></script>
 </body>
 </html>
